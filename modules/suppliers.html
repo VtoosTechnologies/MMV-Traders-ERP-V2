@@ -2943,6 +2943,300 @@ updateSummary();
 
 </script>
 
+<script type="module">
+/* =====================================================
+   FIREBASE PERSISTENCE PATCH
+   Existing supplier HTML/CSS/JS preserved.
+   This patch overrides persistence only.
+   ===================================================== */
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
+import {
+    getAuth,
+    onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js";
+import {
+    getFirestore,
+    collection,
+    getDocs,
+    addDoc,
+    updateDoc,
+    doc,
+    serverTimestamp
+} from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
+
+const MMV_FIREBASE_CONFIG = {
+    apiKey: "AIzaSyDYU43yaApPBU-GFxfMtnfST-ZJRu8Vg_E",
+    authDomain: "mmv-traders-erp-v2.firebaseapp.com",
+    projectId: "mmv-traders-erp-v2",
+    storageBucket: "mmv-traders-erp-v2.firebasestorage.app",
+    messagingSenderId: "345950984944",
+    appId: "1:345950984944:web:2a456b89f42f31ea2bc035"
+};
+
+const MMV_FB_APP = initializeApp(MMV_FIREBASE_CONFIG);
+const MMV_FB_AUTH = getAuth(MMV_FB_APP);
+const MMV_FB_DB = getFirestore(MMV_FB_APP);
+const MMV_SUPPLIERS_REF = collection(MMV_FB_DB, "suppliers");
+
+let MMV_FIREBASE_USER = null;
+let MMV_SUPPLIERS_READY = false;
+
+/* -----------------------------------------------------
+   Helpers
+   ----------------------------------------------------- */
+
+function mmvField(id) {
+    return document.getElementById(id)?.value?.trim() || "";
+}
+
+function mmvNumber(id) {
+    const value = Number(document.getElementById(id)?.value || 0);
+    return Number.isFinite(value) ? value : 0;
+}
+
+function mmvCode() {
+    const source = Array.isArray(window.suppliers)
+        ? window.suppliers
+        : [];
+
+    let max = 0;
+
+    source.forEach(item => {
+        const match = String(item.code || "").match(/MMV-SUP-(\d+)/i);
+
+        if (match) {
+            max = Math.max(max, Number(match[1]) || 0);
+        }
+    });
+
+    return `MMV-SUP-${String(max + 1).padStart(5, "0")}`;
+}
+
+/* -----------------------------------------------------
+   Load Firestore -> existing supplier state
+   ----------------------------------------------------- */
+
+async function mmvLoadSuppliersFromFirebase() {
+
+    if (!MMV_FIREBASE_USER) return;
+
+    try {
+
+        const snapshot = await getDocs(MMV_SUPPLIERS_REF);
+
+        const loaded = snapshot.docs.map(item => ({
+            id: item.id,
+            ...item.data()
+        }));
+
+        /*
+         * Preserve the existing page's global suppliers array
+         * instead of replacing the UI architecture.
+         */
+        window.suppliers = loaded;
+
+        if (typeof renderSuppliers === "function") {
+            renderSuppliers();
+        }
+
+        if (typeof updateSummary === "function") {
+            updateSummary();
+        }
+
+        if (typeof updateSupplierSummary === "function") {
+            updateSupplierSummary();
+        }
+
+        console.log(
+            "MMV Suppliers Firebase:",
+            loaded.length,
+            "supplier(s) loaded."
+        );
+
+    } catch (error) {
+
+        console.error(
+            "MMV Suppliers Firebase load error:",
+            error
+        );
+
+        alert(
+            "Supplier data load failed.\n\n" +
+            error.message
+        );
+    }
+}
+
+/* -----------------------------------------------------
+   Firebase Save
+   ----------------------------------------------------- */
+
+async function mmvSaveSupplierToFirebase(supplier) {
+
+    if (!MMV_FIREBASE_USER) {
+        throw new Error(
+            "Firebase authentication is not available. Please login again."
+        );
+    }
+
+    const code =
+        supplier.code ||
+        mmvCode();
+
+    const existing =
+        Array.isArray(window.suppliers)
+            ? window.suppliers.find(
+                item => item.id === supplier.id ||
+                         item.code === code
+              )
+            : null;
+
+    const payload = {
+        ...supplier,
+
+        code,
+
+        name:
+            supplier.name ||
+            mmvField("supplierName"),
+
+        mobile:
+            supplier.mobile ||
+            mmvField("supplierMobile"),
+
+        type:
+            supplier.type ||
+            document.getElementById("supplierType")?.value ||
+            "Manufacturer",
+
+        city:
+            supplier.city ||
+            mmvField("supplierCity"),
+
+        address:
+            supplier.address ||
+            mmvField("supplierAddress"),
+
+        gstin:
+            supplier.gstin ||
+            mmvField("supplierGstin").toUpperCase(),
+
+        creditPeriod:
+            Number(
+                supplier.creditPeriod ??
+                mmvNumber("creditPeriod")
+            ),
+
+        creditLimit:
+            Number(
+                supplier.creditLimit ??
+                mmvNumber("creditLimit")
+            ),
+
+        outstanding:
+            Number(
+                supplier.outstanding ??
+                existing?.outstanding ??
+                0
+            ),
+
+        status:
+            supplier.status ||
+            "ACTIVE",
+
+        updatedAt:
+            serverTimestamp()
+    };
+
+    delete payload.id;
+
+    let documentId = supplier.id || existing?.id;
+
+    if (documentId) {
+
+        await updateDoc(
+            doc(
+                MMV_FB_DB,
+                "suppliers",
+                documentId
+            ),
+            payload
+        );
+
+    } else {
+
+        payload.createdAt =
+            serverTimestamp();
+
+        const created =
+            await addDoc(
+                MMV_SUPPLIERS_REF,
+                payload
+            );
+
+        documentId =
+            created.id;
+    }
+
+    return {
+        id: documentId,
+        ...payload
+    };
+}
+
+/* -----------------------------------------------------
+   Expose a clean Firebase service for existing page code
+   ----------------------------------------------------- */
+
+window.MMVFirebaseSuppliers = {
+
+    load:
+        mmvLoadSuppliersFromFirebase,
+
+    save:
+        mmvSaveSupplierToFirebase,
+
+    isReady:
+        () => MMV_SUPPLIERS_READY
+
+};
+
+/* -----------------------------------------------------
+   Authentication
+   ----------------------------------------------------- */
+
+onAuthStateChanged(
+    MMV_FB_AUTH,
+    async user => {
+
+        MMV_FIREBASE_USER =
+            user || null;
+
+        MMV_SUPPLIERS_READY =
+            !!user;
+
+        if (user) {
+
+            console.log(
+                "MMV Suppliers Firebase authenticated:",
+                user.uid
+            );
+
+            await mmvLoadSuppliersFromFirebase();
+
+        } else {
+
+            console.warn(
+                "MMV Suppliers Firebase: user not authenticated."
+            );
+        }
+    }
+);
+
+</script>
+
+
 
 </body>
 
