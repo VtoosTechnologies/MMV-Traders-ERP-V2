@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <meta
+        name="theme-color"
+        content="#0b3b82"
+    >
+
+    <meta
+        name="robots"
+        content="noindex,nofollow"
+    >
+
+    <title>
+        Access Restricted | MMV Traders ERP
+    </title>
+
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+
+        :root {
+
+            --primary:
+                #0b3b82;
+
+            --primary-dark:
+                #082d63;
+
+            --text:
+                #172033;
+
+            --muted:
+                #687386;
+
+            --border:
+                #e5e9f0;
+
+            --surface:
+                #ffffff;
+
+            --background:
+                #f5f7fb;
+
+        }
+
+
+        body {
+
+            min-height: 100vh;
+
+            font-family:
+                Inter,
+                "Segoe UI",
+                Arial,
+                sans-serif;
+
+            background:
+                radial-gradient(
+                    circle at 10% 10%,
+                    rgba(11,59,130,.09),
+                    transparent 32%
+                ),
+                radial-gradient(
+                    circle at 90% 90%,
+                    rgba(11,59,130,.07),
+                    transparent 30%
+                ),
+                var(--background);
+
+            color:
+                var(--text);
+
+            display:
+                flex;
+
+            align-items:
+                center;
+
+            justify-content:
+                center;
+
+            padding:
+                24px;
+
+        }
+
+
+        .page {
+
+            width:
+                100%;
+
+            max-width:
+                760px;
+
+        }
+
+
+        .brand {
+
+            display:
+                flex;
+
+            align-items:
+                center;
+
+            justify-content:
+                center;
+
+            gap:
+                12px;
+
+            margin-bottom:
+                22px;
+
+        }
+
+
+        .brand-logo {
+
+            width:
+                46px;
+
+            height:
+                46px;
+
+            border-radius:
+                13px;
+
+            background:
+                linear-gradient(
+                    145deg,
+                    var(--primary),
+                    #1764c0
+                );
+
+            color:
+                #fff;
+
+            display:
+                flex;
+
+            align-items:
+                center;
+
+            justify-content:
+                center;
+
+            font-size:
+                19px;
+
+            font-weight:
+                800;
+
+            box-shadow:
+                0 10px 24px
+                rgba(11,59,130,.22);
+
+        }
+
+
+        .brand-name {
+
+            font-size:
+                19px;
+
+            font-weight:
+                800;
+
+            letter-spacing:
+                -.3px;
+
+        }
+
+
+        .brand-subtitle {
+
+            font-size:
+                11px;
+
+            color:
+                var(--muted);
+
+            margin-top:
+                2px;
+
+        }
+
+
+        .card {
+
+            background:
+                rgba(255,255,255,.94);
+
+            border:
+                1px solid
+                var(--border);
+
+            border-radius:
+                24px;
+
+            padding:
+                52px 42px;
+
+            text-align:
+                center;
+
+            box-shadow:
+                0 24px 70px
+                rgba(18,38,63,.10);
+
+        }
+
+
+        .icon-wrapper {
+
+            width:
+                92px;
+
+            height:
+                92px;
+
+            margin:
+                0 auto 24px;
+
+            border-radius:
+                50%;
+
+            background:
+                #fff1f1;
+
+            display:
+                flex;
+
+            align-items:
+                center;
+
+            justify-content:
+                center;
+
+            border:
+                8px solid
+                #fff8f8;
+
+        }
+
+
+        .lock-icon {
+
+            width:
+                30px;
+
+            height:
+                34px;
+
+            position:
+                relative;
+
+            border:
+                3px solid
+                #c0392b;
+
+            border-radius:
+                6px;
+
+        }
+
+
+        .lock-icon::before {
+
+            content:
+                "";
+
+            position:
+                absolute;
+
+            width:
+                18px;
+
+            height:
+                16px;
+
+            left:
+                50%;
+
+            top:
+                -15px;
+
+            transform:
+                translateX(-50%);
+
+            border:
+                3px solid
+                #c0392b;
+
+            border-bottom:
+                0;
+
+            border-radius:
+                12px 12px 0 0;
+
+        }
+
+
+        .lock-icon::after {
+
+            content:
+                "";
+
+            position:
+                absolute;
+
+            width:
+                4px;
+
+            height:
+                10px;
+
+            left:
+                50%;
+
+            top:
+                9px;
+
+            transform:
+                translateX(-50%);
+
+            border-radius:
+                5px;
+
+            background:
+                #c0392b;
+
+        }
+
+
+        h1 {
+
+            font-size:
+                clamp(
+                    25px,
+                    5vw,
+                    34px
+                );
+
+            letter-spacing:
+                -.8px;
+
+            margin-bottom:
+                12px;
+
+        }
+
+
+        .description {
+
+            max-width:
+                530px;
+
+            margin:
+                0 auto;
+
+            color:
+                var(--muted);
+
+            font-size:
+                15px;
+
+            line-height:
+                1.7;
+
+        }
+
+
+        .reason {
+
+            margin:
+                28px auto 0;
+
+            max-width:
+                500px;
+
+            padding:
+                16px 18px;
+
+            background:
+                #f7f9fc;
+
+            border:
+                1px solid
+                var(--border);
+
+            border-radius:
+                14px;
+
+            text-align:
+                left;
+
+        }
+
+
+        .reason-title {
+
+            font-size:
+                12px;
+
+            text-transform:
+                uppercase;
+
+            letter-spacing:
+                .7px;
+
+            font-weight:
+                800;
+
+            color:
+                var(--primary);
+
+            margin-bottom:
+                7px;
+
+        }
+
+
+        .reason-text {
+
+            color:
+                var(--muted);
+
+            font-size:
+                13px;
+
+            line-height:
+                1.55;
+
+        }
+
+
+        .actions {
+
+            display:
+                flex;
+
+            justify-content:
+                center;
+
+            gap:
+                12px;
+
+            flex-wrap:
+                wrap;
+
+            margin-top:
+                28px;
+
+        }
+
+
+        .button {
+
+            min-width:
+                150px;
+
+            min-height:
+                46px;
+
+            border:
+                0;
+
+            border-radius:
+                11px;
+
+            padding:
+                0 20px;
+
+            font-size:
+                13px;
+
+            font-weight:
+                750;
+
+            cursor:
+                pointer;
+
+            transition:
+                transform .18s ease,
+                box-shadow .18s ease;
+
+        }
+
+
+        .button:hover {
+
+            transform:
+                translateY(-1px);
+
+        }
+
+
+        .primary {
+
+            color:
+                #fff;
+
+            background:
+                var(--primary);
+
+            box-shadow:
+                0 9px 22px
+                rgba(11,59,130,.20);
+
+        }
+
+
+        .secondary {
+
+            color:
+                var(--text);
+
+            background:
+                #fff;
+
+            border:
+                1px solid
+                var(--border);
+
+        }
+
+
+        .footer {
+
+            text-align:
+                center;
+
+            margin-top:
+                20px;
+
+            color:
+                #8a94a6;
+
+            font-size:
+                11px;
+
+        }
+
+
+        @media (
+            max-width: 560px
+        ) {
+
+            body {
+
+                padding:
+                    16px;
+
+            }
+
+
+            .card {
+
+                padding:
+                    38px 22px;
+
+                border-radius:
+                    20px;
+
+            }
+
+
+            .actions {
+
+                flex-direction:
+                    column;
+
+            }
+
+
+            .button {
+
+                width:
+                    100%;
+
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+    <main class="page">
+
+
+        <!-- BRAND -->
+
+        <div class="brand">
+
+            <div class="brand-logo">
+                MM
+            </div>
+
+            <div>
+
+                <div class="brand-name">
+                    MMV Traders ERP
+                </div>
+
+                <div class="brand-subtitle">
+                    Business Management System
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- ACCESS CARD -->
+
+        <section
+            class="card"
+            aria-labelledby="pageTitle"
+        >
+
+
+            <div
+                class="icon-wrapper"
+                aria-hidden="true"
+            >
+
+                <div
+                    class="lock-icon"
+                ></div>
+
+            </div>
+
+
+            <h1 id="pageTitle">
+                Access Restricted
+            </h1>
+
+
+            <p class="description">
+
+                You don't have the required
+                permission to access this
+                section of MMV Traders ERP.
+
+                Please contact your administrator
+                if you believe this access should
+                be enabled.
+
+            </p>
+
+
+            <div class="reason">
+
+                <div class="reason-title">
+                    Security Notice
+                </div>
+
+                <div class="reason-text">
+
+                    Your account is authenticated,
+                    but your assigned ERP role does
+                    not include access to this module.
+
+                </div>
+
+            </div>
+
+
+            <div class="actions">
+
+                <button
+                    type="button"
+                    class="button primary"
+                    id="dashboardButton"
+                >
+                    Back to Dashboard
+                </button>
+
+
+                <button
+                    type="button"
+                    class="button secondary"
+                    id="logoutButton"
+                >
+                    Sign Out
+                </button>
+
+            </div>
+
+        </section>
+
+
+        <!-- FOOTER -->
+
+        <footer class="footer">
+
+            © <span id="currentYear"></span>
+            MMV Traders ERP.
+            All rights reserved.
+
+        </footer>
+
+
+    </main>
+
+
+    <script>
+
+        "use strict";
+
+
+        /*
+         * Current year
+         */
+
+        document
+            .getElementById(
+                "currentYear"
+            )
+            .textContent =
+            new Date()
+                .getFullYear();
+
+
+        /*
+         * Dashboard
+         */
+
+        document
+            .getElementById(
+                "dashboardButton"
+            )
+            .addEventListener(
+                "click",
+                () => {
+
+                    window.location.href =
+                        "dashboard.html";
+
+                }
+            );
+
+
+        /*
+         * Logout
+         */
+
+        document
+            .getElementById(
+                "logoutButton"
+            )
+            .addEventListener(
+                "click",
+                async () => {
+
+                    try {
+
+                        const {
+                            logout
+                        } =
+                        await import(
+                            "./js/auth.js"
+                        );
+
+
+                        await logout();
+
+                    }
+                    catch(error) {
+
+                        console.error(
+                            "Logout error:",
+                            error
+                        );
+
+                    }
+
+                }
+            );
+
+    </script>
+
+</body>
+
+</html>
