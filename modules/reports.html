@@ -2034,9 +2034,12 @@ document
         "click",
         () => {
 
-            alert(
-                "Export will be connected to Firebase V2 report data."
-            );
+            if (window.MMVR && Array.isArray(window.MMVR.sales)) {
+                exportCurrentReportCSV();
+                return;
+            }
+
+            alert("Report data is still loading. Please try again.");
 
         }
     );
@@ -2047,6 +2050,101 @@ document
 ===================================================== */
 
 updateReport();
+
+function escapeCsvValue(value) {
+    const text = String(value ?? "");
+    return '"' + text.replace(/"/g, '""') + '"';
+}
+
+function exportCurrentReportCSV() {
+
+    const data = window.MMVR || {};
+    const sales = Array.isArray(data.sales) ? data.sales : [];
+    const purchases = Array.isArray(data.purchases) ? data.purchases : [];
+    const payments = Array.isArray(data.payments) ? data.payments : [];
+
+    const from = document.getElementById("fromDate")?.value || "";
+    const to = document.getElementById("toDate")?.value || "";
+
+    const rows = [
+        ["MMV TRADERS ERP - REPORT EXPORT"],
+        ["From", from, "To", to],
+        [],
+        ["SALES"],
+        ["Invoice", "Date", "Customer", "Amount"]
+    ];
+
+    sales
+        .filter(item => inDateRange(
+            reportDate(item.date || item.invoiceDate || item.createdAt),
+            from,
+            to
+        ))
+        .forEach(item => {
+            rows.push([
+                item.invoiceNo || item.invoiceNumber || item.id || "",
+                reportDate(item.date || item.invoiceDate || item.createdAt),
+                item.customerName || item.customer || item.party || "",
+                amount(item.total ?? item.grandTotal ?? item.amount ?? item.netTotal)
+            ]);
+        });
+
+    rows.push([]);
+    rows.push(["PURCHASES"]);
+    rows.push(["Invoice", "Date", "Supplier", "Amount"]);
+
+    purchases
+        .filter(item => inDateRange(
+            reportDate(item.purchaseDate || item.invoiceDate || item.createdAt),
+            from,
+            to
+        ))
+        .forEach(item => {
+            rows.push([
+                item.invoiceNo || item.invoiceNumber || item.id || "",
+                reportDate(item.purchaseDate || item.invoiceDate || item.createdAt),
+                item.supplierName || item.supplier || "",
+                amount(item.total ?? item.grandTotal ?? item.amount ?? item.netTotal)
+            ]);
+        });
+
+    rows.push([]);
+    rows.push(["PAYMENTS"]);
+    rows.push(["Date", "Type", "Party", "Amount"]);
+
+    payments
+        .filter(item => inDateRange(
+            reportDate(item.date || item.paymentDate || item.createdAt),
+            from,
+            to
+        ))
+        .forEach(item => {
+            rows.push([
+                reportDate(item.date || item.paymentDate || item.createdAt),
+                item.type || "",
+                item.customerName || item.supplierName || item.partyName || item.party || "",
+                amount(item.amount)
+            ]);
+        });
+
+    const csv = rows
+        .map(row => row.map(escapeCsvValue).join(","))
+        .join("\n");
+
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `MMV-Traders-Report-${from || "all"}-${to || "all"}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+
+    URL.revokeObjectURL(url);
+}
+
+
 
 </script>
 
@@ -2070,12 +2168,13 @@ import {
 } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js";
 
 const MMV_REPORT_FIREBASE_CONFIG = {
-    apiKey: "AIzaSyDYU43yaApPBU-GFxfMtnfST-ZJRu8Vg_E",
-    authDomain: "mmv-traders-erp-v2.firebaseapp.com",
-    projectId: "mmv-traders-erp-v2",
-    storageBucket: "mmv-traders-erp-v2.firebasestorage.app",
-    messagingSenderId: "345950984944",
-    appId: "1:345950984944:web:2a456b89f42f31ea2bc035"
+    apiKey: "AIzaSyAXPSwnJApJ18TKtzSOIya1wPdAidf89Sg",
+    authDomain: "mmv-traders-erp.firebaseapp.com",
+    projectId: "mmv-traders-erp",
+    storageBucket: "mmv-traders-erp.firebasestorage.app",
+    messagingSenderId: "881174406270",
+    appId: "1:881174406270:web:0d4f5ef387082b49d6242f",
+    measurementId: "G-ZDYBZZ6BQS"
 };
 
 const reportApp =
@@ -2465,9 +2564,11 @@ document
     .getElementById("applyFilter")
     ?.addEventListener(
         "click",
-        () => {
+        async () => {
             if (reportFirebaseReady) {
                 calculateFirebaseReport();
+            } else {
+                updateReport();
             }
         }
     );
