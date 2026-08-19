@@ -2514,46 +2514,86 @@ function renderAllReports() {
    GET REPORT DATA
    ============================================================ */
 
+/* ============================================================
+   GET REPORT DATA
+   Dashboard + Reports Integration
+   ============================================================ */
+
 function getReportSnapshot() {
 
     return {
 
         dateRange: {
-
             from:
                 reportState.fromDate,
 
             to:
                 reportState.toDate
-
         },
 
+        /* ======================================================
+           RAW DATA
+           Dashboard uses these arrays
+           ====================================================== */
+
         sales:
-            calculateSalesReport(),
+            reportState.sales,
+
+        salesItems:
+            reportState.salesItems,
 
         purchases:
-            calculatePurchaseReport(),
+            reportState.purchases,
 
-        profit:
-            calculateProfitReport(),
+        purchaseItems:
+            reportState.purchaseItems,
 
-        gst:
-            calculateGSTReport(),
+        customers:
+            reportState.customers,
+
+        suppliers:
+            reportState.suppliers,
 
         payments:
-            calculatePaymentReport(),
+            reportState.payments,
 
-        outstanding:
-            calculateOutstandingReport(),
+        inventory:
+            reportState.inventory,
 
-        stock:
-            calculateStockReport()
+        /* ======================================================
+           CALCULATED REPORT SUMMARY
+           Kept separately so existing Reports functionality
+           is not affected
+           ====================================================== */
+
+        reports: {
+
+            sales:
+                calculateSalesReport(),
+
+            purchases:
+                calculatePurchaseReport(),
+
+            profit:
+                calculateProfitReport(),
+
+            gst:
+                calculateGSTReport(),
+
+            payments:
+                calculatePaymentReport(),
+
+            outstanding:
+                calculateOutstandingReport(),
+
+            stock:
+                calculateStockReport()
+
+        }
 
     };
 
 }
-
-
 /* ============================================================
    CSV EXPORT
    ============================================================ */
