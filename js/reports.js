@@ -293,55 +293,571 @@ function isDateInRange(
    GENERIC FIRESTORE LOAD
    ============================================================ */
 
-async function loadCollection(
-    collectionName
-) {
+/* ============================================================
+   FIRESTORE COLLECTION LOADER
+   Supports existing + new MMV Traders data
+   ============================================================ */
+
+async function loadCollection(collectionName) {
 
     try {
 
-        const snapshot =
-            await getDocs(
-                query(
-                    collection(
-                        db,
-                        collectionName
-                    ),
-                    limit(
-                        MAX_RESULTS
-                    )
-                )
-            );
-
-
-        return snapshot.docs.map(
-            item => ({
-
-                id:
-                    item.id,
-
-                ...item.data()
-
-            })
+        const snapshot = await getDocs(
+            query(
+                collection(db, collectionName),
+                limit(MAX_RESULTS)
+            )
         );
 
+        const rows = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+        }));
+
+        console.info(
+            `MMV Reports: ${collectionName} loaded`,
+            rows.length
+        );
+
+        return rows;
+
     }
-    catch(error) {
+    catch (error) {
 
         console.error(
             `Unable to load ${collectionName}`,
             error
         );
 
+        /*
+         * salesItems / purchaseItems may not exist
+         * in the current Firestore structure.
+         * Do not stop the complete dashboard.
+         */
 
         return [];
 
     }
+}
+/* ============================================================
+   DATA NORMALIZATION
+   Supports old + new Firestore field names
+   ============================================================ */
+
+function normalizeSales(sales) {
+
+    return (sales || []).map(sale => {
+
+        const subtotal =
+            numberValue(
+                sale.subtotal ??
+                sale.taxableAmount ??
+                sale.subTotal ??
+                sale.amount
+            );
+
+
+        const tax =
+            numberValue(
+                sale.tax ??
+                sale.taxAmount ??
+                sale.gstAmount ??
+                0
+            );
+
+
+        const total =
+            numberValue(
+                sale.totalAmount ??
+                sale.total ??
+                sale.grandTotal ??
+                (subtotal + tax)
+            );
+
+
+        let paid =
+            numberValue(
+                sale.paymentAmount ??
+                sale.paidAmount ??
+                sale.receivedAmount ??
+                0
+            );
+
+
+        /*
+         * Existing MMV sales can have:
+         *
+         * status: "Paid"
+         * payment: "cash"
+         *
+         * without storing paymentAmount.
+         *
+         * Therefore Paid invoices are treated as fully paid.
+         */
+        if (
+            paid === 0 &&
+            String(
+                sale.status || ""
+            ).toLowerCase() === "paid"
+        ) {
+            paid = total;
+        }
+
+
+        const outstanding =
+            Math.max(
+                0,
+                numberValue(
+                    sale.outstanding ??
+                    sale.balance ??
+                    (total - paid)
+                )
+            );
+
+
+        return {
+
+            ...sale,
+
+            id:
+                sale.id || "",
+
+            invoiceNumber:
+                sale.invoiceNumber ||
+                sale.number ||
+                sale.invoiceNo ||
+                sale.billNumber ||
+                sale.id ||
+                "",
+
+            invoiceDate:
+                sale.invoiceDate ||
+                sale.date ||
+                sale.billDate ||
+                sale.createdAt ||
+                "",
+
+            customerName:
+                sale.customerName ||
+                sale.customer ||
+                sale.customer_name ||
+                "Walk-in Customer",
+
+            taxableAmount:
+                subtotal,
+
+            gstAmount:
+                tax,
+
+            totalAmount:
+                total,
+
+            paymentAmount:
+                paid,
+
+            outstanding:
+                outstanding
+
+        };
+
+    });
 
 }
 
 
 /* ============================================================
+   NORMALIZE SALES ITEMS
+   ============================================================ */
+
+function normalizeSalesItems(
+    sales,
+    existingItems
+) {
+
+    const result = [];
+
+
+    /*
+     * Use separate salesItems collection if available.
+     */
+    if (
+        Array.isArray(existingItems) &&
+        existingItems.length > 0
+    ) {
+
+        return existingItems.map(item => ({
+
+            ...item,
+
+            invoiceNumber:
+                item.invoiceNumber ||
+                item.number ||
+                "",
+
+            materialName:
+                item.materialName ||
+                item.productName ||
+                item.product ||
+                item.description ||
+                "",
+
+            quantity:
+                numberValue(
+                    item.quantity ??
+                    item.qty
+                ),
+
+            rate:
+                numberValue(
+                    item.rate ??
+                    item.sellingRate ??
+                    item.price
+                ),
+
+            costRate:
+                numberValue(
+                    item.costRate ??
+                    item.purchaseRate ??
+                    item.cost
+                ),
+
+            taxableAmount:
+                numberValue(
+                    item.taxableAmount ??
+                    item.amount
+                ),
+
+            profit:
+                numberValue(
+                    item.profit ??
+                    (
+                        numberValue(
+                            item.rate ??
+                            item.sellingRate ??
+                            item.price
+                        )
+                        -
+                        numberValue(
+                            item.costRate ??
+                            item.purchaseRate ??
+                            item.cost
+                        )
+                    )
+                    *
+                    numberValue(
+                        item.quantity ??
+                        item.qty
+                    )
+                )
+
+        }));
+
+    }
+
+
+    /*
+     * Existing structure:
+     *
+     * sales/{id}
+     *      items: [...]
+     *
+     * Build report items from inside each sale.
+     */
+
+    (sales || []).forEach(sale => {
+
+        const items =
+            Array.isArray(sale.items)
+                ? sale.items
+                : [];
+
+
+        items.forEach(item => {
+
+            const quantity =
+                numberValue(
+                    item.quantity ??
+                    item.qty ??
+                    0
+                );
+
+
+            const rate =
+                numberValue(
+                    item.rate ??
+                    item.sellingRate ??
+                    item.price ??
+                    0
+                );
+
+
+            const costRate =
+                numberValue(
+                    item.costRate ??
+                    item.purchaseRate ??
+                    item.cost ??
+                    0
+                );
+
+
+            const amount =
+                numberValue(
+                    item.amount ??
+                    item.total ??
+                    (quantity * rate)
+                );
+
+
+            const profit =
+                numberValue(
+                    item.profit ??
+                    (
+                        amount -
+                        (
+                            quantity *
+                            costRate
+                        )
+                    )
+                );
+
+
+            result.push({
+
+                id:
+                    `${sale.id || "sale"}-${result.length + 1}`,
+
+                invoiceNumber:
+                    sale.invoiceNumber ||
+                    sale.number ||
+                    sale.id ||
+                    "",
+
+                createdAt:
+                    sale.invoiceDate ||
+                    sale.date ||
+                    sale.createdAt ||
+                    "",
+
+                materialName:
+                    item.materialName ||
+                    item.productName ||
+                    item.product ||
+                    item.description ||
+                    "",
+
+                quantity:
+
+                    quantity,
+
+                rate:
+
+                    rate,
+
+                costRate:
+
+                    costRate,
+
+                taxableAmount:
+
+                    amount,
+
+                profit:
+
+                    profit
+
+            });
+
+        });
+
+    });
+
+
+    return result;
+}
+
+
+/* ============================================================
+   NORMALIZE PURCHASES
+   ============================================================ */
+
+function normalizePurchases(
+    purchases
+) {
+
+    return (purchases || []).map(
+        purchase => {
+
+            const subtotal =
+                numberValue(
+                    purchase.subtotal ??
+                    purchase.taxableAmount ??
+                    purchase.subTotal ??
+                    purchase.amount
+                );
+
+
+            const tax =
+                numberValue(
+                    purchase.tax ??
+                    purchase.taxAmount ??
+                    purchase.gstAmount ??
+                    0
+                );
+
+
+            const total =
+                numberValue(
+                    purchase.totalAmount ??
+                    purchase.total ??
+                    purchase.grandTotal ??
+                    (subtotal + tax)
+                );
+
+
+            return {
+
+                ...purchase,
+
+                invoiceNumber:
+                    purchase.invoiceNumber ||
+                    purchase.number ||
+                    purchase.invoiceNo ||
+                    purchase.billNumber ||
+                    purchase.id ||
+                    "",
+
+                invoiceDate:
+                    purchase.invoiceDate ||
+                    purchase.date ||
+                    purchase.billDate ||
+                    purchase.createdAt ||
+                    "",
+
+                supplierName:
+                    purchase.supplierName ||
+                    purchase.supplier ||
+                    purchase.supplier_name ||
+                    "",
+
+                taxableAmount:
+                    subtotal,
+
+                gstAmount:
+                    tax,
+
+                totalAmount:
+                    total
+
+            };
+
+        }
+    );
+}
+
+
+/* ============================================================
+   NORMALIZE PURCHASE ITEMS
+   ============================================================ */
+
+function normalizePurchaseItems(
+    purchases,
+    existingItems
+) {
+
+    if (
+        Array.isArray(existingItems) &&
+        existingItems.length > 0
+    ) {
+
+        return existingItems;
+
+    }
+
+
+    const result = [];
+
+
+    (purchases || []).forEach(
+        purchase => {
+
+            const items =
+                Array.isArray(
+                    purchase.items
+                )
+                    ? purchase.items
+                    : [];
+
+
+            items.forEach(item => {
+
+                const quantity =
+                    numberValue(
+                        item.quantity ??
+                        item.qty
+                    );
+
+
+                const rate =
+                    numberValue(
+                        item.rate ??
+                        item.purchaseRate ??
+                        item.price
+                    );
+
+
+                result.push({
+
+                    id:
+                        `${purchase.id || "purchase"}-${result.length + 1}`,
+
+                    invoiceNumber:
+                        purchase.invoiceNumber ||
+                        purchase.number ||
+                        purchase.id ||
+                        "",
+
+                    createdAt:
+                        purchase.invoiceDate ||
+                        purchase.date ||
+                        purchase.createdAt ||
+                        "",
+
+                    materialName:
+                        item.materialName ||
+                        item.productName ||
+                        item.product ||
+                        item.description ||
+                        "",
+
+                    quantity:
+                        quantity,
+
+                    rate:
+                        rate,
+
+                    costRate:
+                        rate,
+
+                    taxableAmount:
+                        numberValue(
+                            item.amount ??
+                            item.total ??
+                            (quantity * rate)
+                        )
+
+                });
+
+            });
+
+        }
+    );
+
+
+    return result;
+}
+/* ============================================================
    LOAD ALL REPORT DATA
+   Existing Firestore compatible version
    ============================================================ */
 
 async function loadReportData() {
@@ -349,80 +865,73 @@ async function loadReportData() {
     try {
 
         const [
-
             sales,
-
             salesItems,
-
             purchases,
-
             purchaseItems,
-
             customers,
-
             suppliers,
-
             payments,
-
             inventory
-
         ] = await Promise.all([
 
-            loadCollection(
-                SALES
-            ),
+            loadCollection(SALES),
 
-            loadCollection(
-                SALES_ITEMS
-            ),
+            /*
+             * Optional collections.
+             * Existing sales documents may already contain
+             * their item information.
+             */
+            loadCollection(SALES_ITEMS),
 
-            loadCollection(
-                PURCHASES
-            ),
+            loadCollection(PURCHASES),
 
-            loadCollection(
-                PURCHASE_ITEMS
-            ),
+            loadCollection(PURCHASE_ITEMS),
 
-            loadCollection(
-                CUSTOMERS
-            ),
+            loadCollection(CUSTOMERS),
 
-            loadCollection(
-                SUPPLIERS
-            ),
+            loadCollection(SUPPLIERS),
 
-            loadCollection(
-                PAYMENTS
-            ),
+            loadCollection(PAYMENTS),
 
-            loadCollection(
-                INVENTORY
-            )
+            loadCollection(INVENTORY)
 
         ]);
 
 
         reportState.sales =
-            sales;
+            normalizeSales(sales);
+
 
         reportState.salesItems =
-            salesItems;
+            normalizeSalesItems(
+                sales,
+                salesItems
+            );
+
 
         reportState.purchases =
-            purchases;
+            normalizePurchases(purchases);
+
 
         reportState.purchaseItems =
-            purchaseItems;
+            normalizePurchaseItems(
+                purchases,
+                purchaseItems
+            );
+
 
         reportState.customers =
             customers;
 
+
         reportState.suppliers =
             suppliers;
 
+
         reportState.payments =
             payments;
+
 
         reportState.inventory =
             inventory;
@@ -431,10 +940,40 @@ async function loadReportData() {
         applyReportFilter();
 
 
+        console.info(
+            "MMV Reports data loaded:",
+            {
+                sales:
+                    reportState.sales.length,
+
+                salesItems:
+                    reportState.salesItems.length,
+
+                purchases:
+                    reportState.purchases.length,
+
+                purchaseItems:
+                    reportState.purchaseItems.length,
+
+                customers:
+                    reportState.customers.length,
+
+                suppliers:
+                    reportState.suppliers.length,
+
+                payments:
+                    reportState.payments.length,
+
+                inventory:
+                    reportState.inventory.length
+            }
+        );
+
+
         return reportState;
 
     }
-    catch(error) {
+    catch (error) {
 
         console.error(
             "Report data loading error:",
@@ -451,7 +990,6 @@ async function loadReportData() {
         return reportState;
 
     }
-
 }
 
 
@@ -571,6 +1109,7 @@ function applyDateInputs() {
 
 /* ============================================================
    SALES REPORT
+   Existing + New Firestore compatible
    ============================================================ */
 
 function calculateSalesReport() {
@@ -585,10 +1124,7 @@ function calculateSalesReport() {
 
     const taxable =
         sales.reduce(
-            (
-                total,
-                sale
-            ) =>
+            (total, sale) =>
                 total +
                 numberValue(
                     sale.taxableAmount
@@ -599,10 +1135,7 @@ function calculateSalesReport() {
 
     const gst =
         sales.reduce(
-            (
-                total,
-                sale
-            ) =>
+            (total, sale) =>
                 total +
                 numberValue(
                     sale.gstAmount
@@ -613,10 +1146,7 @@ function calculateSalesReport() {
 
     const grossSales =
         sales.reduce(
-            (
-                total,
-                sale
-            ) =>
+            (total, sale) =>
                 total +
                 numberValue(
                     sale.totalAmount
@@ -627,10 +1157,7 @@ function calculateSalesReport() {
 
     const received =
         sales.reduce(
-            (
-                total,
-                sale
-            ) =>
+            (total, sale) =>
                 total +
                 numberValue(
                     sale.paymentAmount
@@ -641,10 +1168,7 @@ function calculateSalesReport() {
 
     const outstanding =
         sales.reduce(
-            (
-                total,
-                sale
-            ) =>
+            (total, sale) =>
                 total +
                 numberValue(
                     sale.outstanding
@@ -670,8 +1194,6 @@ function calculateSalesReport() {
     };
 
 }
-
-
 /* ============================================================
    PURCHASE REPORT
    ============================================================ */
@@ -1247,15 +1769,11 @@ function renderSummaryCards() {
 function renderSalesReport() {
 
     const table =
-        el(
-            "salesReportTable"
-        );
+        el("salesReportTable");
 
 
     if (!table) {
-
         return;
-
     }
 
 
@@ -1264,22 +1782,15 @@ function renderSalesReport() {
 
 
     if (
-        sales.length ===
-        0
+        sales.length === 0
     ) {
 
         table.innerHTML = `
-
             <tr>
-
                 <td colspan="100%">
-
                     No sales found for selected period.
-
                 </td>
-
             </tr>
-
         `;
 
         return;
@@ -1296,23 +1807,30 @@ function renderSalesReport() {
 
                         <td>
                             ${escapeHTML(
-                                sale.invoiceNumber
+                                sale.invoiceNumber ||
+                                sale.number ||
+                                "-"
                             )}
                         </td>
+
 
                         <td>
                             ${escapeHTML(
                                 sale.customerName ||
+                                sale.customer ||
                                 "Walk-in Customer"
                             )}
                         </td>
 
+
                         <td>
                             ${formatDate(
                                 sale.invoiceDate ||
+                                sale.date ||
                                 sale.createdAt
                             )}
                         </td>
+
 
                         <td>
                             ₹${formatAmount(
@@ -1320,17 +1838,20 @@ function renderSalesReport() {
                             )}
                         </td>
 
+
                         <td>
                             ₹${formatAmount(
                                 sale.gstAmount
                             )}
                         </td>
 
+
                         <td>
                             ₹${formatAmount(
                                 sale.totalAmount
                             )}
                         </td>
+
 
                         <td>
                             ₹${formatAmount(
@@ -1345,7 +1866,6 @@ function renderSalesReport() {
             .join("");
 
 }
-
 
 /* ============================================================
    PURCHASE TABLE
