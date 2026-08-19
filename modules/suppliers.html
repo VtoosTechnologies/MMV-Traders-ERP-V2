@@ -2336,7 +2336,7 @@ document
     .getElementById("saveSupplier")
     .addEventListener(
         "click",
-        () => {
+        async () => {
 
             const name =
                 document
@@ -2459,21 +2459,77 @@ document
                             .value || 0
                     ),
 
-                outstanding:0
+                outstanding:0,
+
+                status:"ACTIVE"
 
             };
 
 
-            suppliers.push(supplier);
+            try {
+
+                if(
+                    !window.MMVFirebaseSuppliers ||
+                    !window.MMVFirebaseSuppliers.isReady()
+                ){
+
+                    throw new Error(
+                        "Firebase is not ready. Please wait a moment and try again."
+                    );
+
+                }
 
 
-            renderSuppliers();
+                /*
+                 * IMPORTANT:
+                 * Save to Firestore FIRST.
+                 * Do not push into the local array before
+                 * Firebase confirms the save.
+                 */
+                const saved =
+                    await window
+                        .MMVFirebaseSuppliers
+                        .save(supplier);
 
-            updateSummary();
 
-            clearForm();
+                console.log(
+                    "MMV Supplier saved to Firebase:",
+                    saved
+                );
 
-            closeModal();
+
+                /*
+                 * Reload the complete supplier collection
+                 * so the exact Firestore record (including
+                 * document ID) becomes the page state.
+                 */
+                await window
+                    .MMVFirebaseSuppliers
+                    .load();
+
+
+                clearForm();
+
+                closeModal();
+
+
+                alert(
+                    "Supplier saved successfully."
+                );
+
+            } catch(error){
+
+                console.error(
+                    "MMV Supplier save failed:",
+                    error
+                );
+
+                alert(
+                    "Supplier save failed.\n\n" +
+                    error.message
+                );
+
+            }
 
         }
     );
@@ -2876,11 +2932,39 @@ document
     .getElementById("refreshBtn")
     .addEventListener(
         "click",
-        () => {
+        async () => {
 
-            renderSuppliers();
+            try {
 
-            updateSummary();
+                if(
+                    window.MMVFirebaseSuppliers &&
+                    window.MMVFirebaseSuppliers.isReady()
+                ){
+
+                    await window
+                        .MMVFirebaseSuppliers
+                        .load();
+
+                }else{
+
+                    renderSuppliers();
+                    updateSummary();
+
+                }
+
+            }catch(error){
+
+                console.error(
+                    "Supplier refresh failed:",
+                    error
+                );
+
+                alert(
+                    "Supplier refresh failed.\n\n" +
+                    error.message
+                );
+
+            }
 
         }
     );
@@ -2931,6 +3015,29 @@ function escapeHtml(value){
         );
 
 }
+
+
+/* =====================================================
+   FIREBASE STATE BRIDGE
+   Keeps the original page variable and Firebase data
+   in the same state.
+===================================================== */
+
+window.MMVApplySuppliers = function(list){
+
+    suppliers =
+        Array.isArray(list)
+            ? list
+            : [];
+
+    window.suppliers =
+        suppliers;
+
+    renderSuppliers();
+
+    updateSummary();
+
+};
 
 
 /* =====================================================
@@ -3036,12 +3143,22 @@ async function mmvLoadSuppliersFromFirebase() {
          */
         window.suppliers = loaded;
 
-        if (typeof renderSuppliers === "function") {
-            renderSuppliers();
-        }
+        /*
+         * Critical fix:
+         * the original page uses a lexical `suppliers` array.
+         * Updating only window.suppliers does NOT update that
+         * array. Use the bridge to update both.
+         */
+        if (typeof window.MMVApplySuppliers === "function") {
 
-        if (typeof updateSummary === "function") {
-            updateSummary();
+            window.MMVApplySuppliers(loaded);
+
+        } else {
+
+            console.warn(
+                "MMVApplySuppliers bridge not ready."
+            );
+
         }
 
         if (typeof updateSupplierSummary === "function") {
