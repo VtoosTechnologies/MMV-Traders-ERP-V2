@@ -1656,88 +1656,80 @@ function renderDashboard() {
 
 }
 
-/* ============================================================
-   LOAD DASHBOARD DATA
-   ============================================================ */
+/*
+ * ========================================================
+ * LOAD FROM MMV REPORTS SERVICE
+ * ========================================================
+ */
 
-async function loadDashboardData() {
+if (
+    window.MMVReports &&
+    typeof window.MMVReports.loadReportData === "function"
+) {
 
     try {
 
-        let loaded = false;
+        await window.MMVReports.loadReportData();
 
-        /*
-         * ========================================================
-         * LOAD FROM MMV REPORTS SERVICE
-         * ========================================================
-         */
+        const snapshot =
+            window.MMVReports.getReportSnapshot();
 
-        if (
-            window.MMVReports &&
-            typeof window.MMVReports.getReportSnapshot === "function"
-        ) {
+        if (snapshot) {
 
-            try {
-
-                const snapshot =
-                    window.MMVReports.getReportSnapshot();
-
-                if (snapshot) {
-
-                    if (Array.isArray(snapshot.sales)) {
-                        dashboardState.sales =
-                            snapshot.sales;
-                    }
-
-                    if (Array.isArray(snapshot.salesItems)) {
-                        dashboardState.salesItems =
-                            snapshot.salesItems;
-                    }
-
-                    if (Array.isArray(snapshot.purchases)) {
-                        dashboardState.purchases =
-                            snapshot.purchases;
-                    }
-
-                    if (Array.isArray(snapshot.purchaseItems)) {
-                        dashboardState.purchaseItems =
-                            snapshot.purchaseItems;
-                    }
-
-                    if (Array.isArray(snapshot.customers)) {
-                        dashboardState.customers =
-                            snapshot.customers;
-                    }
-
-                    if (Array.isArray(snapshot.suppliers)) {
-                        dashboardState.suppliers =
-                            snapshot.suppliers;
-                    }
-
-                    if (Array.isArray(snapshot.payments)) {
-                        dashboardState.payments =
-                            snapshot.payments;
-                    }
-
-                    if (Array.isArray(snapshot.inventory)) {
-                        dashboardState.inventory =
-                            snapshot.inventory;
-                    }
-
-                    loaded = true;
-                }
-
-            }
-            catch (reportError) {
-
-                console.warn(
-                    "MMV Reports snapshot load warning:",
-                    reportError
-                );
-
+            if (Array.isArray(snapshot.sales)) {
+                dashboardState.sales =
+                    snapshot.sales;
             }
 
+            if (Array.isArray(snapshot.salesItems)) {
+                dashboardState.salesItems =
+                    snapshot.salesItems;
+            }
+
+            if (Array.isArray(snapshot.purchases)) {
+                dashboardState.purchases =
+                    snapshot.purchases;
+            }
+
+            if (Array.isArray(snapshot.purchaseItems)) {
+                dashboardState.purchaseItems =
+                    snapshot.purchaseItems;
+            }
+
+            if (Array.isArray(snapshot.customers)) {
+                dashboardState.customers =
+                    snapshot.customers;
+            }
+
+            if (Array.isArray(snapshot.suppliers)) {
+                dashboardState.suppliers =
+                    snapshot.suppliers;
+            }
+
+            if (Array.isArray(snapshot.payments)) {
+                dashboardState.payments =
+                    snapshot.payments;
+            }
+
+            if (Array.isArray(snapshot.inventory)) {
+                dashboardState.inventory =
+                    snapshot.inventory;
+            }
+
+            loaded = true;
         }
+
+    }
+    catch (reportError) {
+
+        console.warn(
+            "MMV Reports snapshot load warning:",
+            reportError
+        );
+
+    }
+
+}
 
 
         /*
