@@ -2166,18 +2166,405 @@ document
     todayString;
 
 
+
+/* =====================================================
+   FIREBASE V2 - SALES PERSISTENCE
+   Existing Sales UI/logic preserved
+===================================================== */
+
+let salesFirebaseApp = null;
+let salesFirebaseAuth = null;
+let salesFirebaseDb = null;
+let salesFirebaseUser = null;
+let salesFirebaseReady = false;
+
+const SALES_FIREBASE_CONFIG = {
+    apiKey: "AIzaSyDYU43yaApPBU-GFxfMtnfST-ZJRu8Vg_E",
+    authDomain: "mmv-traders-erp-v2.firebaseapp.com",
+    projectId: "mmv-traders-erp-v2",
+    storageBucket: "mmv-traders-erp-v2.firebasestorage.app",
+    messagingSenderId: "345950984944",
+    appId: "1:345950984944:web:2a456b89f42f31ea2bc035"
+};
+
+async function initSalesFirebase(){
+
+    const firebaseApp =
+        await import(
+            "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js"
+        );
+
+    const firebaseAuth =
+        await import(
+            "https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js"
+        );
+
+    salesFirebaseApp =
+        firebaseApp.initializeApp(
+            SALES_FIREBASE_CONFIG
+        );
+
+    salesFirebaseAuth =
+        firebaseAuth.getAuth(
+            salesFirebaseApp
+        );
+
+    const firebaseStore =
+        await import(
+            "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js"
+        );
+
+    salesFirebaseDb =
+        firebaseStore.getFirestore(
+            salesFirebaseApp
+        );
+
+    firebaseAuth.onAuthStateChanged(
+        salesFirebaseAuth,
+        async user => {
+
+            salesFirebaseUser = user || null;
+
+            if(!user){
+                console.warn(
+                    "Sales Firebase: user not authenticated."
+                );
+                return;
+            }
+
+            salesFirebaseReady = true;
+
+            console.log(
+                "Sales Firebase authenticated:",
+                user.uid
+            );
+
+            await loadSalesMasterData();
+            await loadSalesInvoices();
+
+            if(typeof renderRecentInvoices === "function"){
+                renderRecentInvoices();
+            }
+        }
+    );
+}
+
+async function loadSalesMasterData(){
+
+    if(!salesFirebaseReady) return;
+
+    const {
+        collection,
+        getDocs
+    } = await import(
+        "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js"
+    );
+
+    try{
+
+        const productSnapshot =
+            await getDocs(
+                collection(
+                    salesFirebaseDb,
+                    "products"
+                )
+            );
+
+        products =
+            productSnapshot.docs.map(
+                item => ({
+                    id:item.id,
+                    ...item.data()
+                })
+            );
+
+        const customerSnapshot =
+            await getDocs(
+                collection(
+                    salesFirebaseDb,
+                    "customers"
+                )
+            );
+
+        customers =
+            customerSnapshot.docs.map(
+                item => ({
+                    id:item.id,
+                    ...item.data()
+                })
+            );
+
+        const customerSelect =
+            document.getElementById(
+                "customerSelect"
+            );
+
+        if(customerSelect){
+
+            customerSelect.innerHTML = `
+                <option value="">
+                    Select Customer
+                </option>
+                <option value="walkin">
+                    Walk-in Customer
+                </option>
+            `;
+
+            customers.forEach(
+                customer => {
+
+                    const option =
+                        document.createElement(
+                            "option"
+                        );
+
+                    option.value =
+                        customer.code ||
+                        customer.id;
+
+                    option.textContent =
+                        customer.name ||
+                        customer.code ||
+                        "Customer";
+
+                    customerSelect.appendChild(
+                        option
+                    );
+                }
+            );
+        }
+
+        console.log(
+            "Sales master data loaded:",
+            products.length,
+            "products /",
+            customers.length,
+            "customers"
+        );
+
+    }catch(error){
+
+        console.error(
+            "Sales master data load failed:",
+            error
+        );
+    }
+}
+
+async function loadSalesInvoices(){
+
+    if(!salesFirebaseReady) return;
+
+    const {
+        collection,
+        getDocs
+    } = await import(
+        "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js"
+    );
+
+    try{
+
+        const snapshot =
+            await getDocs(
+                collection(
+                    salesFirebaseDb,
+                    "sales"
+                )
+            );
+
+        invoices =
+            snapshot.docs.map(
+                item => ({
+                    id:item.id,
+                    ...item.data()
+                })
+            );
+
+        invoices.sort(
+            (a,b) =>
+                (b.createdAt?.seconds || 0) -
+                (a.createdAt?.seconds || 0)
+        );
+
+        console.log(
+            "Sales invoices loaded:",
+            invoices.length
+        );
+
+    }catch(error){
+
+        console.error(
+            "Sales invoice load failed:",
+            error
+        );
+    }
+}
+
+async function saveSalesInvoiceToFirebase(invoice){
+
+    if(!salesFirebaseUser){
+        throw new Error(
+            "Firebase login is not active. Please login again."
+        );
+    }
+
+    const {
+        collection,
+        addDoc,
+        updateDoc,
+        doc,
+        serverTimestamp
+    } = await import(
+        "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js"
+    );
+
+    const payload = {
+        number: invoice.number,
+        date: invoice.date,
+
+        dueDate:
+            document.getElementById(
+                "dueDate"
+            )?.value || "",
+
+        referenceNo:
+            document.getElementById(
+                "referenceNo"
+            )?.value || "",
+
+        salesType:
+            document.getElementById(
+                "salesType"
+            )?.value || "retail",
+
+        taxType:
+            document.getElementById(
+                "taxType"
+            )?.value || "exclusive",
+
+        customer: invoice.customer,
+        items: invoice.items,
+        subtotal: Number(invoice.subtotal || 0),
+        discount: Number(invoice.discount || 0),
+        tax: Number(invoice.tax || 0),
+        total: Number(invoice.total || 0),
+        payment: invoice.payment,
+
+        notes:
+            document.getElementById(
+                "invoiceNotes"
+            )?.value || "",
+
+        status:
+            invoice.payment === "credit"
+                ? "Credit"
+                : "Paid",
+
+        createdAt:
+            serverTimestamp(),
+
+        updatedAt:
+            serverTimestamp()
+    };
+
+    const result =
+        await addDoc(
+            collection(
+                salesFirebaseDb,
+                "sales"
+            ),
+            payload
+        );
+
+    /* Reduce inventory stock after invoice is saved. */
+    for(
+        const row
+        of document.querySelectorAll(
+            ".sales-item"
+        )
+    ){
+
+        const code =
+            row.querySelector(
+                ".item-product"
+            )?.value;
+
+        const qty =
+            Number(
+                row.querySelector(
+                    ".item-qty"
+                )?.value || 0
+            );
+
+        if(
+            !code ||
+            code === "manual" ||
+            qty <= 0
+        ){
+            continue;
+        }
+
+        const product =
+            products.find(
+                item =>
+                    item.code === code
+            );
+
+        if(
+            !product ||
+            !product.id
+        ){
+            continue;
+        }
+
+        const newStock =
+            Math.max(
+                0,
+                Number(product.stock || 0) -
+                qty
+            );
+
+        await updateDoc(
+            doc(
+                salesFirebaseDb,
+                "products",
+                product.id
+            ),
+            {
+                stock:newStock,
+                updatedAt:
+                    serverTimestamp()
+            }
+        );
+
+        product.stock =
+            newStock;
+    }
+
+    return result.id;
+}
+
+initSalesFirebase().catch(
+    error => {
+        console.error(
+            "Sales Firebase initialization failed:",
+            error
+        );
+    }
+);
+
 /* =====================================================
    DATA
    Firebase V2 will replace these arrays.
 ===================================================== */
 
-const products = [];
+let products = [];
 
 
-const customers = [];
+let customers = [];
 
 
-const invoices = [];
+let invoices = [];
 
 
 let selectedPayment =
@@ -2915,7 +3302,7 @@ document
     );
 
 
-function saveInvoice(){
+async function saveInvoice(){
 
     const customer =
         document
@@ -3005,6 +3392,41 @@ function saveInvoice(){
             selectedPayment
 
     };
+
+
+    if(!salesFirebaseReady || !salesFirebaseUser){
+
+        alert(
+            "Firebase login is not active. Please login again."
+        );
+
+        return;
+    }
+
+    try{
+
+        const firebaseInvoiceId =
+            await saveSalesInvoiceToFirebase(
+                invoice
+            );
+
+        invoice.id =
+            firebaseInvoiceId;
+
+    }catch(error){
+
+        console.error(
+            "Sales invoice Firebase save failed:",
+            error
+        );
+
+        alert(
+            "Invoice was NOT saved to Firebase.\n\n" +
+            error.message
+        );
+
+        return;
+    }
 
 
     invoices.unshift(
@@ -3709,6 +4131,26 @@ calculate();
 
 </script>
 
+
+
+<script>
+window.addEventListener("focus", async function(){
+
+    if(
+        typeof loadSalesInvoices === "function" &&
+        salesFirebaseReady
+    ){
+
+        await loadSalesInvoices();
+
+        if(
+            typeof renderRecentInvoices === "function"
+        ){
+            renderRecentInvoices();
+        }
+    }
+});
+</script>
 
 </body>
 
