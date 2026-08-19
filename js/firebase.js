@@ -1,61 +1,64 @@
 /* ============================================================
    MMV TRADERS ERP V2
-   FIREBASE CORE
-   Production Firebase Configuration
+   FIREBASE CORE CONFIGURATION
    ============================================================ */
 
 "use strict";
 
-import {
-    initializeApp,
-    getApps,
-    getApp
-} from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
+
+/* ============================================================
+   FIREBASE APP
+   ============================================================ */
 
 import {
-    getAuth
-} from "https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js";
-
-import {
-    getFirestore
-} from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
+    initializeApp
+} from
+    "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
 
 
 /* ============================================================
-   FIREBASE PROJECT CONFIG
-   ============================================================
+   FIREBASE AUTHENTICATION
+   ============================================================ */
 
-   IMPORTANT:
-   Keezh irukkura values-la
-   NAMMA ALREADY EXISTING FIREBASE PROJECT
-   config values-ai exactly paste pannunga.
+import {
+    getAuth
+} from
+    "https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js";
 
-   Firebase Console:
-   Project Settings
-   → General
-   → Your apps
-   → Web app
-   → SDK setup and configuration
+
+/* ============================================================
+   FIRESTORE
+   ============================================================ */
+
+import {
+    getFirestore
+} from
+    "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
+
+
+/* ============================================================
+   FIREBASE CONFIGURATION
    ============================================================ */
 
 const firebaseConfig = {
 
-    apiKey: "PASTE_EXISTING_API_KEY",
+    apiKey:
+        "AIzaSyDYU43yaApPBU-GFxfMtnfST-ZJRu8Vg_E",
 
     authDomain:
-        "PASTE_EXISTING_AUTH_DOMAIN",
+        "mmv-traders-erp-v2.firebaseapp.com",
 
     projectId:
-        "PASTE_EXISTING_PROJECT_ID",
+        "mmv-traders-erp-v2",
 
     storageBucket:
-        "PASTE_EXISTING_STORAGE_BUCKET",
+        "mmv-traders-erp-v2.firebasestorage.app",
 
     messagingSenderId:
-        "PASTE_EXISTING_MESSAGING_SENDER_ID",
+        "345950984944",
 
     appId:
-        "PASTE_EXISTING_APP_ID"
+        "1:345950984944:web:2a456b89f42f31ea2bc035"
 
 };
 
@@ -65,42 +68,67 @@ const firebaseConfig = {
    ============================================================ */
 
 const app =
-    getApps().length > 0
-        ? getApp()
-        : initializeApp(
-            firebaseConfig
-        );
+    initializeApp(
+        firebaseConfig
+    );
 
 
 /* ============================================================
-   FIREBASE SERVICES
+   INITIALIZE AUTH
    ============================================================ */
 
 const auth =
-    getAuth(app);
-
-const db =
-    getFirestore(app);
+    getAuth(
+        app
+    );
 
 
 /* ============================================================
-   EXPORT
+   INITIALIZE FIRESTORE
    ============================================================ */
 
-export {
+const db =
+    getFirestore(
+        app
+    );
+
+
+/* ============================================================
+   GLOBAL DEBUG REFERENCE
+   ------------------------------------------------------------
+   Useful during development.
+   ============================================================ */
+
+window.MMVFirebase = {
+
     app,
+
     auth,
-    db,
-    firebaseConfig
+
+    db
+
 };
 
 
 /* ============================================================
-   GLOBAL DEBUG
+   EXPORTS
    ============================================================ */
 
+export {
+
+    app,
+
+    auth,
+
+    db,
+
+    firebaseConfig
+
+};
+
+
 console.info(
-    "%cMMV Traders ERP V2%c Firebase initialized",
-    "font-weight:700;color:#0a3d91;",
+    "%cMMV Traders ERP V2%c Firebase initialized successfully.",
+    "font-weight:800;color:#0b3b82;",
     "color:inherit;"
 );
