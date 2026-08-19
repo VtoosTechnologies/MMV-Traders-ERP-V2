@@ -1722,1117 +1722,784 @@ label{
 </div>
 
 
-<script>
+<script type="module">
+/* =====================================================
+   MMV TRADERS ERP V2
+   CUSTOMER MODULE - FIREBASE V2
+   ===================================================== */
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
+import {
+    getAuth,
+    onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js";
+
+import {
+    getFirestore,
+    collection,
+    getDocs,
+    addDoc,
+    updateDoc,
+    doc,
+    serverTimestamp
+} from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
+
+/* =====================================================
+   FIREBASE CONFIG
+   ===================================================== */
+
+const firebaseConfig = {
+    apiKey: "AIzaSyDYU43yaApPBU-GFxfMtnfST-ZJRu8Vg_E",
+    authDomain: "mmv-traders-erp-v2.firebaseapp.com",
+    projectId: "mmv-traders-erp-v2",
+    storageBucket: "mmv-traders-erp-v2.firebasestorage.app",
+    messagingSenderId: "345950984944",
+    appId: "1:345950984944:web:2a456b89f42f31ea2bc035"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+console.log("MMV Customers V2 Firebase initialized successfully.");
 
 /* =====================================================
    MOBILE MENU
-===================================================== */
+   ===================================================== */
 
-const menuBtn =
-    document.getElementById("menuBtn");
+const menuBtn = document.getElementById("menuBtn");
+const sidebar = document.getElementById("sidebar");
+const overlay = document.getElementById("overlay");
 
-const sidebar =
-    document.getElementById("sidebar");
-
-const overlay =
-    document.getElementById("overlay");
-
-
-menuBtn.addEventListener(
-    "click",
-    () => {
-
+if (menuBtn) {
+    menuBtn.addEventListener("click", () => {
         sidebar.classList.add("open");
-
         overlay.classList.add("show");
+    });
+}
 
-    }
-);
-
-
-overlay.addEventListener(
-    "click",
-    () => {
-
+if (overlay) {
+    overlay.addEventListener("click", () => {
         sidebar.classList.remove("open");
-
         overlay.classList.remove("show");
-
-    }
-);
-
+    });
+}
 
 /* =====================================================
    MODAL
-===================================================== */
+   ===================================================== */
 
-const modal =
-    document.getElementById(
-        "customerModal"
-    );
-
-
-function openModal(){
-
-    modal.classList.add("show");
-
-    document
-        .getElementById("customerName")
-        .focus();
-
-}
-
-
-function closeModal(){
-
-    modal.classList.remove("show");
-
-}
-
-
-document
-    .getElementById("addCustomerBtn")
-    .addEventListener(
-        "click",
-        openModal
-    );
-
-
-document
-    .getElementById("closeModal")
-    .addEventListener(
-        "click",
-        closeModal
-    );
-
-
-document
-    .getElementById("cancelModal")
-    .addEventListener(
-        "click",
-        closeModal
-    );
-
-
-modal.addEventListener(
-    "click",
-    event => {
-
-        if(
-            event.target === modal
-        ){
-
-            closeModal();
-
-        }
-
-    }
-);
-
-
-/* =====================================================
-   CUSTOMER DATA
-   Firebase V2 will replace this.
-===================================================== */
+const modal = document.getElementById("customerModal");
+const saveButton = document.getElementById("saveCustomer");
 
 let customers = [];
+let editingCustomerId = null;
+let firebaseReady = false;
 
+/* =====================================================
+   HELPERS
+   ===================================================== */
+
+function getValue(id) {
+    return document.getElementById(id)?.value?.trim() || "";
+}
+
+function getNumber(id) {
+    const value = Number(document.getElementById(id)?.value || 0);
+    return Number.isFinite(value) ? value : 0;
+}
+
+function showMessage(message) {
+    alert(message);
+}
+
+function setSaveButtonState(loading) {
+    if (!saveButton) return;
+
+    saveButton.disabled = loading;
+    saveButton.textContent = loading
+        ? "Saving..."
+        : (editingCustomerId ? "Update Customer" : "Save Customer");
+}
+
+function openModal(editing = false) {
+    modal.classList.add("show");
+
+    const title = modal.querySelector(".modal-header h2");
+    const subtitle = modal.querySelector(".modal-header p");
+
+    if (editing) {
+        title.textContent = "Edit Customer";
+        subtitle.textContent = "Update customer master record.";
+    } else {
+        title.textContent = "Add Customer";
+        subtitle.textContent = "Create a customer master record.";
+    }
+
+    document.getElementById("customerName").focus();
+}
+
+function closeModal() {
+    modal.classList.remove("show");
+}
+
+function clearForm() {
+    document.querySelectorAll("#customerModal input").forEach(element => {
+        element.value = "";
+    });
+
+    document.getElementById("customerType").value = "Retail";
+
+    editingCustomerId = null;
+
+    const title = modal.querySelector(".modal-header h2");
+    const subtitle = modal.querySelector(".modal-header p");
+
+    title.textContent = "Add Customer";
+    subtitle.textContent = "Create a customer master record.";
+
+    setSaveButtonState(false);
+}
+
+document.getElementById("addCustomerBtn").addEventListener("click", () => {
+    clearForm();
+    openModal(false);
+});
+
+document.getElementById("closeModal").addEventListener("click", () => {
+    closeModal();
+});
+
+document.getElementById("cancelModal").addEventListener("click", () => {
+    closeModal();
+    clearForm();
+});
+
+modal.addEventListener("click", event => {
+    if (event.target === modal) {
+        closeModal();
+        clearForm();
+    }
+});
+
+/* =====================================================
+   CUSTOMER CODE
+   ===================================================== */
+
+function generateCustomerCode() {
+    let maxNumber = 0;
+
+    customers.forEach(customer => {
+        const match = String(customer.code || "").match(/MMV-CUS-(\d+)/i);
+
+        if (match) {
+            const number = Number(match[1]);
+
+            if (Number.isFinite(number) && number > maxNumber) {
+                maxNumber = number;
+            }
+        }
+    });
+
+    return "MMV-CUS-" + String(maxNumber + 1).padStart(5, "0");
+}
 
 /* =====================================================
    STATUS
-===================================================== */
+   ===================================================== */
 
-function getStatus(customer){
+function getStatus(customer) {
+    const due = Number(customer.outstanding || 0);
 
-    const due =
-        Number(
-            customer.outstanding || 0
-        );
-
-
-    if(due > 0){
-
+    if (due > 0) {
         return {
-            key:"due",
-            label:"Outstanding"
+            key: "due",
+            label: "Outstanding"
         };
-
     }
 
-
     return {
-        key:"clear",
-        label:"Clear"
+        key: "clear",
+        label: "Clear"
     };
-
 }
 
+/* =====================================================
+   FIRESTORE LOAD
+   ===================================================== */
+
+async function loadCustomers() {
+    if (!firebaseReady) return;
+
+    try {
+        const snapshot = await getDocs(collection(db, "customers"));
+
+        customers = snapshot.docs.map(item => ({
+            id: item.id,
+            ...item.data()
+        }));
+
+        customers.sort((a, b) => {
+            const aTime = a.createdAt?.seconds || 0;
+            const bTime = b.createdAt?.seconds || 0;
+            return bTime - aTime;
+        });
+
+        renderCustomers();
+        updateSummary();
+
+        console.log(
+            `MMV Customers V2: ${customers.length} customer(s) loaded from Firestore.`
+        );
+
+    } catch (error) {
+        console.error("Customer load error:", error);
+
+        showMessage(
+            "Unable to load customers from Firebase.\n\n" +
+            error.message
+        );
+    }
+}
+
+/* =====================================================
+   SAVE / UPDATE CUSTOMER
+   ===================================================== */
+
+async function saveCustomerToFirebase() {
+
+    if (!auth.currentUser) {
+        showMessage("Please login again. Firebase authentication is not available.");
+        return;
+    }
+
+    const name = getValue("customerName");
+    const mobile = getValue("customerMobile");
+
+    if (!name) {
+        showMessage("Customer name is required.");
+        return;
+    }
+
+    if (!mobile) {
+        showMessage("Mobile number is required.");
+        return;
+    }
+
+    let code = getValue("customerCode");
+
+    if (!code) {
+        code = generateCustomerCode();
+    }
+
+    const type = document.getElementById("customerType").value;
+
+    const city = getValue("customerCity");
+    const address = getValue("customerAddress");
+    const creditLimit = getNumber("creditLimit");
+
+    /* Prevent duplicate customer code */
+    const duplicate = customers.find(customer =>
+        String(customer.code || "").toLowerCase() === code.toLowerCase() &&
+        customer.id !== editingCustomerId
+    );
+
+    if (duplicate) {
+        showMessage("Customer code already exists.\nPlease use another code.");
+        return;
+    }
+
+    const customerData = {
+        code,
+        name,
+        mobile,
+        type,
+        city,
+        address,
+        creditLimit,
+        outstanding: editingCustomerId
+            ? Number(
+                customers.find(c => c.id === editingCustomerId)?.outstanding || 0
+              )
+            : 0,
+        status: "ACTIVE",
+        updatedAt: serverTimestamp()
+    };
+
+    setSaveButtonState(true);
+
+    try {
+
+        if (editingCustomerId) {
+
+            await updateDoc(
+                doc(db, "customers", editingCustomerId),
+                customerData
+            );
+
+            console.log(
+                "Customer updated successfully:",
+                editingCustomerId
+            );
+
+            showMessage("Customer updated successfully.");
+
+        } else {
+
+            customerData.createdAt = serverTimestamp();
+
+            const created = await addDoc(
+                collection(db, "customers"),
+                customerData
+            );
+
+            console.log(
+                "Customer saved successfully:",
+                created.id
+            );
+
+            showMessage("Customer saved successfully.");
+
+        }
+
+        await loadCustomers();
+
+        clearForm();
+        closeModal();
+
+    } catch (error) {
+
+        console.error("Customer save error:", error);
+
+        showMessage(
+            "Customer was NOT saved.\n\n" +
+            error.message
+        );
+
+    } finally {
+
+        setSaveButtonState(false);
+    }
+}
+
+saveButton.addEventListener("click", saveCustomerToFirebase);
 
 /* =====================================================
    RENDER
-===================================================== */
+   ===================================================== */
 
-function renderCustomers(
-    list = customers
-){
+function renderCustomers(list = customers) {
 
-    const table =
-        document.getElementById(
-            "customerTable"
-        );
-
-
-    const mobile =
-        document.getElementById(
-            "mobileCustomers"
-        );
-
-
-    const result =
-        document.getElementById(
-            "resultText"
-        );
-
+    const table = document.getElementById("customerTable");
+    const mobile = document.getElementById("mobileCustomers");
+    const result = document.getElementById("resultText");
 
     table.innerHTML = "";
-
     mobile.innerHTML = "";
 
-
-    if(!list.length){
+    if (!list.length) {
 
         table.innerHTML = `
-
             <tr>
-
                 <td colspan="7">
-
                     <div class="empty-state">
-
-                        <div class="empty-icon">
-                            ♙
-                        </div>
-
-                        <strong>
-                            No customers yet
-                        </strong>
-
-                        <span>
-                            Add your first customer
-                            to start managing accounts.
-                        </span>
-
+                        <div class="empty-icon">♙</div>
+                        <strong>No customers yet</strong>
+                        <span>Add your first customer to start managing accounts.</span>
                     </div>
-
                 </td>
-
             </tr>
-
         `;
 
-
         mobile.innerHTML = `
-
             <div class="empty-state">
+                <div class="empty-icon">♙</div>
+                <strong>No customers yet</strong>
+                <span>Add your first customer.</span>
+            </div>
+        `;
 
-                <div class="empty-icon">
-                    ♙
+        result.textContent = "No customers available";
+        return;
+    }
+
+    result.textContent = `${list.length} customer(s)`;
+
+    list.forEach(customer => {
+
+        const status = getStatus(customer);
+
+        const initial = String(customer.name || "?")
+            .charAt(0)
+            .toUpperCase();
+
+        const row = document.createElement("tr");
+
+        row.innerHTML = `
+            <td>
+                <div class="party">
+                    <div class="party-avatar">${initial}</div>
+                    <div class="party-name">
+                        <strong>${escapeHtml(customer.name || "")}</strong>
+                        <span>${escapeHtml(customer.code || "")}</span>
+                    </div>
+                </div>
+            </td>
+
+            <td>${escapeHtml(customer.type || "")}</td>
+
+            <td>${escapeHtml(customer.mobile || "")}</td>
+
+            <td>${escapeHtml(customer.city || "-")}</td>
+
+            <td>
+                <strong class="balance ${
+                    status.key === "due" ? "due" : "clear"
+                }">
+                    ₹${Number(customer.outstanding || 0).toFixed(2)}
+                </strong>
+            </td>
+
+            <td>
+                <span class="status ${status.key}">
+                    ${status.label}
+                </span>
+            </td>
+
+            <td>
+                <div class="row-actions">
+
+                    <button
+                        class="icon-btn"
+                        onclick="viewCustomer('${customer.id}')"
+                        title="View">
+                        ◉
+                    </button>
+
+                    <button
+                        class="icon-btn"
+                        onclick="collectPayment('${customer.id}')"
+                        title="Receive Payment">
+                        ₹
+                    </button>
+
+                    <button
+                        class="icon-btn"
+                        onclick="editCustomer('${customer.id}')"
+                        title="Edit">
+                        ✎
+                    </button>
+
+                </div>
+            </td>
+        `;
+
+        table.appendChild(row);
+
+        const card = document.createElement("div");
+
+        card.className = "customer-card";
+
+        card.innerHTML = `
+            <div class="customer-card-top">
+
+                <div class="customer-main">
+                    <div class="party-avatar">${initial}</div>
+
+                    <div>
+                        <strong>${escapeHtml(customer.name || "")}</strong>
+                        <span>${escapeHtml(customer.code || "")}</span>
+                    </div>
                 </div>
 
-                <strong>
-                    No customers yet
-                </strong>
-
-                <span>
-                    Add your first customer.
+                <span class="status ${status.key}">
+                    ${status.label}
                 </span>
 
             </div>
 
+            <div class="customer-details">
+
+                <div class="detail-box">
+                    <span>Mobile</span>
+                    <strong>${escapeHtml(customer.mobile || "")}</strong>
+                </div>
+
+                <div class="detail-box">
+                    <span>Type</span>
+                    <strong>${escapeHtml(customer.type || "")}</strong>
+                </div>
+
+                <div class="detail-box">
+                    <span>City</span>
+                    <strong>${escapeHtml(customer.city || "-")}</strong>
+                </div>
+
+                <div class="detail-box">
+                    <span>Outstanding</span>
+                    <strong class="balance ${
+                        status.key === "due" ? "due" : "clear"
+                    }">
+                        ₹${Number(customer.outstanding || 0).toFixed(2)}
+                    </strong>
+                </div>
+
+            </div>
+
+            <div class="mobile-actions">
+
+                <button
+                    class="btn"
+                    onclick="viewCustomer('${customer.id}')">
+                    View
+                </button>
+
+                <button
+                    class="btn"
+                    onclick="collectPayment('${customer.id}')">
+                    ₹ Receive
+                </button>
+
+                <button
+                    class="btn"
+                    onclick="editCustomer('${customer.id}')">
+                    Edit
+                </button>
+
+            </div>
         `;
 
-
-        result.textContent =
-            "No customers available";
-
-        return;
-
-    }
-
-
-    result.textContent =
-        `${list.length} customer(s)`;
-
-
-    list.forEach(
-        customer => {
-
-            const status =
-                getStatus(customer);
-
-
-            const initial =
-                customer.name
-                    .charAt(0)
-                    .toUpperCase();
-
-
-            /* DESKTOP */
-
-            const row =
-                document.createElement("tr");
-
-
-            row.innerHTML = `
-
-                <td>
-
-                    <div class="party">
-
-                        <div class="party-avatar">
-                            ${initial}
-                        </div>
-
-                        <div class="party-name">
-
-                            <strong>
-                                ${escapeHtml(
-                                    customer.name
-                                )}
-                            </strong>
-
-                            <span>
-                                ${escapeHtml(
-                                    customer.code
-                                )}
-                            </span>
-
-                        </div>
-
-                    </div>
-
-                </td>
-
-
-                <td>
-                    ${escapeHtml(
-                        customer.type
-                    )}
-                </td>
-
-
-                <td>
-                    ${escapeHtml(
-                        customer.mobile
-                    )}
-                </td>
-
-
-                <td>
-                    ${escapeHtml(
-                        customer.city || "-"
-                    )}
-                </td>
-
-
-                <td>
-
-                    <strong
-                        class="balance ${
-                            status.key === "due"
-                            ? "due"
-                            : "clear"
-                        }"
-                    >
-                        ₹${Number(
-                            customer.outstanding || 0
-                        ).toFixed(2)}
-                    </strong>
-
-                </td>
-
-
-                <td>
-
-                    <span
-                        class="status ${status.key}"
-                    >
-                        ${status.label}
-                    </span>
-
-                </td>
-
-
-                <td>
-
-                    <div class="row-actions">
-
-                        <button
-                            class="icon-btn"
-                            onclick="viewCustomer(
-                                '${customer.code}'
-                            )"
-                            title="View"
-                        >
-                            ◉
-                        </button>
-
-
-                        <button
-                            class="icon-btn"
-                            onclick="collectPayment(
-                                '${customer.code}'
-                            )"
-                            title="Receive Payment"
-                        >
-                            ₹
-                        </button>
-
-
-                        <button
-                            class="icon-btn"
-                            onclick="editCustomer(
-                                '${customer.code}'
-                            )"
-                            title="Edit"
-                        >
-                            ✎
-                        </button>
-
-                    </div>
-
-                </td>
-
-            `;
-
-
-            table.appendChild(row);
-
-
-            /* MOBILE */
-
-            const card =
-                document.createElement("div");
-
-
-            card.className =
-                "customer-card";
-
-
-            card.innerHTML = `
-
-                <div class="customer-card-top">
-
-                    <div class="customer-main">
-
-                        <div class="party-avatar">
-                            ${initial}
-                        </div>
-
-                        <div>
-
-                            <strong>
-                                ${escapeHtml(
-                                    customer.name
-                                )}
-                            </strong>
-
-                            <span>
-                                ${escapeHtml(
-                                    customer.code
-                                )}
-                            </span>
-
-                        </div>
-
-                    </div>
-
-
-                    <span
-                        class="status ${status.key}"
-                    >
-                        ${status.label}
-                    </span>
-
-                </div>
-
-
-                <div class="customer-details">
-
-
-                    <div class="detail-box">
-
-                        <span>
-                            Mobile
-                        </span>
-
-                        <strong>
-                            ${escapeHtml(
-                                customer.mobile
-                            )}
-                        </strong>
-
-                    </div>
-
-
-                    <div class="detail-box">
-
-                        <span>
-                            Type
-                        </span>
-
-                        <strong>
-                            ${escapeHtml(
-                                customer.type
-                            )}
-                        </strong>
-
-                    </div>
-
-
-                    <div class="detail-box">
-
-                        <span>
-                            City
-                        </span>
-
-                        <strong>
-                            ${escapeHtml(
-                                customer.city || "-"
-                            )}
-                        </strong>
-
-                    </div>
-
-
-                    <div class="detail-box">
-
-                        <span>
-                            Outstanding
-                        </span>
-
-                        <strong
-                            class="balance ${
-                                status.key === "due"
-                                ? "due"
-                                : "clear"
-                            }"
-                        >
-                            ₹${Number(
-                                customer.outstanding || 0
-                            ).toFixed(2)}
-                        </strong>
-
-                    </div>
-
-
-                </div>
-
-
-                <div class="mobile-actions">
-
-                    <button
-                        class="btn"
-                        onclick="viewCustomer(
-                            '${customer.code}'
-                        )"
-                    >
-                        View
-                    </button>
-
-
-                    <button
-                        class="btn"
-                        onclick="collectPayment(
-                            '${customer.code}'
-                        )"
-                    >
-                        ₹ Receive
-                    </button>
-
-
-                    <button
-                        class="btn"
-                        onclick="editCustomer(
-                            '${customer.code}'
-                        )"
-                    >
-                        Edit
-                    </button>
-
-                </div>
-
-            `;
-
-
-            mobile.appendChild(card);
-
-        }
-    );
-
+        mobile.appendChild(card);
+    });
 }
-
-
-/* =====================================================
-   SAVE CUSTOMER
-===================================================== */
-
-document
-    .getElementById("saveCustomer")
-    .addEventListener(
-        "click",
-        () => {
-
-            const name =
-                document
-                    .getElementById(
-                        "customerName"
-                    )
-                    .value
-                    .trim();
-
-
-            const mobile =
-                document
-                    .getElementById(
-                        "customerMobile"
-                    )
-                    .value
-                    .trim();
-
-
-            if(!name){
-
-                alert(
-                    "Customer name is required."
-                );
-
-                return;
-
-            }
-
-
-            if(!mobile){
-
-                alert(
-                    "Mobile number is required."
-                );
-
-                return;
-
-            }
-
-
-            let code =
-                document
-                    .getElementById(
-                        "customerCode"
-                    )
-                    .value
-                    .trim();
-
-
-            if(!code){
-
-                code =
-                    "MMV-CUS-" +
-                    String(
-                        customers.length + 1
-                    ).padStart(
-                        5,
-                        "0"
-                    );
-
-            }
-
-
-            const customer = {
-
-                code,
-
-                name,
-
-                mobile,
-
-                type:
-                    document
-                        .getElementById(
-                            "customerType"
-                        )
-                        .value,
-
-                city:
-                    document
-                        .getElementById(
-                            "customerCity"
-                        )
-                        .value
-                        .trim(),
-
-                address:
-                    document
-                        .getElementById(
-                            "customerAddress"
-                        )
-                        .value
-                        .trim(),
-
-                creditLimit:
-                    Number(
-                        document
-                            .getElementById(
-                                "creditLimit"
-                            )
-                            .value || 0
-                    ),
-
-                outstanding:0
-
-            };
-
-
-            customers.push(customer);
-
-
-            renderCustomers();
-
-            updateSummary();
-
-            clearForm();
-
-            closeModal();
-
-        }
-    );
-
 
 /* =====================================================
    SUMMARY
-===================================================== */
+   ===================================================== */
 
-function updateSummary(){
+function updateSummary() {
 
-    const total =
-        customers.length;
+    const total = customers.length;
 
+    const active = customers.filter(customer =>
+        String(customer.status || "ACTIVE").toUpperCase() === "ACTIVE"
+    ).length;
 
-    const active =
-        customers.length;
+    const receivable = customers.reduce(
+        (sum, customer) =>
+            sum + Number(customer.outstanding || 0),
+        0
+    );
 
+    const creditCustomers = customers.filter(customer =>
+        Number(customer.creditLimit || 0) > 0
+    ).length;
 
-    const receivable =
-        customers.reduce(
-            (
-                sum,
-                customer
-            ) =>
-                sum +
-                Number(
-                    customer.outstanding || 0
-                ),
-            0
-        );
-
-
-    const creditCustomers =
-        customers.filter(
-            customer =>
-                Number(
-                    customer.creditLimit || 0
-                ) > 0
-        ).length;
-
-
-    document
-        .getElementById(
-            "totalCustomers"
-        )
-        .textContent =
-        total;
-
-
-    document
-        .getElementById(
-            "activeCustomers"
-        )
-        .textContent =
-        active;
-
-
-    document
-        .getElementById(
-            "totalReceivable"
-        )
-        .textContent =
-        "₹" +
-        receivable.toFixed(2);
-
-
-    document
-        .getElementById(
-            "creditCustomers"
-        )
-        .textContent =
+    document.getElementById("totalCustomers").textContent = total;
+    document.getElementById("activeCustomers").textContent = active;
+    document.getElementById("totalReceivable").textContent =
+        "₹" + receivable.toFixed(2);
+    document.getElementById("creditCustomers").textContent =
         creditCustomers;
-
 }
-
 
 /* =====================================================
    SEARCH
-===================================================== */
+   ===================================================== */
 
-function filterCustomers(){
+function filterCustomers() {
 
-    const query =
-        document
-            .getElementById(
-                "searchInput"
-            )
-            .value
-            .trim()
-            .toLowerCase();
-
+    const query = getValue("searchInput").toLowerCase();
 
     const statusFilter =
-        document
-            .getElementById(
-                "statusFilter"
-            )
-            .value;
-
+        document.getElementById("statusFilter").value;
 
     const typeFilter =
-        document
-            .getElementById(
-                "typeFilter"
-            )
-            .value;
+        document.getElementById("typeFilter").value;
 
+    const filtered = customers.filter(customer => {
 
-    const filtered =
-        customers.filter(
-            customer => {
+        const matchesQuery =
+            !query ||
+            String(customer.name || "").toLowerCase().includes(query) ||
+            String(customer.mobile || "").toLowerCase().includes(query) ||
+            String(customer.code || "").toLowerCase().includes(query) ||
+            String(customer.city || "").toLowerCase().includes(query);
 
-                const matchesQuery =
-                    !query ||
-                    customer.name
-                        .toLowerCase()
-                        .includes(query) ||
-                    customer.mobile
-                        .toLowerCase()
-                        .includes(query) ||
-                    customer.code
-                        .toLowerCase()
-                        .includes(query) ||
-                    (
-                        customer.city || ""
-                    )
-                        .toLowerCase()
-                        .includes(query);
+        const status = getStatus(customer).key;
 
+        const matchesStatus =
+            statusFilter === "all" ||
+            status === statusFilter;
 
-                const status =
-                    getStatus(
-                        customer
-                    ).key;
+        const matchesType =
+            typeFilter === "all" ||
+            customer.type === typeFilter;
 
-
-                const matchesStatus =
-                    statusFilter === "all" ||
-                    status ===
-                    statusFilter;
-
-
-                const matchesType =
-                    typeFilter === "all" ||
-                    customer.type ===
-                    typeFilter;
-
-
-                return(
-                    matchesQuery &&
-                    matchesStatus &&
-                    matchesType
-                );
-
-            }
+        return (
+            matchesQuery &&
+            matchesStatus &&
+            matchesType
         );
-
+    });
 
     renderCustomers(filtered);
-
 }
 
+document.getElementById("searchBtn")
+    .addEventListener("click", filterCustomers);
 
-document
-    .getElementById("searchBtn")
-    .addEventListener(
-        "click",
-        filterCustomers
-    );
+document.getElementById("searchInput")
+    .addEventListener("input", filterCustomers);
 
+document.getElementById("statusFilter")
+    .addEventListener("change", filterCustomers);
 
-document
-    .getElementById("searchInput")
-    .addEventListener(
-        "input",
-        filterCustomers
-    );
-
-
-document
-    .getElementById("statusFilter")
-    .addEventListener(
-        "change",
-        filterCustomers
-    );
-
-
-document
-    .getElementById("typeFilter")
-    .addEventListener(
-        "change",
-        filterCustomers
-    );
-
+document.getElementById("typeFilter")
+    .addEventListener("change", filterCustomers);
 
 /* =====================================================
    CUSTOMER ACTIONS
-===================================================== */
+   ===================================================== */
 
-function viewCustomer(code){
+window.viewCustomer = function(id) {
 
-    const customer =
-        customers.find(
-            item =>
-                item.code === code
-        );
+    const customer = customers.find(item => item.id === id);
 
-
-    if(!customer) return;
-
+    if (!customer) return;
 
     alert(
-
-        "Customer: " +
-        customer.name +
-
-        "\nCode: " +
-        customer.code +
-
-        "\nMobile: " +
-        customer.mobile +
-
-        "\nType: " +
-        customer.type +
-
-        "\nCity: " +
-        (
-            customer.city || "-"
-        ) +
-
+        "Customer: " + (customer.name || "-") +
+        "\nCode: " + (customer.code || "-") +
+        "\nMobile: " + (customer.mobile || "-") +
+        "\nType: " + (customer.type || "-") +
+        "\nCity: " + (customer.city || "-") +
+        "\nAddress: " + (customer.address || "-") +
+        "\nCredit Limit: ₹" +
+            Number(customer.creditLimit || 0).toFixed(2) +
         "\nOutstanding: ₹" +
-        Number(
-            customer.outstanding || 0
-        ).toFixed(2)
-
+            Number(customer.outstanding || 0).toFixed(2)
     );
+};
 
-}
+window.collectPayment = function(id) {
 
+    const customer = customers.find(item => item.id === id);
 
-function collectPayment(code){
+    if (!customer) return;
 
-    const customer =
-        customers.find(
-            item =>
-                item.code === code
-        );
-
-
-    if(!customer) return;
-
+    /*
+       Payment module can later receive the customer ID
+       through URL parameters.
+    */
 
     window.location.href =
-        "payments.html";
+        "payments.html?customerId=" +
+        encodeURIComponent(customer.id);
+};
 
-}
+window.editCustomer = function(id) {
 
+    const customer = customers.find(item => item.id === id);
 
-function editCustomer(code){
+    if (!customer) return;
 
-    const customer =
-        customers.find(
-            item =>
-                item.code === code
-        );
+    editingCustomerId = customer.id;
 
+    document.getElementById("customerName").value =
+        customer.name || "";
 
-    if(!customer) return;
+    document.getElementById("customerCode").value =
+        customer.code || "";
 
+    document.getElementById("customerMobile").value =
+        customer.mobile || "";
 
-    document
-        .getElementById(
-            "customerName"
-        )
-        .value =
-        customer.name;
+    document.getElementById("customerType").value =
+        customer.type || "Retail";
 
-
-    document
-        .getElementById(
-            "customerCode"
-        )
-        .value =
-        customer.code;
-
-
-    document
-        .getElementById(
-            "customerMobile"
-        )
-        .value =
-        customer.mobile;
-
-
-    document
-        .getElementById(
-            "customerType"
-        )
-        .value =
-        customer.type;
-
-
-    document
-        .getElementById(
-            "customerCity"
-        )
-        .value =
+    document.getElementById("customerCity").value =
         customer.city || "";
 
-
-    document
-        .getElementById(
-            "customerAddress"
-        )
-        .value =
+    document.getElementById("customerAddress").value =
         customer.address || "";
 
-
-    document
-        .getElementById(
-            "creditLimit"
-        )
-        .value =
+    document.getElementById("creditLimit").value =
         customer.creditLimit || 0;
 
-
-    openModal();
-
-}
-
-
-/* =====================================================
-   CLEAR FORM
-===================================================== */
-
-function clearForm(){
-
-    document
-        .querySelectorAll(
-            "#customerModal input"
-        )
-        .forEach(
-            element => {
-
-                element.value = "";
-
-            }
-        );
-
-
-    document
-        .getElementById(
-            "customerType"
-        )
-        .value =
-        "Retail";
-
-}
-
+    openModal(true);
+};
 
 /* =====================================================
    REFRESH
-===================================================== */
+   ===================================================== */
 
-document
-    .getElementById("refreshBtn")
-    .addEventListener(
-        "click",
-        () => {
+document.getElementById("refreshBtn")
+    .addEventListener("click", async () => {
 
-            renderCustomers();
-
-            updateSummary();
-
-        }
-    );
-
+        await loadCustomers();
+    });
 
 /* =====================================================
    PRINT
-===================================================== */
+   ===================================================== */
 
-document
-    .getElementById("printBtn")
-    .addEventListener(
-        "click",
-        () => {
+document.getElementById("printBtn")
+    .addEventListener("click", () => {
 
-            window.print();
-
-        }
-    );
-
+        window.print();
+    });
 
 /* =====================================================
    ESCAPE HTML
-===================================================== */
+   ===================================================== */
 
-function escapeHtml(value){
+function escapeHtml(value) {
 
     return String(value)
-        .replaceAll(
-            "&",
-            "&amp;"
-        )
-        .replaceAll(
-            "<",
-            "&lt;"
-        )
-        .replaceAll(
-            ">",
-            "&gt;"
-        )
-        .replaceAll(
-            '"',
-            "&quot;"
-        )
-        .replaceAll(
-            "'",
-            "&#039;"
-        );
-
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
 }
 
+/* =====================================================
+   AUTH + INITIAL LOAD
+   ===================================================== */
+
+onAuthStateChanged(auth, async user => {
+
+    if (!user) {
+
+        firebaseReady = false;
+        customers = [];
+
+        renderCustomers();
+        updateSummary();
+
+        console.warn(
+            "MMV Customers V2: No authenticated Firebase user."
+        );
+
+        return;
+    }
+
+    console.log(
+        "MMV Customers V2 authenticated:",
+        user.uid
+    );
+
+    firebaseReady = true;
+
+    await loadCustomers();
+});
 
 /* =====================================================
-   INITIAL
-===================================================== */
+   INITIAL UI
+   ===================================================== */
 
 renderCustomers();
-
 updateSummary();
 
 </script>
