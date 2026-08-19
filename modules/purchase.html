@@ -2843,6 +2843,623 @@ calculate();
 </script>
 
 
+
+<!-- =====================================================
+     MMV TRADERS ERP V2
+     PURCHASE FIREBASE PERSISTENCE PATCH
+     Existing Purchase UI / CSS / calculation code preserved
+===================================================== -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
+import {
+    getFirestore,
+    collection,
+    getDocs,
+    addDoc,
+    updateDoc,
+    doc,
+    serverTimestamp
+} from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
+import {
+    getAuth,
+    onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js";
+
+const MMV_PURCHASE_FIREBASE_CONFIG = {
+    apiKey: "AIzaSyDYU43yaApPBU-GFxfMtnfST-ZJRu8Vg_E",
+    authDomain: "mmv-traders-erp-v2.firebaseapp.com",
+    projectId: "mmv-traders-erp-v2",
+    storageBucket: "mmv-traders-erp-v2.firebasestorage.app",
+    messagingSenderId: "345950984944",
+    appId: "1:345950984944:web:2a456b89f42f31ea2bc035"
+};
+
+const MMV_PURCHASE_APP =
+    initializeApp(MMV_PURCHASE_FIREBASE_CONFIG, "MMV_PURCHASE_APP");
+
+const MMV_PURCHASE_DB =
+    getFirestore(MMV_PURCHASE_APP);
+
+const MMV_PURCHASE_AUTH =
+    getAuth(MMV_PURCHASE_APP);
+
+let mmvPurchaseFirebaseUser = null;
+let mmvPurchaseFirebaseReady = false;
+let mmvPurchaseLoading = false;
+
+function mmvPurchaseNumber(id) {
+    const n = Number(
+        document.getElementById(id)?.value || 0
+    );
+    return Number.isFinite(n) ? n : 0;
+}
+
+function mmvPurchaseText(id) {
+    return (
+        document.getElementById(id)?.value?.trim() || ""
+    );
+}
+
+function mmvPurchaseItemRows() {
+
+    return Array.from(
+        document.querySelectorAll(".purchase-item")
+    ).map(row => {
+
+        const product =
+            row.querySelector(".item-product")?.value || "";
+
+        const qty =
+            Number(
+                row.querySelector(".item-qty")?.value || 0
+            );
+
+        const rate =
+            Number(
+                row.querySelector(".item-rate")?.value || 0
+            );
+
+        const discount =
+            Number(
+                row.querySelector(".item-discount")?.value || 0
+            );
+
+        const tax =
+            Number(
+                row.querySelector(".item-tax")?.value || 0
+            );
+
+        const gross = qty * rate;
+        const discountAmount =
+            gross * discount / 100;
+        const taxable =
+            gross - discountAmount;
+        const taxAmount =
+            taxable * tax / 100;
+
+        return {
+            product,
+            qty,
+            rate,
+            discountPercent: discount,
+            discountAmount,
+            taxPercent: tax,
+            taxAmount,
+            amount: taxable + taxAmount
+        };
+    });
+}
+
+function mmvPurchaseSummary() {
+
+    const rows =
+        mmvPurchaseItemRows();
+
+    let subtotal = 0;
+    let discount = 0;
+    let tax = 0;
+
+    rows.forEach(item => {
+        subtotal +=
+            Number(item.qty || 0) *
+            Number(item.rate || 0);
+
+        discount +=
+            Number(item.discountAmount || 0);
+
+        tax +=
+            Number(item.taxAmount || 0);
+    });
+
+    return {
+        subtotal,
+        discount,
+        tax,
+        total:
+            subtotal -
+            discount +
+            tax
+    };
+}
+
+/* -----------------------------------------------------
+   Load suppliers and products from Firestore
+   ----------------------------------------------------- */
+
+async function mmvLoadPurchaseMasters() {
+
+    if (!mmvPurchaseFirebaseUser) return;
+
+    try {
+
+        const [
+            supplierSnapshot,
+            productSnapshot
+        ] = await Promise.all([
+            getDocs(
+                collection(
+                    MMV_PURCHASE_DB,
+                    "suppliers"
+                )
+            ),
+            getDocs(
+                collection(
+                    MMV_PURCHASE_DB,
+                    "products"
+                )
+            )
+        ]);
+
+        const supplierSelect =
+            document.getElementById(
+                "supplierSelect"
+            );
+
+        const productData = [];
+
+        productSnapshot.forEach(item => {
+            productData.push({
+                id: item.id,
+                ...item.data()
+            });
+        });
+
+        /*
+         * Keep existing global `products` array compatible
+         * with the original Purchase page.
+         */
+        window.products =
+            productData;
+
+        if (supplierSelect) {
+
+            const currentSupplier =
+                supplierSelect.value;
+
+            supplierSelect.innerHTML =
+                `<option value="">
+                    Select Supplier
+                </option>`;
+
+            supplierSnapshot.forEach(item => {
+
+                const data = item.data();
+
+                const option =
+                    document.createElement(
+                        "option"
+                    );
+
+                option.value =
+                    item.id;
+
+                option.textContent =
+                    data.name ||
+                    data.code ||
+                    "Supplier";
+
+                supplierSelect.appendChild(
+                    option
+                );
+            });
+
+            if (currentSupplier) {
+                supplierSelect.value =
+                    currentSupplier;
+            }
+        }
+
+        if (
+            typeof renderRecentPurchases ===
+            "function"
+        ) {
+            await mmvLoadRecentPurchases();
+        }
+
+        console.log(
+            "Purchase masters loaded:",
+            {
+                suppliers: supplierSnapshot.size,
+                products: productSnapshot.size
+            }
+        );
+
+    } catch (error) {
+
+        console.error(
+            "Purchase master load failed:",
+            error
+        );
+    }
+}
+
+/* -----------------------------------------------------
+   Save Purchase to Firestore
+   ----------------------------------------------------- */
+
+async function mmvSavePurchaseToFirebase() {
+
+    if (!mmvPurchaseFirebaseUser) {
+        throw new Error(
+            "Firebase authentication is not available."
+        );
+    }
+
+    const supplierId =
+        mmvPurchaseText(
+            "supplierSelect"
+        );
+
+    const items =
+        mmvPurchaseItemRows();
+
+    if (!supplierId) {
+        throw new Error(
+            "Please select a supplier."
+        );
+    }
+
+    if (!items.length) {
+        throw new Error(
+            "Please add at least one purchase item."
+        );
+    }
+
+    const summary =
+        mmvPurchaseSummary();
+
+    if (summary.total <= 0) {
+        throw new Error(
+            "Purchase amount must be greater than zero."
+        );
+    }
+
+    const supplierSnapshot =
+        await getDocs(
+            collection(
+                MMV_PURCHASE_DB,
+                "suppliers"
+            )
+        );
+
+    let supplierName =
+        supplierId;
+
+    supplierSnapshot.forEach(item => {
+
+        if (item.id === supplierId) {
+
+            const data =
+                item.data();
+
+            supplierName =
+                data.name ||
+                data.code ||
+                supplierId;
+        }
+    });
+
+    const purchase = {
+
+        purchaseNumber:
+            document.getElementById(
+                "purchaseNumber"
+            )?.textContent || "",
+
+        purchaseDate:
+            mmvPurchaseText(
+                "purchaseDate"
+            ),
+
+        invoiceDate:
+            mmvPurchaseText(
+                "invoiceDate"
+            ),
+
+        supplierId,
+
+        supplierName,
+
+        supplierInvoice:
+            mmvPurchaseText(
+                "supplierInvoice"
+            ),
+
+        referenceNo:
+            mmvPurchaseText(
+                "referenceNo"
+            ),
+
+        paymentTerms:
+            mmvPurchaseText(
+                "paymentTerms"
+            ),
+
+        payment:
+            window.selectedPayment ||
+            "cash",
+
+        notes:
+            mmvPurchaseText(
+                "purchaseNotes"
+            ),
+
+        items,
+
+        itemCount:
+            items.length,
+
+        subtotal:
+            summary.subtotal,
+
+        discount:
+            summary.discount,
+
+        tax:
+            summary.tax,
+
+        total:
+            summary.total,
+
+        status:
+            "Recorded",
+
+        createdBy:
+            mmvPurchaseFirebaseUser.uid,
+
+        createdAt:
+            serverTimestamp(),
+
+        updatedAt:
+            serverTimestamp()
+    };
+
+    const purchaseRef =
+        await addDoc(
+            collection(
+                MMV_PURCHASE_DB,
+                "purchases"
+            ),
+            purchase
+        );
+
+    /* -------------------------------------------------
+       Increase product stock
+       ------------------------------------------------- */
+
+    for (const item of items) {
+
+        if (
+            !item.product ||
+            item.product === "manual"
+        ) {
+            continue;
+        }
+
+        const productRef =
+            doc(
+                MMV_PURCHASE_DB,
+                "products",
+                item.product
+            );
+
+        const productSnapshot =
+            await getDocs(
+                collection(
+                    MMV_PURCHASE_DB,
+                    "products"
+                )
+            );
+
+        let currentProduct = null;
+
+        productSnapshot.forEach(productDoc => {
+            if (
+                productDoc.id ===
+                item.product
+            ) {
+                currentProduct = {
+                    id: productDoc.id,
+                    ...productDoc.data()
+                };
+            }
+        });
+
+        if (!currentProduct) {
+            continue;
+        }
+
+        const oldStock =
+            Number(
+                currentProduct.stock || 0
+            );
+
+        const qty =
+            Number(
+                item.qty || 0
+            );
+
+        await updateDoc(
+            productRef,
+            {
+                stock:
+                    oldStock + qty,
+
+                purchaseRate:
+                    Number(
+                        item.rate ||
+                        currentProduct.purchaseRate ||
+                        0
+                    ),
+
+                updatedAt:
+                    serverTimestamp()
+            }
+        );
+    }
+
+    return purchaseRef.id;
+}
+
+/* -----------------------------------------------------
+   Load recent purchases from Firestore
+   ----------------------------------------------------- */
+
+async function mmvLoadRecentPurchases() {
+
+    if (!mmvPurchaseFirebaseUser) return;
+
+    try {
+
+        const snapshot =
+            await getDocs(
+                collection(
+                    MMV_PURCHASE_DB,
+                    "purchases"
+                )
+            );
+
+        const loaded = [];
+
+        snapshot.forEach(item => {
+
+            const data =
+                item.data();
+
+            loaded.push({
+                id: item.id,
+
+                number:
+                    data.purchaseNumber || "",
+
+                date:
+                    data.purchaseDate || "",
+
+                supplier:
+                    data.supplierName ||
+                    data.supplierId ||
+                    "",
+
+                items:
+                    data.items || [],
+
+                payment:
+                    data.payment || "cash",
+
+                amount:
+                    Number(
+                        data.total || 0
+                    ),
+
+                status:
+                    data.status ||
+                    "Recorded"
+            });
+        });
+
+        loaded.sort(
+            (a, b) =>
+                String(b.date).localeCompare(
+                    String(a.date)
+                )
+        );
+
+        window.purchases =
+            loaded;
+
+        if (
+            typeof renderRecentPurchases ===
+            "function"
+        ) {
+            renderRecentPurchases();
+        }
+
+        console.log(
+            "Recent purchases loaded:",
+            loaded.length
+        );
+
+    } catch (error) {
+
+        console.error(
+            "Recent purchase load failed:",
+            error
+        );
+    }
+}
+
+/* -----------------------------------------------------
+   Expose service for existing page
+   ----------------------------------------------------- */
+
+window.MMVPurchaseFirebase = {
+
+    save:
+        mmvSavePurchaseToFirebase,
+
+    load:
+        mmvLoadRecentPurchases,
+
+    loadMasters:
+        mmvLoadPurchaseMasters,
+
+    ready:
+        () => mmvPurchaseFirebaseReady
+};
+
+/* -----------------------------------------------------
+   Auth
+   ----------------------------------------------------- */
+
+onAuthStateChanged(
+    MMV_PURCHASE_AUTH,
+    async user => {
+
+        mmvPurchaseFirebaseUser =
+            user || null;
+
+        mmvPurchaseFirebaseReady =
+            !!user;
+
+        if (!user) {
+
+            console.warn(
+                "Purchase: Firebase user not authenticated."
+            );
+
+            return;
+        }
+
+        console.log(
+            "Purchase Firebase authenticated:",
+            user.uid
+        );
+
+        await mmvLoadPurchaseMasters();
+    }
+);
+</script>
+
 </body>
 
 </html>
