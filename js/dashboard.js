@@ -1658,7 +1658,6 @@ function renderDashboard() {
 
 }
 
-
 /* ============================================================
    LOAD DASHBOARD DATA
    ============================================================ */
@@ -1668,94 +1667,266 @@ async function loadDashboardData() {
     try {
 
         /*
-         * Use existing reports service
-         * when available.
+         * Load data from existing Reports Service.
          */
+        let data = null;
 
-        const data =
-            await loadReportData();
+        if (
+            typeof loadReportData ===
+            "function"
+        ) {
 
+            data =
+                await loadReportData();
 
-            dashboardState.sales =
-                data.sales || [];
-
-
-            dashboardState.salesItems =
-                data.salesItems || [];
-
-
-            dashboardState.purchases =
-                data.purchases || [];
-
-
-            dashboardState.purchaseItems =
-                data.purchaseItems || [];
-
-
-            dashboardState.customers =
-                data.customers || [];
-
-
-            dashboardState.suppliers =
-                data.suppliers || [];
-
-
-            dashboardState.payments =
-                data.payments || [];
-
-
-            dashboardState.inventory =
-                data.inventory || [];
-
-
-        renderDashboard();
-
-
-        return dashboardState;
+        }
 
 
         /*
-         * If reports.js is not loaded,
-         * use direct module APIs if available.
+         * Load all available dashboard data.
          */
+        if (data) {
 
+            dashboardState.sales =
+                Array.isArray(data.sales)
+                    ? data.sales
+                    : [];
+
+
+            dashboardState.salesItems =
+                Array.isArray(data.salesItems)
+                    ? data.salesItems
+                    : [];
+
+
+            dashboardState.purchases =
+                Array.isArray(data.purchases)
+                    ? data.purchases
+                    : [];
+
+
+            dashboardState.purchaseItems =
+                Array.isArray(data.purchaseItems)
+                    ? data.purchaseItems
+                    : [];
+
+
+            dashboardState.customers =
+                Array.isArray(data.customers)
+                    ? data.customers
+                    : [];
+
+
+            dashboardState.suppliers =
+                Array.isArray(data.suppliers)
+                    ? data.suppliers
+                    : [];
+
+
+            dashboardState.payments =
+                Array.isArray(data.payments)
+                    ? data.payments
+                    : [];
+
+
+            dashboardState.inventory =
+                Array.isArray(data.inventory)
+                    ? data.inventory
+                    : [];
+
+        }
+
+
+        /*
+         * If Reports Service is available,
+         * check its snapshot also.
+         */
         if (
-            window.MMVReports
+            window.MMVReports &&
+            typeof window.MMVReports
+                .getReportSnapshot ===
+                "function"
         ) {
 
             const snapshot =
                 window.MMVReports
-                    .getReportSnapshot?.();
+                    .getReportSnapshot();
 
 
             if (snapshot) {
 
-                renderDashboard();
+                /*
+                 * Only use snapshot data when
+                 * the current dashboard array
+                 * is empty.
+                 */
 
-                return dashboardState;
+                if (
+                    dashboardState.sales
+                        .length === 0 &&
+                    Array.isArray(
+                        snapshot.sales
+                    )
+                ) {
+
+                    dashboardState.sales =
+                        snapshot.sales;
+
+                }
+
+
+                if (
+                    dashboardState.salesItems
+                        .length === 0 &&
+                    Array.isArray(
+                        snapshot.salesItems
+                    )
+                ) {
+
+                    dashboardState.salesItems =
+                        snapshot.salesItems;
+
+                }
+
+
+                if (
+                    dashboardState.purchases
+                        .length === 0 &&
+                    Array.isArray(
+                        snapshot.purchases
+                    )
+                ) {
+
+                    dashboardState.purchases =
+                        snapshot.purchases;
+
+                }
+
+
+                if (
+                    dashboardState.purchaseItems
+                        .length === 0 &&
+                    Array.isArray(
+                        snapshot.purchaseItems
+                    )
+                ) {
+
+                    dashboardState.purchaseItems =
+                        snapshot.purchaseItems;
+
+                }
+
+
+                if (
+                    dashboardState.customers
+                        .length === 0 &&
+                    Array.isArray(
+                        snapshot.customers
+                    )
+                ) {
+
+                    dashboardState.customers =
+                        snapshot.customers;
+
+                }
+
+
+                if (
+                    dashboardState.suppliers
+                        .length === 0 &&
+                    Array.isArray(
+                        snapshot.suppliers
+                    )
+                ) {
+
+                    dashboardState.suppliers =
+                        snapshot.suppliers;
+
+                }
+
+
+                if (
+                    dashboardState.payments
+                        .length === 0 &&
+                    Array.isArray(
+                        snapshot.payments
+                    )
+                ) {
+
+                    dashboardState.payments =
+                        snapshot.payments;
+
+                }
+
+
+                if (
+                    dashboardState.inventory
+                        .length === 0 &&
+                    Array.isArray(
+                        snapshot.inventory
+                    )
+                ) {
+
+                    dashboardState.inventory =
+                        snapshot.inventory;
+
+                }
 
             }
 
         }
 
 
-        console.warn(
-            "MMVReports not available. Load reports.js before dashboard.js."
-        );
-
-
+        /*
+         * Update dashboard.
+         */
         renderDashboard();
+
+
+        /*
+         * Update last refreshed time.
+         */
+        dashboardState.lastUpdated =
+            new Date();
+
+
+        console.info(
+            "MMV Dashboard loaded:",
+            {
+                sales:
+                    dashboardState.sales.length,
+
+                purchases:
+                    dashboardState.purchases.length,
+
+                customers:
+                    dashboardState.customers.length,
+
+                suppliers:
+                    dashboardState.suppliers.length,
+
+                inventory:
+                    dashboardState.inventory.length
+            }
+        );
 
 
         return dashboardState;
 
     }
-    catch(error) {
+    catch (error) {
 
         console.error(
             "Dashboard loading error:",
             error
         );
+
+
+        /*
+         * Do not destroy existing dashboard data
+         * when refresh fails.
+         */
+        renderDashboard();
 
 
         showDashboardMessage(
@@ -1770,8 +1941,6 @@ async function loadDashboardData() {
     }
 
 }
-
-
 /* ============================================================
    REFRESH
    ============================================================ */
