@@ -40,7 +40,7 @@ const dashboardState = {
     purchases: [],
 
     salesItems: [],
-
+purchaseItems: [],
     customers: [],
 
     suppliers: [],
