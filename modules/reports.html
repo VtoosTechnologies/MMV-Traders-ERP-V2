@@ -2051,6 +2051,465 @@ updateReport();
 </script>
 
 
+
+<!-- =====================================================
+     MMV TRADERS ERP V2
+     REPORTS FIREBASE DATA PATCH
+     Existing 2,056-line report UI preserved
+===================================================== -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
+import {
+    getFirestore,
+    collection,
+    getDocs
+} from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
+import {
+    getAuth,
+    onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js";
+
+const MMV_REPORT_FIREBASE_CONFIG = {
+    apiKey: "AIzaSyDYU43yaApPBU-GFxfMtnfST-ZJRu8Vg_E",
+    authDomain: "mmv-traders-erp-v2.firebaseapp.com",
+    projectId: "mmv-traders-erp-v2",
+    storageBucket: "mmv-traders-erp-v2.firebasestorage.app",
+    messagingSenderId: "345950984944",
+    appId: "1:345950984944:web:2a456b89f42f31ea2bc035"
+};
+
+const reportApp =
+    initializeApp(MMV_REPORT_FIREBASE_CONFIG, "MMV_REPORTS_APP");
+
+const reportDb = getFirestore(reportApp);
+const reportAuth = getAuth(reportApp);
+
+let reportFirebaseUser = null;
+let reportFirebaseReady = false;
+
+async function getCollectionData(name) {
+    const snap = await getDocs(collection(reportDb, name));
+    return snap.docs.map(item => ({
+        id: item.id,
+        ...item.data()
+    }));
+}
+
+function reportDate(value) {
+    if (!value) return "";
+
+    if (typeof value === "string") {
+        return value.slice(0, 10);
+    }
+
+    if (value?.toDate) {
+        return value.toDate().toISOString().slice(0, 10);
+    }
+
+    return "";
+}
+
+function amount(value) {
+    const n = Number(value || 0);
+    return Number.isFinite(n) ? n : 0;
+}
+
+function inDateRange(date, from, to) {
+    if (!date) return true;
+    if (from && date < from) return false;
+    if (to && date > to) return false;
+    return true;
+}
+
+async function loadFirebaseReports() {
+    if (!reportFirebaseUser) return;
+
+    try {
+        const [
+            sales,
+            purchases,
+            payments,
+            customers,
+            suppliers
+        ] = await Promise.all([
+            getCollectionData("sales"),
+            getCollectionData("purchases"),
+            getCollectionData("payments"),
+            getCollectionData("customers"),
+            getCollectionData("suppliers")
+        ]);
+
+        window.MMVR = {
+            sales,
+            purchases,
+            payments,
+            customers,
+            suppliers
+        };
+
+        calculateFirebaseReport();
+
+        console.log("Reports Firebase data loaded:", {
+            sales: sales.length,
+            purchases: purchases.length,
+            payments: payments.length,
+            customers: customers.length,
+            suppliers: suppliers.length
+        });
+
+    } catch (error) {
+        console.error("Reports Firebase load failed:", error);
+        console.warn(
+            "Reports will continue using the existing page state."
+        );
+    }
+}
+
+function calculateFirebaseReport() {
+
+    const data = window.MMVR || {};
+
+    const sales = Array.isArray(data.sales)
+        ? data.sales
+        : [];
+
+    const purchases = Array.isArray(data.purchases)
+        ? data.purchases
+        : [];
+
+    const payments = Array.isArray(data.payments)
+        ? data.payments
+        : [];
+
+    const customers = Array.isArray(data.customers)
+        ? data.customers
+        : [];
+
+    const suppliers = Array.isArray(data.suppliers)
+        ? data.suppliers
+        : [];
+
+    const from =
+        document.getElementById("fromDate")?.value || "";
+
+    const to =
+        document.getElementById("toDate")?.value || "";
+
+    const filteredSales =
+        sales.filter(item =>
+            inDateRange(
+                reportDate(
+                    item.date ||
+                    item.invoiceDate ||
+                    item.createdAt
+                ),
+                from,
+                to
+            )
+        );
+
+    const filteredPurchases =
+        purchases.filter(item =>
+            inDateRange(
+                reportDate(
+                    item.purchaseDate ||
+                    item.invoiceDate ||
+                    item.createdAt
+                ),
+                from,
+                to
+            )
+        );
+
+    const filteredPayments =
+        payments.filter(item =>
+            inDateRange(
+                reportDate(
+                    item.date ||
+                    item.paymentDate ||
+                    item.createdAt
+                ),
+                from,
+                to
+            )
+        );
+
+    const salesTotal =
+        filteredSales.reduce(
+            (sum, item) =>
+                sum +
+                amount(
+                    item.total ??
+                    item.grandTotal ??
+                    item.amount ??
+                    item.netTotal
+                ),
+            0
+        );
+
+    const purchaseTotal =
+        filteredPurchases.reduce(
+            (sum, item) =>
+                sum +
+                amount(
+                    item.total ??
+                    item.grandTotal ??
+                    item.amount ??
+                    item.netTotal
+                ),
+            0
+        );
+
+    const received =
+        filteredPayments
+            .filter(item =>
+                String(
+                    item.type || ""
+                ).toLowerCase() === "received"
+            )
+            .reduce(
+                (sum, item) =>
+                    sum + amount(item.amount),
+                0
+            );
+
+    const paid =
+        filteredPayments
+            .filter(item =>
+                String(
+                    item.type || ""
+                ).toLowerCase() === "paid"
+            )
+            .reduce(
+                (sum, item) =>
+                    sum + amount(item.amount),
+                0
+            );
+
+    /*
+     * Outstanding values are derived from master records where
+     * available. We do not invent balances if the source records
+     * do not contain them.
+     */
+    const receivable =
+        customers.reduce(
+            (sum, item) =>
+                sum +
+                amount(
+                    item.outstanding ??
+                    item.balance ??
+                    item.receivable
+                ),
+            0
+        );
+
+    const payable =
+        suppliers.reduce(
+            (sum, item) =>
+                sum +
+                amount(
+                    item.outstanding ??
+                    item.balance ??
+                    item.payable
+                ),
+            0
+        );
+
+    reportData.sales = salesTotal;
+    reportData.purchase = purchaseTotal;
+    reportData.received = received;
+    reportData.paid = paid;
+    reportData.receivable = receivable;
+    reportData.payable = payable;
+
+    updateReport();
+
+    renderFirebaseTopCustomers(filteredSales);
+    renderFirebaseTopSuppliers(filteredPurchases);
+}
+
+function renderFirebaseTopCustomers(sales) {
+
+    const table =
+        document.getElementById("customerTable");
+
+    if (!table) return;
+
+    const map = {};
+
+    sales.forEach(item => {
+
+        const name =
+            item.customerName ||
+            item.customer ||
+            item.party ||
+            "Unknown Customer";
+
+        const total =
+            amount(
+                item.total ??
+                item.grandTotal ??
+                item.amount ??
+                item.netTotal
+            );
+
+        if (!map[name]) {
+            map[name] = {
+                name,
+                invoices: 0,
+                sales: 0
+            };
+        }
+
+        map[name].invoices += 1;
+        map[name].sales += total;
+    });
+
+    const rows =
+        Object.values(map)
+            .sort(
+                (a,b) =>
+                    b.sales - a.sales
+            )
+            .slice(0, 10);
+
+    if (!rows.length) {
+        table.innerHTML = `
+            <tr>
+                <td colspan="3">
+                    No customer data
+                </td>
+            </tr>`;
+        return;
+    }
+
+    table.innerHTML =
+        rows.map(item => `
+            <tr>
+                <td><strong>${escapeHtml(item.name)}</strong></td>
+                <td>${item.invoices}</td>
+                <td><strong>${money(item.sales)}</strong></td>
+            </tr>
+        `).join("");
+}
+
+function renderFirebaseTopSuppliers(purchases) {
+
+    const table =
+        document.getElementById("supplierTable");
+
+    if (!table) return;
+
+    const map = {};
+
+    purchases.forEach(item => {
+
+        const name =
+            item.supplierName ||
+            item.supplier ||
+            "Unknown Supplier";
+
+        const total =
+            amount(
+                item.total ??
+                item.grandTotal ??
+                item.amount ??
+                item.netTotal
+            );
+
+        if (!map[name]) {
+            map[name] = {
+                name,
+                bills: 0,
+                purchase: 0
+            };
+        }
+
+        map[name].bills += 1;
+        map[name].purchase += total;
+    });
+
+    const rows =
+        Object.values(map)
+            .sort(
+                (a,b) =>
+                    b.purchase - a.purchase
+            )
+            .slice(0, 10);
+
+    if (!rows.length) {
+        table.innerHTML = `
+            <tr>
+                <td colspan="3">
+                    No supplier data
+                </td>
+            </tr>`;
+        return;
+    }
+
+    table.innerHTML =
+        rows.map(item => `
+            <tr>
+                <td><strong>${escapeHtml(item.name)}</strong></td>
+                <td>${item.bills}</td>
+                <td><strong>${money(item.purchase)}</strong></td>
+            </tr>
+        `).join("");
+}
+
+/*
+ * Recalculate when Apply Report is clicked.
+ * The existing report UI remains unchanged.
+ */
+document
+    .getElementById("applyFilter")
+    ?.addEventListener(
+        "click",
+        () => {
+            if (reportFirebaseReady) {
+                calculateFirebaseReport();
+            }
+        }
+    );
+
+document
+    .getElementById("refreshBtn")
+    ?.addEventListener(
+        "click",
+        async () => {
+            if (reportFirebaseReady) {
+                await loadFirebaseReports();
+            }
+        }
+    );
+
+onAuthStateChanged(
+    reportAuth,
+    async user => {
+
+        reportFirebaseUser =
+            user || null;
+
+        reportFirebaseReady =
+            !!user;
+
+        if (!user) {
+            console.warn(
+                "Reports: Firebase user is not authenticated."
+            );
+            return;
+        }
+
+        console.log(
+            "Reports Firebase authenticated:",
+            user.uid
+        );
+
+        await loadFirebaseReports();
+    }
+);
+</script>
+
 </body>
 
 </html>
