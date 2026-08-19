@@ -1790,7 +1790,7 @@ document
 let products = [];
 
 
-const purchases = [];
+let purchases = [];
 
 
 let selectedPayment =
@@ -1804,50 +1804,54 @@ let selectedPayment =
 function productOptions(){
 
     let html = `
-
         <option value="">
             Select Product
         </option>
-
     `;
-
 
     products.forEach(
         product => {
 
-            const productCode =
-                product.code ||
-                product.productCode ||
-                product.itemCode ||
-                product.sku ||
-                product.id ||
-                "";
+            const productId =
+                String(
+                    product.id ||
+                    product.productId ||
+                    ""
+                );
 
             const productName =
                 product.name ||
                 product.productName ||
                 product.itemName ||
                 product.description ||
-                productCode ||
                 "Product";
 
+            const productCode =
+                product.code ||
+                product.productCode ||
+                product.itemCode ||
+                product.sku ||
+                "";
 
-            html += `
+            const label =
+                productCode
+                    ? `${productName} (${productCode})`
+                    : productName;
 
-                <option
-                    value="${escapeHtml(productCode)}"
-                >
-                    ${escapeHtml(productName)}
-                </option>
+            if(productId){
 
-            `;
-
+                html += `
+                    <option
+                        value="${escapeHtml(productId)}"
+                    >
+                        ${escapeHtml(label)}
+                    </option>
+                `;
+            }
         }
     );
 
-
     return html;
-
 }
 
 
@@ -1987,7 +1991,7 @@ function addItem(){
             "change",
             () => {
 
-                const code =
+                const productId =
                     row
                         .querySelector(
                             ".item-product"
@@ -1997,13 +2001,12 @@ function addItem(){
                 const product =
                     products.find(
                         item =>
-                            (
-                                item.code ||
-                                item.productCode ||
-                                item.itemCode ||
-                                item.sku ||
-                                item.id
-                            ) === code
+                            String(
+                                item.id ||
+                                item.productId ||
+                                ""
+                            ) ===
+                            String(productId)
                     );
 
                 if(product){
@@ -2031,20 +2034,14 @@ function addItem(){
                         product.gst ??
                         0;
 
-                    if(
-                        row.querySelector(
+                    row
+                        .querySelector(
                             ".item-tax"
                         )
-                    ){
-                        row
-                            .querySelector(
-                                ".item-tax"
-                            )
-                            .value =
-                            Number(
-                                taxRate || 0
-                            );
-                    }
+                        .value =
+                        Number(
+                            taxRate || 0
+                        );
 
                     calculate();
                 }
@@ -2960,7 +2957,7 @@ const MMV_PURCHASE_FIREBASE_CONFIG = {
 };
 
 const MMV_PURCHASE_APP =
-    initializeApp(MMV_PURCHASE_FIREBASE_CONFIG, "MMV_PURCHASE_APP");
+    initializeApp(MMV_PURCHASE_FIREBASE_CONFIG);
 
 const MMV_PURCHASE_DB =
     getFirestore(MMV_PURCHASE_APP);
@@ -3206,6 +3203,41 @@ async function mmvLoadPurchaseMasters() {
         ) {
             await mmvLoadRecentPurchases();
         }
+
+        document
+            .querySelectorAll(
+                ".purchase-item .item-product"
+            )
+            .forEach(
+                select => {
+
+                    const currentValue =
+                        select.value || "";
+
+                    select.innerHTML =
+                        productOptions() +
+                        `
+                            <option value="manual">
+                                Manual Product
+                            </option>
+                        `;
+
+                    if(
+                        currentValue &&
+                        Array.from(select.options)
+                            .some(
+                                option =>
+                                    option.value ===
+                                    currentValue
+                            )
+                    ){
+                        select.value =
+                            currentValue;
+                    }
+                }
+            );
+
+        calculate();
 
         console.log(
             "Purchase masters loaded:",
@@ -3515,8 +3547,11 @@ async function mmvLoadRecentPurchases() {
                 )
         );
 
-        window.purchases =
+        purchases =
             loaded;
+
+        window.purchases =
+            purchases;
 
         if (
             typeof renderRecentPurchases ===
@@ -3559,8 +3594,91 @@ window.MMVPurchaseFirebase = {
 };
 
 /* -----------------------------------------------------
+   Firebase Save Button
+   Replaces the original local-only save handler.
+   ----------------------------------------------------- */
+
+function installFirebasePurchaseSaveButton(){
+
+    const oldButton =
+        document.getElementById(
+            "savePurchase"
+        );
+
+    if(!oldButton) return;
+
+    const newButton =
+        oldButton.cloneNode(true);
+
+    oldButton.replaceWith(
+        newButton
+    );
+
+    newButton.addEventListener(
+        "click",
+        async () => {
+
+            if(!mmvPurchaseFirebaseUser){
+
+                alert(
+                    "Firebase authentication is not ready. Please login again."
+                );
+
+                return;
+            }
+
+            if(mmvPurchaseLoading) return;
+
+            mmvPurchaseLoading = true;
+            newButton.disabled = true;
+            newButton.textContent =
+                "Saving...";
+
+            try{
+
+                const purchaseId =
+                    await mmvSavePurchaseToFirebase();
+
+                await mmvLoadRecentPurchases();
+
+                alert(
+                    "Purchase saved successfully.\n\n" +
+                    "Firebase ID: " +
+                    purchaseId
+                );
+
+                clearPurchase();
+
+            }catch(error){
+
+                console.error(
+                    "Purchase Firebase save failed:",
+                    error
+                );
+
+                alert(
+                    "Purchase save failed.\n\n" +
+                    error.message
+                );
+
+            }finally{
+
+                mmvPurchaseLoading = false;
+                newButton.disabled = false;
+                newButton.textContent =
+                    "Save Purchase";
+
+            }
+        }
+    );
+}
+
+
+/* -----------------------------------------------------
    Auth
    ----------------------------------------------------- */
+
+installFirebasePurchaseSaveButton();
 
 onAuthStateChanged(
     MMV_PURCHASE_AUTH,
