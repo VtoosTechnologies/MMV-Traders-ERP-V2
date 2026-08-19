@@ -2908,6 +2908,32 @@ window.clearReportFilter =
     clearReportFilter;
 
 
+
+/* ============================================================
+   MMV TRADERS ERP V2
+   REPORTS COMPATIBILITY PATCH
+   - Preserves the existing Reports Service
+   - Adds safer date aliases
+   - Adds refresh helper for Dashboard integration
+   - Keeps all existing calculations / exports intact
+   ============================================================ */
+
+function refreshMMVReports() {
+    return loadReportData();
+}
+
+window.refreshMMVReports = refreshMMVReports;
+
+/* Dashboard compatibility aliases */
+window.MMVReports.refresh = refreshMMVReports;
+window.MMVReports.refreshReports = refreshMMVReports;
+
+/* Re-render without reloading Firestore data */
+window.MMVReports.refreshView = function () {
+    renderAllReports();
+    return getReportSnapshot();
+};
+
 console.info(
     "%cMMV Reports V2%c ready",
     "font-weight:800;color:#0a3d91;",
