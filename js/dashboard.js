@@ -2144,22 +2144,24 @@ document.addEventListener(
     async () => {
 
         /*
-         * Initial load.
+         * Give Reports service a moment to initialize.
+         * Reports service is the single source of truth
+         * for dashboard data.
          */
+        await new Promise(
+            resolve =>
+                setTimeout(
+                    resolve,
+                    100
+                )
+        );
+
 
         await loadDashboardData();
 
 
-        /*
-         * Manual refresh.
-         */
-
         bindDashboardRefresh();
 
-
-        /*
-         * Automatic refresh.
-         */
 
         startDashboardAutoRefresh();
 
