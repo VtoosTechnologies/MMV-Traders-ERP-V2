@@ -3692,7 +3692,423 @@
                 </div>
 
 
-            </body>
+            
+<!-- =====================================================
+     MMV TRADERS ERP V2
+     PAYMENTS / ACCOUNTS FIREBASE PERSISTENCE PATCH
+     Existing 3847-line UI + JS preserved
+===================================================== -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
+import {
+    getFirestore,
+    collection,
+    getDocs,
+    addDoc,
+    serverTimestamp
+} from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
+import {
+    getAuth,
+    onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js";
+
+const MMV_PAYMENT_FIREBASE_CONFIG = {
+    apiKey: "AIzaSyDYU43yaApPBU-GFxfMtnfST-ZJRu8Vg_E",
+    authDomain: "mmv-traders-erp-v2.firebaseapp.com",
+    projectId: "mmv-traders-erp-v2",
+    storageBucket: "mmv-traders-erp-v2.firebasestorage.app",
+    messagingSenderId: "345950984944",
+    appId: "1:345950984944:web:2a456b89f42f31ea2bc035"
+};
+
+const mmvPaymentApp =
+    initializeApp(
+        MMV_PAYMENT_FIREBASE_CONFIG,
+        "MMV_PAYMENT_APP"
+    );
+
+const mmvPaymentDb =
+    getFirestore(mmvPaymentApp);
+
+const mmvPaymentAuth =
+    getAuth(mmvPaymentApp);
+
+let mmvPaymentUser = null;
+let mmvPaymentReady = false;
+let mmvPaymentLoading = false;
+
+function mmvPaymentValue(id) {
+    return (
+        document.getElementById(id)?.value?.trim() || ""
+    );
+}
+
+async function mmvLoadPaymentsFromFirebase() {
+
+    if (!mmvPaymentUser || mmvPaymentLoading) return;
+
+    mmvPaymentLoading = true;
+
+    try {
+
+        const snapshot =
+            await getDocs(
+                collection(
+                    mmvPaymentDb,
+                    "payments"
+                )
+            );
+
+        const loaded = [];
+
+        snapshot.forEach(item => {
+
+            const data = item.data();
+
+            loaded.push({
+                id: item.id,
+                number:
+                    data.number ||
+                    "",
+                type:
+                    data.type ||
+                    "received",
+                party:
+                    data.party ||
+                    "",
+                amount:
+                    Number(
+                        data.amount || 0
+                    ),
+                method:
+                    data.method ||
+                    "Cash",
+                reference:
+                    data.reference ||
+                    "",
+                date:
+                    data.date ||
+                    "",
+                remarks:
+                    data.remarks ||
+                    "",
+                createdAt:
+                    data.createdAt || null
+            });
+        });
+
+        loaded.sort(
+            (a,b) => {
+                const aTime =
+                    a.createdAt?.seconds || 0;
+                const bTime =
+                    b.createdAt?.seconds || 0;
+
+                if (aTime !== bTime) {
+                    return bTime - aTime;
+                }
+
+                return String(b.date || "")
+                    .localeCompare(
+                        String(a.date || "")
+                    );
+            }
+        );
+
+        /*
+         * Existing page uses the global `payments`
+         * array for render/filter/summary.
+         */
+        payments = loaded;
+
+        renderPayments();
+        updateSummary();
+
+        mmvPaymentReady = true;
+
+        console.log(
+            "MMV Payments loaded from Firebase:",
+            loaded.length
+        );
+
+    } catch (error) {
+
+        console.error(
+            "Payment Firebase load error:",
+            error
+        );
+
+        alert(
+            "Payment data load failed.
+
+" +
+            error.message
+        );
+
+    } finally {
+
+        mmvPaymentLoading = false;
+    }
+}
+
+async function mmvSavePaymentToFirebase(payment) {
+
+    if (!mmvPaymentUser) {
+        throw new Error(
+            "Firebase authentication is not active. Please login again."
+        );
+    }
+
+    const payload = {
+
+        number:
+            payment.number ||
+            "MMV-PAY-" +
+            Date.now(),
+
+        type:
+            payment.type ||
+            "received",
+
+        party:
+            payment.party ||
+            "",
+
+        amount:
+            Number(
+                payment.amount || 0
+            ),
+
+        method:
+            payment.method ||
+            "Cash",
+
+        reference:
+            payment.reference ||
+            "",
+
+        date:
+            payment.date ||
+            "",
+
+        remarks:
+            payment.remarks ||
+            "",
+
+        createdBy:
+            mmvPaymentUser.uid,
+
+        createdAt:
+            serverTimestamp()
+    };
+
+    const result =
+        await addDoc(
+            collection(
+                mmvPaymentDb,
+                "payments"
+            ),
+            payload
+        );
+
+    console.log(
+        "Payment saved to Firebase:",
+        result.id
+    );
+
+    return result.id;
+}
+
+window.MMVPaymentFirebase = {
+
+    save:
+        mmvSavePaymentToFirebase,
+
+    load:
+        mmvLoadPaymentsFromFirebase,
+
+    ready:
+        () => mmvPaymentReady
+};
+
+/*
+ * Current Firestore rule requires authentication:
+ * allow read, write: if request.auth != null;
+ */
+onAuthStateChanged(
+    mmvPaymentAuth,
+    async user => {
+
+        mmvPaymentUser =
+            user || null;
+
+        if (!user) {
+
+            mmvPaymentReady = false;
+
+            console.warn(
+                "Payments: Firebase user not authenticated."
+            );
+
+            return;
+        }
+
+        console.log(
+            "Payments Firebase authenticated:",
+            user.uid
+        );
+
+        await mmvLoadPaymentsFromFirebase();
+    }
+);
+</script>
+
+<script>
+/* =====================================================
+   FIREBASE SAVE BRIDGE
+   The original Save Payment handler remains untouched.
+   This listener independently persists the same payment
+   to Firestore after the original UI handler runs.
+===================================================== */
+(function () {
+
+    const saveButton =
+        document.getElementById(
+            "savePayment"
+        );
+
+    if (!saveButton) return;
+
+    saveButton.addEventListener(
+        "click",
+        function () {
+
+            setTimeout(
+                async function () {
+
+                    try {
+
+                        if (
+                            !window.MMVPaymentFirebase ||
+                            !window.MMVPaymentFirebase.ready()
+                        ) {
+                            return;
+                        }
+
+                        const party =
+                            document
+                                .getElementById(
+                                    "partyName"
+                                )
+                                ?.value
+                                ?.trim() || "";
+
+                        const amount =
+                            Number(
+                                document
+                                    .getElementById(
+                                        "paymentAmount"
+                                    )
+                                    ?.value || 0
+                            );
+
+                        /*
+                         * Original handler clears the form after save.
+                         * Therefore capture the payment object from the
+                         * latest local array before it gets overwritten.
+                         */
+                        const localPayment =
+                            Array.isArray(payments) &&
+                            payments.length
+                                ? payments[0]
+                                : null;
+
+                        if (
+                            !localPayment ||
+                            !party ||
+                            amount <= 0
+                        ) {
+                            return;
+                        }
+
+                        /*
+                         * Prevent duplicate Firebase writes if the same
+                         * browser action is accidentally triggered twice.
+                         */
+                        const key =
+                            [
+                                localPayment.type,
+                                localPayment.party,
+                                localPayment.amount,
+                                localPayment.method,
+                                localPayment.reference,
+                                localPayment.date
+                            ].join("|");
+
+                        if (
+                            window.__mmvLastPaymentFirebaseKey ===
+                            key
+                        ) {
+                            return;
+                        }
+
+                        window.__mmvLastPaymentFirebaseKey =
+                            key;
+
+                        await window.MMVPaymentFirebase.save(
+                            localPayment
+                        );
+
+                        console.log(
+                            "Payment persistence completed."
+                        );
+
+                    } catch (error) {
+
+                        console.error(
+                            "Payment Firebase save error:",
+                            error
+                        );
+
+                        alert(
+                            "Payment was added on screen, but Firebase save failed.
+
+" +
+                            error.message
+                        );
+                    }
+
+                },
+                200
+            );
+        }
+    );
+
+    const refreshButton =
+        document.getElementById(
+            "refreshBtn"
+        );
+
+    if (refreshButton) {
+
+        refreshButton.addEventListener(
+            "click",
+            async function () {
+
+                if (
+                    window.MMVPaymentFirebase &&
+                    window.MMVPaymentFirebase.ready()
+                ) {
+                    await window.MMVPaymentFirebase.load();
+                }
+            }
+        );
+    }
+
+})();
+</script>
+
+</body>
 
             </html>
 
