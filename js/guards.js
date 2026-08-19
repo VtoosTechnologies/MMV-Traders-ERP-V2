@@ -795,3 +795,16 @@ console.info(
     "font-weight:800;color:#0a3d91;",
     "color:inherit;"
 );
+export {
+    initializeGuards,
+    guardCurrentPage,
+    canAccessCurrentPage,
+    hasPagePermission,
+    applyPermissionVisibility,
+    guardAction,
+    canDelete,
+    canExport,
+    canViewReports,
+    canManageSettings,
+    canManageUsers
+};
