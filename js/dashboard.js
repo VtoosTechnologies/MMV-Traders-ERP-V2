@@ -1,3 +1,5 @@
+import { loadReportData } from "./reports.js";
+
 /* ============================================================
    MMV TRADERS ERP V2
    DASHBOARD SERVICE
@@ -1670,17 +1672,8 @@ async function loadDashboardData() {
          * when available.
          */
 
-        if (
-            window.MMVReports &&
-            typeof
-            window.MMVReports
-                .loadReportData ===
-            "function"
-        ) {
-
-            const data =
-                await window.MMVReports
-                    .loadReportData();
+        const data =
+            await loadReportData();
 
 
             dashboardState.sales =
@@ -1715,12 +1708,10 @@ async function loadDashboardData() {
                 data.inventory || [];
 
 
-            renderDashboard();
+        renderDashboard();
 
 
-            return dashboardState;
-
-        }
+        return dashboardState;
 
 
         /*
