@@ -1,1 +1,296 @@
+rules_version = '2';
 
+service cloud.firestore {
+
+  match /databases/{database}/documents {
+
+
+    /* ========================================================
+       COMMON FUNCTIONS
+    ======================================================== */
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+
+    function isOwner() {
+      return signedIn()
+        && (
+          request.auth.token.email != null
+          &&
+          request.auth.token.email ==
+          "YOUR_OWNER_EMAIL"
+        );
+    }
+
+
+    function userProfileExists() {
+      return signedIn()
+        &&
+        exists(
+          /databases/$(database)/documents/users/$(request.auth.uid)
+        );
+    }
+
+
+    function userIsActive() {
+      return userProfileExists()
+        &&
+        get(
+          /databases/$(database)/documents/users/$(request.auth.uid)
+        ).data.status == "Active";
+    }
+
+
+    function userRole() {
+      return userProfileExists()
+        ? get(
+            /databases/$(database)/documents/users/$(request.auth.uid)
+          ).data.role
+        : "";
+    }
+
+
+    function isAdmin() {
+      return userIsActive()
+        &&
+        (
+          userRole() == "owner"
+          ||
+          userRole() == "admin"
+        );
+    }
+
+
+    function canUseERP() {
+      return userIsActive()
+        &&
+        (
+          userRole() == "owner"
+          ||
+          userRole() == "admin"
+          ||
+          userRole() == "manager"
+          ||
+          userRole() == "staff"
+        );
+    }
+
+
+    /* ========================================================
+       USERS
+    ======================================================== */
+
+    match /users/{userId} {
+
+      /*
+       * User can read only own profile.
+       */
+
+      allow read:
+        if signedIn()
+        && request.auth.uid == userId;
+
+
+      /*
+       * Owner/Admin can manage user profiles.
+       */
+
+      allow create, update, delete:
+        if isAdmin();
+
+    }
+
+
+    /* ========================================================
+       CUSTOMERS
+    ======================================================== */
+
+    match /customers/{customerId} {
+
+      allow read:
+        if canUseERP();
+
+      allow create:
+        if canUseERP();
+
+      allow update:
+        if canUseERP();
+
+      allow delete:
+        if isAdmin();
+
+    }
+
+
+    /* ========================================================
+       SUPPLIERS
+    ======================================================== */
+
+    match /suppliers/{supplierId} {
+
+      allow read:
+        if canUseERP();
+
+      allow create:
+        if canUseERP();
+
+      allow update:
+        if canUseERP();
+
+      allow delete:
+        if isAdmin();
+
+    }
+
+
+    /* ========================================================
+       MATERIALS
+    ======================================================== */
+
+    match /materials/{materialId} {
+
+      allow read:
+        if canUseERP();
+
+      allow create:
+        if isAdmin();
+
+      allow update:
+        if isAdmin();
+
+      allow delete:
+        if isAdmin();
+
+    }
+
+
+    /* ========================================================
+       INVENTORY
+    ======================================================== */
+
+    match /inventory/{inventoryId} {
+
+      allow read:
+        if canUseERP();
+
+      allow create, update:
+        if canUseERP();
+
+      allow delete:
+        if isAdmin();
+
+    }
+
+
+    /* ========================================================
+       PURCHASES
+    ======================================================== */
+
+    match /purchases/{purchaseId} {
+
+      allow read:
+        if canUseERP();
+
+      allow create:
+        if canUseERP();
+
+      allow update:
+        if canUseERP();
+
+      allow delete:
+        if isAdmin();
+
+    }
+
+
+    /* ========================================================
+       SALES
+    ======================================================== */
+
+    match /sales/{saleId} {
+
+      allow read:
+        if canUseERP();
+
+      allow create:
+        if canUseERP();
+
+      allow update:
+        if canUseERP();
+
+      allow delete:
+        if isAdmin();
+
+    }
+
+
+    /* ========================================================
+       PAYMENTS
+    ======================================================== */
+
+    match /payments/{paymentId} {
+
+      allow read:
+        if canUseERP();
+
+      allow create:
+        if canUseERP();
+
+      allow update:
+        if isAdmin();
+
+      allow delete:
+        if isAdmin();
+
+    }
+
+
+    /* ========================================================
+       ACCOUNTS
+    ======================================================== */
+
+    match /accounts/{accountId} {
+
+      allow read:
+        if canUseERP();
+
+      allow create, update:
+        if isAdmin();
+
+      allow delete:
+        if isOwner();
+
+    }
+
+
+    /* ========================================================
+       SETTINGS
+    ======================================================== */
+
+    match /settings/{settingId} {
+
+      allow read:
+        if canUseERP();
+
+      allow create, update, delete:
+        if isAdmin();
+
+    }
+
+
+    /* ========================================================
+       DENY EVERYTHING ELSE
+    ======================================================== */
+
+    match /{document=**} {
+
+      allow read, write:
+        if false;
+
+    }
+
+  }
+
+}
