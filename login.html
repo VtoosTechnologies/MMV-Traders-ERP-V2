@@ -1,1 +1,1660 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+    <title>MMV Traders ERP | Sign In</title>
+
+    <meta
+        name="description"
+        content="MMV Traders ERP - Professional Business Management System"
+    >
+
+    <meta name="theme-color" content="#0b3b82">
+
+    <link rel="icon" type="image/png" href="assets/logo/mmv-logo.png">
+
+    <style>
+        /* =========================================================
+           MMV TRADERS ERP V2
+           LOGIN PAGE
+           Production UI
+        ========================================================= */
+
+        :root {
+            --primary: #0b3b82;
+            --primary-dark: #082e66;
+            --primary-light: #eaf2ff;
+
+            --accent: #1d6fe8;
+
+            --text: #14213d;
+            --text-soft: #64748b;
+            --text-muted: #94a3b8;
+
+            --border: #e2e8f0;
+            --surface: #ffffff;
+            --background: #f5f8fc;
+
+            --success: #15803d;
+            --danger: #dc2626;
+
+            --shadow-lg:
+                0 24px 60px rgba(15, 23, 42, 0.12);
+
+            --radius-lg: 24px;
+            --radius-md: 14px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html,
+        body {
+            width: 100%;
+            min-height: 100%;
+        }
+
+        body {
+            font-family:
+                Inter,
+                ui-sans-serif,
+                system-ui,
+                -apple-system,
+                BlinkMacSystemFont,
+                "Segoe UI",
+                sans-serif;
+
+            background:
+                radial-gradient(
+                    circle at 15% 20%,
+                    rgba(29, 111, 232, 0.10),
+                    transparent 28%
+                ),
+                radial-gradient(
+                    circle at 85% 80%,
+                    rgba(11, 59, 130, 0.08),
+                    transparent 30%
+                ),
+                var(--background);
+
+            color: var(--text);
+
+            -webkit-font-smoothing: antialiased;
+            text-rendering: optimizeLegibility;
+        }
+
+        button,
+        input {
+            font: inherit;
+        }
+
+        button {
+            border: 0;
+        }
+
+        /* =========================================================
+           PAGE
+        ========================================================= */
+
+        .login-page {
+            min-height: 100vh;
+
+            display: grid;
+            grid-template-columns: 1.05fr 0.95fr;
+
+            overflow: hidden;
+        }
+
+        /* =========================================================
+           LEFT BRAND PANEL
+        ========================================================= */
+
+        .brand-panel {
+            position: relative;
+
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+
+            min-height: 100vh;
+
+            padding: 54px 7vw;
+
+            color: #ffffff;
+
+            background:
+                linear-gradient(
+                    145deg,
+                    #082e66 0%,
+                    #0b3b82 45%,
+                    #1455a7 100%
+                );
+
+            overflow: hidden;
+        }
+
+        .brand-panel::before {
+            content: "";
+
+            position: absolute;
+
+            width: 520px;
+            height: 520px;
+
+            right: -220px;
+            top: -180px;
+
+            border-radius: 50%;
+
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .brand-panel::after {
+            content: "";
+
+            position: absolute;
+
+            width: 420px;
+            height: 420px;
+
+            left: -220px;
+            bottom: -190px;
+
+            border-radius: 50%;
+
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .brand-content,
+        .brand-footer {
+            position: relative;
+            z-index: 2;
+        }
+
+        /* =========================================================
+           LOGO
+        ========================================================= */
+
+        .brand-logo {
+            display: inline-flex;
+            align-items: center;
+            gap: 14px;
+
+            width: fit-content;
+        }
+
+        .brand-logo img {
+            width: 62px;
+            height: 62px;
+
+            object-fit: contain;
+
+            background: #ffffff;
+
+            border-radius: 16px;
+
+            padding: 8px;
+
+            box-shadow:
+                0 12px 30px rgba(0, 0, 0, 0.18);
+        }
+
+        .brand-logo-text {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .brand-logo-title {
+            font-size: 22px;
+            font-weight: 800;
+            letter-spacing: 0.04em;
+        }
+
+        .brand-logo-subtitle {
+            margin-top: 3px;
+
+            font-size: 11px;
+            font-weight: 600;
+
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+
+            opacity: 0.70;
+        }
+
+        /* =========================================================
+           BRAND HERO
+        ========================================================= */
+
+        .brand-hero {
+            max-width: 620px;
+
+            margin-top: auto;
+            margin-bottom: auto;
+
+            padding: 70px 0;
+        }
+
+        .brand-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+
+            padding: 8px 13px;
+
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            border-radius: 999px;
+
+            background: rgba(255, 255, 255, 0.08);
+
+            font-size: 12px;
+            font-weight: 700;
+
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+        }
+
+        .brand-badge-dot {
+            width: 7px;
+            height: 7px;
+
+            border-radius: 50%;
+
+            background: #72d572;
+
+            box-shadow:
+                0 0 0 5px rgba(114, 213, 114, 0.12);
+        }
+
+        .brand-hero h1 {
+            margin-top: 24px;
+
+            max-width: 620px;
+
+            font-size: clamp(42px, 4vw, 68px);
+
+            line-height: 1.04;
+
+            letter-spacing: -0.045em;
+
+            font-weight: 800;
+        }
+
+        .brand-hero h1 span {
+            display: block;
+
+            color: #9fc7ff;
+        }
+
+        .brand-hero p {
+            max-width: 550px;
+
+            margin-top: 24px;
+
+            font-size: 17px;
+            line-height: 1.75;
+
+            color: rgba(255, 255, 255, 0.76);
+        }
+
+        /* =========================================================
+           FEATURE LIST
+        ========================================================= */
+
+        .feature-list {
+            display: grid;
+
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+
+            gap: 14px;
+
+            max-width: 560px;
+
+            margin-top: 34px;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: center;
+            gap: 11px;
+
+            padding: 12px 14px;
+
+            border: 1px solid rgba(255, 255, 255, 0.10);
+
+            border-radius: 12px;
+
+            background: rgba(255, 255, 255, 0.055);
+
+            color: rgba(255, 255, 255, 0.88);
+
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .feature-icon {
+            width: 28px;
+            height: 28px;
+
+            flex: 0 0 28px;
+
+            display: grid;
+            place-items: center;
+
+            border-radius: 8px;
+
+            background: rgba(255, 255, 255, 0.10);
+
+            font-size: 13px;
+        }
+
+        /* =========================================================
+           BRAND FOOTER
+        ========================================================= */
+
+        .brand-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            gap: 20px;
+
+            padding-top: 20px;
+
+            border-top: 1px solid rgba(255, 255, 255, 0.10);
+
+            color: rgba(255, 255, 255, 0.55);
+
+            font-size: 11px;
+        }
+
+        .brand-footer strong {
+            color: rgba(255, 255, 255, 0.85);
+        }
+
+        /* =========================================================
+           RIGHT LOGIN AREA
+        ========================================================= */
+
+        .login-panel {
+            min-height: 100vh;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            padding: 42px 6vw;
+
+            background: rgba(255, 255, 255, 0.72);
+
+            backdrop-filter: blur(20px);
+        }
+
+        .login-container {
+            width: 100%;
+            max-width: 470px;
+        }
+
+        /* =========================================================
+           MOBILE LOGO
+        ========================================================= */
+
+        .mobile-brand {
+            display: none;
+        }
+
+        /* =========================================================
+           LOGIN CARD
+        ========================================================= */
+
+        .login-card {
+            padding: 42px;
+
+            border: 1px solid rgba(226, 232, 240, 0.90);
+
+            border-radius: var(--radius-lg);
+
+            background: rgba(255, 255, 255, 0.96);
+
+            box-shadow: var(--shadow-lg);
+        }
+
+        .login-header {
+            margin-bottom: 32px;
+        }
+
+        .login-kicker {
+            display: inline-flex;
+            align-items: center;
+
+            margin-bottom: 13px;
+
+            padding: 6px 10px;
+
+            border-radius: 7px;
+
+            background: var(--primary-light);
+
+            color: var(--primary);
+
+            font-size: 11px;
+            font-weight: 800;
+
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .login-header h2 {
+            font-size: 31px;
+            line-height: 1.2;
+
+            letter-spacing: -0.035em;
+
+            font-weight: 800;
+        }
+
+        .login-header p {
+            margin-top: 9px;
+
+            color: var(--text-soft);
+
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        /* =========================================================
+           FORM
+        ========================================================= */
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            margin-bottom: 8px;
+        }
+
+        .form-label {
+            color: var(--text);
+
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .forgot-link {
+            color: var(--primary);
+
+            font-size: 12px;
+            font-weight: 700;
+
+            text-decoration: none;
+
+            cursor: pointer;
+        }
+
+        .forgot-link:hover {
+            text-decoration: underline;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .input-icon {
+            position: absolute;
+
+            left: 15px;
+            top: 50%;
+
+            transform: translateY(-50%);
+
+            width: 18px;
+            height: 18px;
+
+            color: #94a3b8;
+
+            pointer-events: none;
+        }
+
+        .form-input {
+            width: 100%;
+            height: 52px;
+
+            padding: 0 46px;
+
+            border: 1px solid var(--border);
+
+            border-radius: 12px;
+
+            outline: none;
+
+            background: #ffffff;
+
+            color: var(--text);
+
+            font-size: 14px;
+
+            transition:
+                border-color 0.2s ease,
+                box-shadow 0.2s ease,
+                background 0.2s ease;
+        }
+
+        .form-input::placeholder {
+            color: #a0aec0;
+        }
+
+        .form-input:hover {
+            border-color: #cbd5e1;
+        }
+
+        .form-input:focus {
+            border-color: var(--accent);
+
+            background: #ffffff;
+
+            box-shadow:
+                0 0 0 4px rgba(29, 111, 232, 0.10);
+        }
+
+        .password-toggle {
+            position: absolute;
+
+            right: 10px;
+            top: 50%;
+
+            transform: translateY(-50%);
+
+            width: 34px;
+            height: 34px;
+
+            display: grid;
+            place-items: center;
+
+            border-radius: 8px;
+
+            background: transparent;
+
+            color: #64748b;
+
+            cursor: pointer;
+        }
+
+        .password-toggle:hover {
+            background: #f1f5f9;
+            color: var(--primary);
+        }
+
+        /* =========================================================
+           OPTIONS
+        ========================================================= */
+
+        .form-options {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            margin-top: 4px;
+            margin-bottom: 24px;
+        }
+
+        .remember-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 9px;
+
+            color: var(--text-soft);
+
+            font-size: 12px;
+
+            cursor: pointer;
+        }
+
+        .remember-label input {
+            width: 16px;
+            height: 16px;
+
+            accent-color: var(--primary);
+
+            cursor: pointer;
+        }
+
+        /* =========================================================
+           ERROR
+        ========================================================= */
+
+        .form-message {
+            display: none;
+
+            margin-bottom: 18px;
+
+            padding: 11px 13px;
+
+            border: 1px solid #fecaca;
+
+            border-radius: 10px;
+
+            background: #fef2f2;
+
+            color: var(--danger);
+
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        .form-message.show {
+            display: block;
+        }
+
+        /* =========================================================
+           SIGN IN BUTTON
+        ========================================================= */
+
+        .signin-button {
+            width: 100%;
+            height: 54px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+
+            border-radius: 12px;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    var(--primary),
+                    var(--accent)
+                );
+
+            color: #ffffff;
+
+            font-size: 14px;
+            font-weight: 800;
+
+            letter-spacing: 0.01em;
+
+            cursor: pointer;
+
+            box-shadow:
+                0 10px 24px rgba(11, 59, 130, 0.20);
+
+            transition:
+                transform 0.18s ease,
+                box-shadow 0.18s ease,
+                opacity 0.18s ease;
+        }
+
+        .signin-button:hover {
+            transform: translateY(-1px);
+
+            box-shadow:
+                0 14px 30px rgba(11, 59, 130, 0.25);
+        }
+
+        .signin-button:active {
+            transform: translateY(0);
+        }
+
+        .signin-button:disabled {
+            opacity: 0.65;
+
+            cursor: not-allowed;
+
+            transform: none;
+        }
+
+        /* =========================================================
+           LOADER
+        ========================================================= */
+
+        .button-loader {
+            width: 17px;
+            height: 17px;
+
+            border: 2px solid rgba(255, 255, 255, 0.35);
+            border-top-color: #ffffff;
+
+            border-radius: 50%;
+
+            animation: spin 0.75s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* =========================================================
+           SECURITY NOTE
+        ========================================================= */
+
+        .security-note {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+
+            margin-top: 22px;
+
+            padding: 13px 14px;
+
+            border: 1px solid #e6edf5;
+
+            border-radius: 11px;
+
+            background: #f8fafc;
+
+            color: var(--text-soft);
+
+            font-size: 11px;
+            line-height: 1.55;
+        }
+
+        .security-icon {
+            flex: 0 0 auto;
+
+            width: 18px;
+            height: 18px;
+
+            display: grid;
+            place-items: center;
+
+            border-radius: 5px;
+
+            background: #e8f1ff;
+
+            color: var(--primary);
+
+            font-size: 10px;
+            font-weight: 800;
+        }
+
+        /* =========================================================
+           CARD FOOTER
+        ========================================================= */
+
+        .login-footer {
+            margin-top: 28px;
+
+            text-align: center;
+
+            color: var(--text-muted);
+
+            font-size: 11px;
+            line-height: 1.7;
+        }
+
+        .login-footer strong {
+            color: var(--text-soft);
+            font-weight: 700;
+        }
+
+        /* =========================================================
+           RESPONSIVE - TABLET
+        ========================================================= */
+
+        @media (max-width: 1050px) {
+
+            .login-page {
+                grid-template-columns: 0.9fr 1.1fr;
+            }
+
+            .brand-panel {
+                padding: 42px 5vw;
+            }
+
+            .brand-hero h1 {
+                font-size: 48px;
+            }
+
+            .login-panel {
+                padding: 32px 5vw;
+            }
+
+            .login-card {
+                padding: 34px;
+            }
+        }
+
+        /* =========================================================
+           RESPONSIVE - MOBILE
+        ========================================================= */
+
+        @media (max-width: 760px) {
+
+            body {
+                background: var(--background);
+            }
+
+            .login-page {
+                display: block;
+
+                min-height: 100vh;
+            }
+
+            .brand-panel {
+                display: none;
+            }
+
+            .login-panel {
+                min-height: 100vh;
+
+                padding: 22px 16px 30px;
+
+                display: flex;
+                align-items: flex-start;
+
+                background:
+                    radial-gradient(
+                        circle at 50% -10%,
+                        rgba(29, 111, 232, 0.12),
+                        transparent 38%
+                    ),
+                    var(--background);
+
+                backdrop-filter: none;
+            }
+
+            .login-container {
+                max-width: 100%;
+
+                margin: 0 auto;
+
+                padding-top: 10px;
+            }
+
+            .mobile-brand {
+                display: flex;
+
+                align-items: center;
+                justify-content: center;
+
+                gap: 11px;
+
+                margin-bottom: 22px;
+            }
+
+            .mobile-brand img {
+                width: 50px;
+                height: 50px;
+
+                padding: 7px;
+
+                object-fit: contain;
+
+                background: #ffffff;
+
+                border-radius: 13px;
+
+                box-shadow:
+                    0 8px 22px rgba(15, 23, 42, 0.10);
+            }
+
+            .mobile-brand-text {
+                display: flex;
+                flex-direction: column;
+            }
+
+            .mobile-brand-title {
+                color: var(--primary);
+
+                font-size: 18px;
+                font-weight: 800;
+
+                letter-spacing: 0.02em;
+            }
+
+            .mobile-brand-subtitle {
+                margin-top: 2px;
+
+                color: var(--text-muted);
+
+                font-size: 9px;
+                font-weight: 700;
+
+                letter-spacing: 0.12em;
+                text-transform: uppercase;
+            }
+
+            .login-card {
+                padding: 27px 21px 23px;
+
+                border-radius: 20px;
+
+                box-shadow:
+                    0 18px 45px rgba(15, 23, 42, 0.09);
+            }
+
+            .login-header {
+                margin-bottom: 27px;
+            }
+
+            .login-header h2 {
+                font-size: 27px;
+            }
+
+            .login-header p {
+                font-size: 13px;
+            }
+
+            .form-input {
+                height: 51px;
+            }
+
+            .signin-button {
+                height: 52px;
+            }
+
+            .security-note {
+                margin-top: 18px;
+            }
+
+            .login-footer {
+                margin-top: 20px;
+            }
+        }
+
+        /* =========================================================
+           SMALL MOBILE
+        ========================================================= */
+
+        @media (max-width: 380px) {
+
+            .login-panel {
+                padding-left: 11px;
+                padding-right: 11px;
+            }
+
+            .login-card {
+                padding: 24px 17px 21px;
+            }
+
+            .login-header h2 {
+                font-size: 25px;
+            }
+        }
+
+        /* =========================================================
+           REDUCED MOTION
+        ========================================================= */
+
+        @media (prefers-reduced-motion: reduce) {
+
+            *,
+            *::before,
+            *::after {
+                scroll-behavior: auto !important;
+                transition: none !important;
+                animation: none !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <main class="login-page">
+
+        <!-- =====================================================
+             LEFT BRAND PANEL
+        ====================================================== -->
+
+        <section class="brand-panel">
+
+            <div class="brand-content">
+
+                <div class="brand-logo">
+
+                    <img
+                        src="assets/logo/mmv-logo.png"
+                        alt="MMV Traders Logo"
+                    >
+
+                    <div class="brand-logo-text">
+                        <div class="brand-logo-title">
+                            MMV TRADERS
+                        </div>
+
+                        <div class="brand-logo-subtitle">
+                            Business Management System
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="brand-hero">
+
+                <div class="brand-badge">
+                    <span class="brand-badge-dot"></span>
+                    MMV Traders ERP V2
+                </div>
+
+                <h1>
+                    Run your business
+                    <span>with clarity.</span>
+                </h1>
+
+                <p>
+                    A modern business management platform built to
+                    simplify purchasing, sales, inventory, customers,
+                    suppliers and financial operations from one place.
+                </p>
+
+
+                <div class="feature-list">
+
+                    <div class="feature-item">
+                        <span class="feature-icon">✓</span>
+                        Sales & Invoicing
+                    </div>
+
+                    <div class="feature-item">
+                        <span class="feature-icon">✓</span>
+                        Purchase Management
+                    </div>
+
+                    <div class="feature-item">
+                        <span class="feature-icon">✓</span>
+                        Inventory Control
+                    </div>
+
+                    <div class="feature-item">
+                        <span class="feature-icon">✓</span>
+                        Customer & Supplier
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <footer class="brand-footer">
+
+                <span>
+                    © 2026 <strong>MMV Traders</strong>
+                </span>
+
+                <span>
+                    Powered by <strong>VTOOS Software Solutions</strong>
+                </span>
+
+            </footer>
+
+        </section>
+
+
+        <!-- =====================================================
+             LOGIN PANEL
+        ====================================================== -->
+
+        <section class="login-panel">
+
+            <div class="login-container">
+
+                <!-- Mobile Brand -->
+
+                <div class="mobile-brand">
+
+                    <img
+                        src="assets/logo/mmv-logo.png"
+                        alt="MMV Traders Logo"
+                    >
+
+                    <div class="mobile-brand-text">
+
+                        <div class="mobile-brand-title">
+                            MMV TRADERS
+                        </div>
+
+                        <div class="mobile-brand-subtitle">
+                            Business Management System
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- Login Card -->
+
+                <div class="login-card">
+
+                    <div class="login-header">
+
+                        <span class="login-kicker">
+                            Secure Access
+                        </span>
+
+                        <h2>
+                            Welcome back
+                        </h2>
+
+                        <p>
+                            Sign in to access your MMV Traders ERP workspace.
+                        </p>
+
+                    </div>
+
+
+                    <!-- Error Message -->
+
+                    <div
+                        id="loginMessage"
+                        class="form-message"
+                        role="alert"
+                    ></div>
+
+
+                    <!-- Email -->
+
+                    <div class="form-group">
+
+                        <div class="form-label-row">
+
+                            <label
+                                class="form-label"
+                                for="email"
+                            >
+                                Email address
+                            </label>
+
+                        </div>
+
+
+                        <div class="input-wrapper">
+
+                            <svg
+                                class="input-icon"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="1.8"
+                                aria-hidden="true"
+                            >
+                                <path
+                                    d="M4 6h16v12H4z"
+                                    rx="2"
+                                />
+                                <path
+                                    d="m4 7 8 6 8-6"
+                                />
+                            </svg>
+
+
+                            <input
+                                id="email"
+                                class="form-input"
+                                type="email"
+                                name="email"
+                                autocomplete="email"
+                                placeholder="Enter your email address"
+                                required
+                            >
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- Password -->
+
+                    <div class="form-group">
+
+                        <div class="form-label-row">
+
+                            <label
+                                class="form-label"
+                                for="password"
+                            >
+                                Password
+                            </label>
+
+                            <a
+                                href="#"
+                                class="forgot-link"
+                                id="forgotPassword"
+                            >
+                                Forgot password?
+                            </a>
+
+                        </div>
+
+
+                        <div class="input-wrapper">
+
+                            <svg
+                                class="input-icon"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="1.8"
+                                aria-hidden="true"
+                            >
+                                <rect
+                                    x="4"
+                                    y="10"
+                                    width="16"
+                                    height="10"
+                                    rx="2"
+                                />
+
+                                <path
+                                    d="M8 10V7a4 4 0 0 1 8 0v3"
+                                />
+                            </svg>
+
+
+                            <input
+                                id="password"
+                                class="form-input"
+                                type="password"
+                                name="password"
+                                autocomplete="current-password"
+                                placeholder="Enter your password"
+                                required
+                            >
+
+
+                            <button
+                                type="button"
+                                class="password-toggle"
+                                id="togglePassword"
+                                aria-label="Show password"
+                                title="Show password"
+                            >
+
+                                <svg
+                                    id="eyeIcon"
+                                    width="18"
+                                    height="18"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="1.8"
+                                >
+                                    <path
+                                        d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"
+                                    />
+
+                                    <circle
+                                        cx="12"
+                                        cy="12"
+                                        r="3"
+                                    />
+                                </svg>
+
+                            </button>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- Options -->
+
+                    <div class="form-options">
+
+                        <label class="remember-label">
+
+                            <input
+                                type="checkbox"
+                                id="rememberMe"
+                            >
+
+                            <span>
+                                Keep me signed in
+                            </span>
+
+                        </label>
+
+                    </div>
+
+
+                    <!-- Login Button -->
+
+                    <button
+                        type="button"
+                        class="signin-button"
+                        id="signInButton"
+                    >
+
+                        <span id="buttonText">
+                            Sign in
+                        </span>
+
+                    </button>
+
+
+                    <!-- Security -->
+
+                    <div class="security-note">
+
+                        <span class="security-icon">
+                            ✓
+                        </span>
+
+                        <span>
+                            Your account access is protected using
+                            Firebase Authentication. Never share your
+                            password with anyone.
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+                <!-- Footer -->
+
+                <div class="login-footer">
+
+                    <div>
+                        MMV Traders ERP V2
+                    </div>
+
+                    <div>
+                        Powered by
+                        <strong>VTOOS Software Solutions</strong>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <script>
+        /* =========================================================
+           LOGIN UI BEHAVIOUR
+           Firebase authentication will be connected later.
+        ========================================================= */
+
+        const passwordInput =
+            document.getElementById("password");
+
+        const togglePassword =
+            document.getElementById("togglePassword");
+
+        const eyeIcon =
+            document.getElementById("eyeIcon");
+
+        const signInButton =
+            document.getElementById("signInButton");
+
+        const buttonText =
+            document.getElementById("buttonText");
+
+        const loginMessage =
+            document.getElementById("loginMessage");
+
+        const forgotPassword =
+            document.getElementById("forgotPassword");
+
+
+        /* =========================================================
+           SHOW / HIDE PASSWORD
+        ========================================================= */
+
+        togglePassword.addEventListener("click", () => {
+
+            const isPassword =
+                passwordInput.type === "password";
+
+            passwordInput.type =
+                isPassword ? "text" : "password";
+
+            togglePassword.setAttribute(
+                "aria-label",
+                isPassword
+                    ? "Hide password"
+                    : "Show password"
+            );
+
+            togglePassword.setAttribute(
+                "title",
+                isPassword
+                    ? "Hide password"
+                    : "Show password"
+            );
+
+            if (isPassword) {
+
+                eyeIcon.innerHTML = `
+                    <path
+                        d="M3 3l18 18"
+                    />
+
+                    <path
+                        d="M10.6 10.6a2 2 0 0 0 2.8 2.8"
+                    />
+
+                    <path
+                        d="M9.9 4.2A10.7 10.7 0 0 1 12 4c6.5 0 10 8 10 8a17.4 17.4 0 0 1-3.1 4.2"
+                    />
+
+                    <path
+                        d="M6.2 6.2C3.6 8.1 2 12 2 12s3.5 8 10 8a10.9 10.9 0 0 0 4.1-.8"
+                    />
+                `;
+
+            } else {
+
+                eyeIcon.innerHTML = `
+                    <path
+                        d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"
+                    />
+
+                    <circle
+                        cx="12"
+                        cy="12"
+                        r="3"
+                    />
+                `;
+            }
+
+        });
+
+
+        /* =========================================================
+           FORGOT PASSWORD
+        ========================================================= */
+
+        forgotPassword.addEventListener("click", (event) => {
+
+            event.preventDefault();
+
+            const email =
+                document.getElementById("email").value.trim();
+
+            if (!email) {
+
+                showMessage(
+                    "Please enter your email address first."
+                );
+
+                document.getElementById("email").focus();
+
+                return;
+            }
+
+            /*
+             * Firebase password reset will be connected here.
+             */
+
+            showMessage(
+                "Password reset will be available after Firebase Authentication is connected.",
+                "info"
+            );
+
+        });
+
+
+        /* =========================================================
+           SIGN IN
+        ========================================================= */
+
+        signInButton.addEventListener("click", () => {
+
+            const email =
+                document.getElementById("email").value.trim();
+
+            const password =
+                passwordInput.value;
+
+
+            hideMessage();
+
+
+            if (!email) {
+
+                showMessage(
+                    "Please enter your email address."
+                );
+
+                document.getElementById("email").focus();
+
+                return;
+            }
+
+
+            if (!password) {
+
+                showMessage(
+                    "Please enter your password."
+                );
+
+                passwordInput.focus();
+
+                return;
+            }
+
+
+            /*
+             * Firebase Authentication will be connected here.
+             *
+             * We intentionally do not use dummy credentials.
+             */
+
+            setLoading(true);
+
+            setTimeout(() => {
+
+                setLoading(false);
+
+                showMessage(
+                    "Authentication is not connected yet. Firebase V2 setup will be added next.",
+                    "info"
+                );
+
+            }, 700);
+
+        });
+
+
+        /* =========================================================
+           ENTER KEY
+        ========================================================= */
+
+        document.addEventListener(
+            "keydown",
+            (event) => {
+
+                if (event.key === "Enter") {
+
+                    signInButton.click();
+
+                }
+
+            }
+        );
+
+
+        /* =========================================================
+           UI HELPERS
+        ========================================================= */
+
+        function setLoading(isLoading) {
+
+            signInButton.disabled =
+                isLoading;
+
+            if (isLoading) {
+
+                buttonText.innerHTML = `
+                    <span class="button-loader"></span>
+                    Signing in...
+                `;
+
+            } else {
+
+                buttonText.textContent =
+                    "Sign in";
+
+            }
+
+        }
+
+
+        function showMessage(
+            message,
+            type = "error"
+        ) {
+
+            loginMessage.textContent =
+                message;
+
+            loginMessage.classList.add("show");
+
+            if (type === "info") {
+
+                loginMessage.style.borderColor =
+                    "#bfdbfe";
+
+                loginMessage.style.background =
+                    "#eff6ff";
+
+                loginMessage.style.color =
+                    "#1d4ed8";
+
+            } else {
+
+                loginMessage.style.borderColor =
+                    "#fecaca";
+
+                loginMessage.style.background =
+                    "#fef2f2";
+
+                loginMessage.style.color =
+                    "#dc2626";
+
+            }
+
+        }
+
+
+        function hideMessage() {
+
+            loginMessage.classList.remove("show");
+
+        }
+    </script>
+
+</body>
+</html>
