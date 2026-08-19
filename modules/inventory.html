@@ -3475,6 +3475,243 @@ updateSummary();
 </script>
 
 
+
+<!-- =====================================================
+     FIREBASE V2 - INVENTORY PERSISTENCE PATCH
+     Existing Inventory UI/logic preserved
+===================================================== -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
+import {
+    getFirestore,
+    collection,
+    getDocs,
+    addDoc,
+    updateDoc,
+    doc,
+    query,
+    orderBy,
+    serverTimestamp
+} from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
+import {
+    getAuth,
+    onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js";
+
+const firebaseConfig = {
+    apiKey: "AIzaSyDYU43yaApPBU-GFxfMtnfST-ZJRu8Vg_E",
+    authDomain: "mmv-traders-erp-v2.firebaseapp.com",
+    projectId: "mmv-traders-erp-v2",
+    storageBucket: "mmv-traders-erp-v2.firebasestorage.app",
+    messagingSenderId: "345950984944",
+    appId: "1:345950984944:web:2a456b89f42f31ea2bc035"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
+
+let inventoryFirebaseReady = false;
+let inventoryLoading = false;
+
+function inventoryProductPayload(product) {
+    return {
+        code: String(product.code || ""),
+        name: String(product.name || ""),
+        category: String(product.category || ""),
+        unit: String(product.unit || "Nos"),
+        stock: Number(product.stock || 0),
+        minimumStock: Number(product.minimumStock || 0),
+        purchaseRate: Number(product.purchaseRate || 0),
+        sellingRate: Number(product.sellingRate || 0),
+        description: String(product.description || ""),
+        updatedAt: serverTimestamp()
+    };
+}
+
+async function loadInventoryFromFirebase() {
+    if (inventoryLoading) return;
+    inventoryLoading = true;
+
+    try {
+        const snap = await getDocs(
+            query(collection(db, "products"), orderBy("createdAt", "asc"))
+        );
+
+        const loaded = [];
+        snap.forEach((item) => {
+            loaded.push({
+                id: item.id,
+                ...item.data()
+            });
+        });
+
+        products = loaded;
+        inventoryFirebaseReady = true;
+
+        if (typeof updateCategories === "function") updateCategories();
+        if (typeof renderProducts === "function") renderProducts();
+        if (typeof updateSummary === "function") updateSummary();
+
+        console.log("Inventory loaded from Firebase:", products.length);
+    } catch (error) {
+        console.error("Inventory Firebase load failed:", error);
+        inventoryFirebaseReady = false;
+
+        // Fallback for first-time setup / empty collection.
+        if (typeof updateCategories === "function") updateCategories();
+        if (typeof renderProducts === "function") renderProducts();
+        if (typeof updateSummary === "function") updateSummary();
+    } finally {
+        inventoryLoading = false;
+    }
+}
+
+async function saveInventoryProductToFirebase(product) {
+    const data = inventoryProductPayload(product);
+
+    if (product.id) {
+        await updateDoc(doc(db, "products", product.id), data);
+        return product.id;
+    }
+
+    data.createdAt = serverTimestamp();
+
+    const ref = await addDoc(collection(db, "products"), data);
+    product.id = ref.id;
+    return ref.id;
+}
+
+async function updateInventoryProductInFirebase(product) {
+    if (!product || !product.id) {
+        return saveInventoryProductToFirebase(product);
+    }
+
+    await updateDoc(
+        doc(db, "products", product.id),
+        inventoryProductPayload(product)
+    );
+
+    return product.id;
+}
+
+/* Auth state is required by the current Firestore rules:
+   allow read, write: if request.auth != null;
+*/
+onAuthStateChanged(auth, async (user) => {
+    if (!user) {
+        console.warn("Inventory: Firebase user is not authenticated.");
+        return;
+    }
+
+    console.log("Inventory Firebase authenticated:", user.uid);
+    await loadInventoryFromFirebase();
+});
+
+/* Expose persistence helpers to the existing non-module script. */
+window.inventoryFirebase = {
+    db,
+    auth,
+    load: loadInventoryFromFirebase,
+    save: saveInventoryProductToFirebase,
+    update: updateInventoryProductInFirebase
+};
+</script>
+
+<script>
+/* =====================================================
+   FIREBASE BRIDGE FOR EXISTING INVENTORY FUNCTIONS
+===================================================== */
+
+(function () {
+    const originalSaveButton =
+        document.getElementById("saveProduct");
+
+    if (originalSaveButton) {
+        originalSaveButton.addEventListener("click", async function () {
+            // Existing handler runs first and updates the local UI.
+            // Wait one tick so the newly-added product is available.
+            setTimeout(async function () {
+                try {
+                    if (!window.inventoryFirebase) return;
+                    if (!Array.isArray(products) || !products.length) return;
+
+                    const lastProduct = products[products.length - 1];
+
+                    // If it already has an ID, it was loaded from Firebase.
+                    if (lastProduct && !lastProduct.id) {
+                        await window.inventoryFirebase.save(lastProduct);
+                        console.log("Inventory product saved:", lastProduct.id);
+                    }
+                } catch (error) {
+                    console.error("Inventory product save failed:", error);
+                    alert("Product saved locally, but Firebase save failed. Please check Firebase login/rules.");
+                }
+            }, 150);
+        });
+    }
+
+    // Persist stock changes after the existing stock functions execute.
+    const originalStockIn = window.stockIn;
+    if (typeof originalStockIn === "function") {
+        window.stockIn = async function (code) {
+            const before = products.find(p => p.code === code);
+            if (!before) return;
+
+            const oldStock = Number(before.stock || 0);
+            originalStockIn(code);
+
+            const after = products.find(p => p.code === code);
+            if (!after || Number(after.stock || 0) === oldStock) return;
+
+            try {
+                if (window.inventoryFirebase) {
+                    await window.inventoryFirebase.update(after);
+                    console.log("Stock IN saved:", after.code, after.stock);
+                }
+            } catch (error) {
+                console.error("Stock IN Firebase update failed:", error);
+                alert("Stock updated on screen, but Firebase update failed.");
+            }
+        };
+    }
+
+    const originalStockOut = window.stockOut;
+    if (typeof originalStockOut === "function") {
+        window.stockOut = async function (code) {
+            const before = products.find(p => p.code === code);
+            if (!before) return;
+
+            const oldStock = Number(before.stock || 0);
+            originalStockOut(code);
+
+            const after = products.find(p => p.code === code);
+            if (!after || Number(after.stock || 0) === oldStock) return;
+
+            try {
+                if (window.inventoryFirebase) {
+                    await window.inventoryFirebase.update(after);
+                    console.log("Stock OUT saved:", after.code, after.stock);
+                }
+            } catch (error) {
+                console.error("Stock OUT Firebase update failed:", error);
+                alert("Stock updated on screen, but Firebase update failed.");
+            }
+        };
+    }
+
+    // Refresh button: always reload current Firestore data.
+    const refreshBtn = document.getElementById("refreshBtn");
+    if (refreshBtn) {
+        refreshBtn.addEventListener("click", async function () {
+            if (window.inventoryFirebase) {
+                await window.inventoryFirebase.load();
+            }
+        });
+    }
+})();
+</script>
+
 </body>
 
 </html>
