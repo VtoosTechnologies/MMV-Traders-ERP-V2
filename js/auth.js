@@ -1,23 +1,30 @@
 /* ============================================================
    MMV TRADERS ERP V2
    AUTHENTICATION SERVICE
-   Production Authentication Layer
+   ------------------------------------------------------------
+   Firebase Authentication
+   User Profile Validation
+   Active / Inactive Check
+   Login
+   Logout
+   Session State
+   Role Redirect
    ============================================================ */
 
 "use strict";
 
 import {
-    onAuthStateChanged,
     signInWithEmailAndPassword,
     signOut,
-    setPersistence,
-    browserLocalPersistence
-} from "https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js";
+    onAuthStateChanged
+} from
+"https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js";
 
 import {
     doc,
     getDoc
-} from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
+} from
+"https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
 
 import {
     auth,
@@ -26,47 +33,66 @@ import {
 
 
 /* ============================================================
-   APPLICATION SETTINGS
+   CONFIG
    ============================================================ */
 
-export const AUTH_CONFIG = Object.freeze({
+const USERS_COLLECTION =
+    "users";
 
-    loginPage: "/login.html",
+const LOGIN_PAGE =
+    "index.html";
 
-    homePage: "/index.html",
-
-    defaultRole: "owner",
-
-    sessionKey: "mmv_auth_session"
-
-});
+const DASHBOARD_PAGE =
+    "dashboard.html";
 
 
 /* ============================================================
-   ENABLE LOCAL SESSION
+   STATE
    ============================================================ */
 
-export async function initializeAuth() {
+const authState = {
 
-    try {
+    user:
+        null,
 
-        await setPersistence(
-            auth,
-            browserLocalPersistence
-        );
+    profile:
+        null,
 
-        return true;
+    initialized:
+        false,
 
-    } catch (error) {
+    loading:
+        false
 
-        console.error(
-            "MMV Auth persistence error:",
-            error
-        );
+};
 
-        return false;
 
-    }
+/* ============================================================
+   HELPERS
+   ============================================================ */
+
+function authEl(id) {
+
+    return document.getElementById(
+        id
+    );
+
+}
+
+
+function clean(value) {
+
+    return String(
+        value ?? ""
+    ).trim();
+
+}
+
+
+function getCurrentFirebaseUser() {
+
+    return auth?.currentUser ||
+        null;
 
 }
 
@@ -75,104 +101,73 @@ export async function initializeAuth() {
    GET USER PROFILE
    ============================================================ */
 
-export async function getUserProfile(
-    user
+async function getUserProfile(
+    uid
 ) {
 
-    if (!user) {
+    if (!uid) {
 
         return null;
 
     }
 
 
-    try {
-
-        const reference =
-            doc(
-                db,
-                "users",
-                user.uid
-            );
-
-
-        const snapshot =
-            await getDoc(
-                reference
-            );
-
-
-        if (
-            snapshot.exists()
-        ) {
-
-            return {
-
-                uid: user.uid,
-
-                email:
-                    user.email || "",
-
-                ...snapshot.data()
-
-            };
-
-        }
-
-
-        /*
-         * If profile document does not exist,
-         * create a safe default application profile
-         * in memory only.
-         */
-
-        return {
-
-            uid: user.uid,
-
-            email:
-                user.email || "",
-
-            role:
-                AUTH_CONFIG.defaultRole,
-
-            name:
-                user.displayName ||
-                "MMV Owner",
-
-            status:
-                "Active"
-
-        };
-
-    } catch (error) {
-
-        console.error(
-            "Unable to load user profile:",
-            error
+    const reference =
+        doc(
+            db,
+            USERS_COLLECTION,
+            uid
         );
 
 
-        return {
+    const snapshot =
+        await getDoc(
+            reference
+        );
 
-            uid: user.uid,
 
-            email:
-                user.email || "",
+    if (
+        !snapshot.exists()
+    ) {
 
-            role:
-                AUTH_CONFIG.defaultRole,
-
-            name:
-                user.displayName ||
-                "MMV Owner",
-
-            status:
-                "Active"
-
-        };
+        return null;
 
     }
+
+
+    return {
+
+        id:
+            snapshot.id,
+
+        ...snapshot.data()
+
+    };
+
+}
+
+
+/* ============================================================
+   CHECK USER ACCESS
+   ============================================================ */
+
+function isProfileActive(
+    profile
+) {
+
+    if (!profile) {
+
+        return false;
+
+    }
+
+
+    return (
+        clean(
+            profile.status
+        ).toUpperCase() ===
+        "ACTIVE"
+    );
 
 }
 
@@ -181,139 +176,198 @@ export async function getUserProfile(
    LOGIN
    ============================================================ */
 
-export async function login(
+async function login(
     email,
     password
 ) {
 
-    if (!email || !password) {
+    if (
+        authState.loading
+    ) {
 
-        return {
+        return false;
 
-            success: false,
+    }
 
-            message:
-                "Email and password are required."
 
-        };
+    const loginEmail =
+        clean(
+            email
+        ).toLowerCase();
+
+
+    const loginPassword =
+        String(
+            password ?? ""
+        );
+
+
+    if (!loginEmail) {
+
+        showAuthMessage(
+            "Please enter your email address.",
+            "error"
+        );
+
+        return false;
+
+    }
+
+
+    if (!loginPassword) {
+
+        showAuthMessage(
+            "Please enter your password.",
+            "error"
+        );
+
+        return false;
 
     }
 
 
     try {
 
-        await initializeAuth();
+        authState.loading =
+            true;
+
+
+        setLoginLoading(
+            true
+        );
 
 
         const credential =
             await signInWithEmailAndPassword(
-
                 auth,
-
-                email.trim(),
-
-                password
-
+                loginEmail,
+                loginPassword
             );
 
 
-        const user =
+        const firebaseUser =
             credential.user;
 
 
         const profile =
             await getUserProfile(
-                user
+                firebaseUser.uid
             );
 
 
         /*
-         * Application-level status check
+         * Firebase account exists,
+         * but ERP profile does not.
          */
 
-        if (
-            profile &&
-            profile.status &&
-            profile.status !== "Active"
-        ) {
+        if (!profile) {
 
-            await signOut(auth);
+            await signOut(
+                auth
+            );
 
 
-            return {
+            showAuthMessage(
+                "Your account is not configured for MMV Traders ERP. Please contact the administrator.",
+                "error"
+            );
 
-                success: false,
 
-                message:
-                    "Your account is inactive. Please contact the owner."
-
-            };
+            return false;
 
         }
 
 
         /*
-         * Save lightweight session information.
-         *
-         * Do NOT store password.
+         * Inactive users cannot access ERP.
          */
 
-        localStorage.setItem(
+        if (
+            !isProfileActive(
+                profile
+            )
+        ) {
 
-            AUTH_CONFIG.sessionKey,
-
-            JSON.stringify({
-
-                uid:
-                    user.uid,
-
-                email:
-                    user.email || "",
-
-                role:
-                    profile?.role ||
-                    AUTH_CONFIG.defaultRole,
-
-                name:
-                    profile?.name ||
-                    "MMV Owner",
-
-                loginAt:
-                    Date.now()
-
-            })
-
-        );
+            await signOut(
+                auth
+            );
 
 
-        return {
+            showAuthMessage(
+                "Your ERP account is inactive. Please contact the administrator.",
+                "error"
+            );
 
-            success: true,
 
-            user,
+            return false;
+
+        }
+
+
+        authState.user =
+            firebaseUser;
+
+
+        authState.profile =
+            profile;
+
+
+        window.MMVAuthUser = {
+
+            firebaseUser,
 
             profile
 
         };
 
-    } catch (error) {
+
+        showAuthMessage(
+            "Login successful. Opening dashboard...",
+            "success"
+        );
+
+
+        setTimeout(
+            () => {
+
+                redirectToDashboard();
+
+            },
+            400
+        );
+
+
+        return true;
+
+    }
+    catch(error) {
 
         console.error(
-            "MMV Login Error:",
+            "Login error:",
             error
         );
 
 
-        return {
+        showAuthMessage(
+            getAuthErrorMessage(
+                error
+            ),
+            "error"
+        );
 
-            success: false,
 
-            message:
-                getAuthErrorMessage(
-                    error
-                )
+        return false;
 
-        };
+    }
+    finally {
+
+        authState.loading =
+            false;
+
+
+        setLoginLoading(
+            false
+        );
 
     }
 
@@ -324,7 +378,7 @@ export async function login(
    LOGOUT
    ============================================================ */
 
-export async function logout() {
+async function logout() {
 
     try {
 
@@ -332,23 +386,35 @@ export async function logout() {
             auth
         );
 
-    } catch (error) {
+
+        authState.user =
+            null;
+
+
+        authState.profile =
+            null;
+
+
+        window.MMVAuthUser =
+            null;
+
+
+        redirectToLogin();
+
+
+    }
+    catch(error) {
 
         console.error(
             "Logout error:",
             error
         );
 
-    } finally {
 
-        localStorage.removeItem(
-            AUTH_CONFIG.sessionKey
+        showAuthMessage(
+            "Unable to logout. Please try again.",
+            "error"
         );
-
-        sessionStorage.clear();
-
-        window.location.href =
-            AUTH_CONFIG.loginPage;
 
     }
 
@@ -356,40 +422,156 @@ export async function logout() {
 
 
 /* ============================================================
-   CURRENT USER
+   SESSION CHECK
    ============================================================ */
 
-export function getCurrentUser() {
+async function checkSession() {
 
-    return auth.currentUser || null;
+    const firebaseUser =
+        getCurrentFirebaseUser();
+
+
+    if (!firebaseUser) {
+
+        return null;
+
+    }
+
+
+    try {
+
+        const profile =
+            await getUserProfile(
+                firebaseUser.uid
+            );
+
+
+        if (!profile) {
+
+            await signOut(
+                auth
+            );
+
+
+            return null;
+
+        }
+
+
+        if (
+            !isProfileActive(
+                profile
+            )
+        ) {
+
+            await signOut(
+                auth
+            );
+
+
+            return null;
+
+        }
+
+
+        authState.user =
+            firebaseUser;
+
+
+        authState.profile =
+            profile;
+
+
+        window.MMVAuthUser = {
+
+            firebaseUser,
+
+            profile
+
+        };
+
+
+        return {
+
+            firebaseUser,
+
+            profile
+
+        };
+
+    }
+    catch(error) {
+
+        console.error(
+            "Session validation error:",
+            error
+        );
+
+
+        return null;
+
+    }
 
 }
 
 
 /* ============================================================
-   WAIT FOR AUTH STATE
+   PROTECTED PAGE
    ============================================================ */
 
-export function waitForAuth() {
+async function protectPage() {
+
+    /*
+     * Wait until Firebase resolves
+     * its authentication state.
+     */
 
     return new Promise(
-        function(resolve) {
+        resolve => {
 
             const unsubscribe =
                 onAuthStateChanged(
-
                     auth,
-
-                    function(user) {
+                    async firebaseUser => {
 
                         unsubscribe();
 
+
+                        if (!firebaseUser) {
+
+                            redirectToLogin();
+
+                            resolve(
+                                false
+                            );
+
+                            return;
+
+                        }
+
+
+                        const session =
+                            await checkSession();
+
+
+                        if (!session) {
+
+                            redirectToLogin();
+
+                            resolve(
+                                false
+                            );
+
+                            return;
+
+                        }
+
+
                         resolve(
-                            user
+                            true
                         );
 
                     }
-
                 );
 
         }
@@ -399,215 +581,366 @@ export function waitForAuth() {
 
 
 /* ============================================================
-   REQUIRE LOGIN
-   ============================================================
-
-   Use this on protected ERP pages.
+   LOGIN PAGE GUARD
    ============================================================ */
 
-export async function requireAuth(
-    options = {}
-) {
+async function protectLoginPage() {
 
-    const {
+    return new Promise(
+        resolve => {
 
-        redirect = true,
+            const unsubscribe =
+                onAuthStateChanged(
+                    auth,
+                    async firebaseUser => {
 
-        allowedRoles = null
-
-    } = options;
-
-
-    await initializeAuth();
+                        unsubscribe();
 
 
-    const user =
-        await waitForAuth();
+                        if (!firebaseUser) {
+
+                            resolve(
+                                false
+                            );
+
+                            return;
+
+                        }
 
 
-    if (!user) {
+                        const session =
+                            await checkSession();
 
-        if (redirect) {
 
-            window.location.href =
-                AUTH_CONFIG.loginPage;
+                        if (session) {
+
+                            redirectToDashboard();
+
+                            resolve(
+                                true
+                            );
+
+                            return;
+
+                        }
+
+
+                        resolve(
+                            false
+                        );
+
+                    }
+                );
 
         }
+    );
 
-        return null;
+}
+
+
+/* ============================================================
+   REDIRECT DASHBOARD
+   ============================================================ */
+
+function redirectToDashboard() {
+
+    if (
+        window.location.pathname
+            .endsWith(
+                "dashboard.html"
+            )
+    ) {
+
+        return;
 
     }
 
 
-    const profile =
-        await getUserProfile(
-            user
+    window.location.href =
+        DASHBOARD_PAGE;
+
+}
+
+
+/* ============================================================
+   REDIRECT LOGIN
+   ============================================================ */
+
+function redirectToLogin() {
+
+    if (
+        window.location.pathname
+            .endsWith(
+                LOGIN_PAGE
+            ) ||
+        window.location.pathname ===
+        "/"
+    ) {
+
+        return;
+
+    }
+
+
+    window.location.href =
+        LOGIN_PAGE;
+
+}
+
+
+/* ============================================================
+   LOGIN FORM
+   ============================================================ */
+
+function bindLoginForm() {
+
+    const form =
+        authEl(
+            "loginForm"
         );
 
 
-    /*
-     * Check account status
-     */
+    if (!form) {
 
-    if (
-        profile &&
-        profile.status &&
-        profile.status !== "Active"
-    ) {
-
-        await logout();
-
-        return null;
+        return;
 
     }
 
 
-    /*
-     * Role protection
-     */
+    form.addEventListener(
+        "submit",
+        async event => {
 
-    if (
-        Array.isArray(
-            allowedRoles
-        ) &&
-        allowedRoles.length > 0
-    ) {
-
-        const userRole =
-            profile?.role ||
-            AUTH_CONFIG.defaultRole;
+            event.preventDefault();
 
 
-        if (
-            !allowedRoles.includes(
-                userRole
-            )
-        ) {
+            const email =
+                authEl(
+                    "email"
+                )?.value ||
+                authEl(
+                    "loginEmail"
+                )?.value ||
+                "";
 
-            showAccessDenied();
 
-            return null;
+            const password =
+                authEl(
+                    "password"
+                )?.value ||
+                authEl(
+                    "loginPassword"
+                )?.value ||
+                "";
+
+
+            await login(
+                email,
+                password
+            );
+
+        }
+    );
+
+}
+
+
+/* ============================================================
+   LOGOUT BUTTONS
+   ============================================================ */
+
+function bindLogoutButtons() {
+
+    document
+        .querySelectorAll(
+            "[data-logout]"
+        )
+        .forEach(
+            button => {
+
+                button.addEventListener(
+                    "click",
+                    async event => {
+
+                        event.preventDefault();
+
+                        await logout();
+
+                    }
+                );
+
+            }
+        );
+
+}
+
+
+/* ============================================================
+   LOGIN LOADING
+   ============================================================ */
+
+function setLoginLoading(
+    loading
+) {
+
+    const buttons =
+        document.querySelectorAll(
+            "[data-login-submit]"
+        );
+
+
+    buttons.forEach(
+        button => {
+
+            button.disabled =
+                loading;
+
+
+            if (
+                loading
+            ) {
+
+                button.dataset
+                    .originalText =
+                    button.textContent;
+
+
+                button.textContent =
+                    "Signing in...";
+
+            }
+            else {
+
+                button.textContent =
+                    button.dataset
+                        .originalText ||
+                    "Sign In";
+
+            }
+
+        }
+    );
+
+}
+
+
+/* ============================================================
+   AUTH MESSAGE
+   ============================================================ */
+
+function showAuthMessage(
+    message,
+    type = "info"
+) {
+
+    let box =
+        authEl(
+            "authMessage"
+        );
+
+
+    if (!box) {
+
+        box =
+            document.createElement(
+                "div"
+            );
+
+
+        box.id =
+            "authMessage";
+
+
+        Object.assign(
+            box.style,
+            {
+
+                marginTop:
+                    "14px",
+
+                padding:
+                    "12px 14px",
+
+                borderRadius:
+                    "10px",
+
+                fontSize:
+                    "13px",
+
+                fontWeight:
+                    "600"
+
+            }
+        );
+
+
+        const form =
+            authEl(
+                "loginForm"
+            );
+
+
+        if (form) {
+
+            form.appendChild(
+                box
+            );
+
+        }
+        else {
+
+            document.body.appendChild(
+                box
+            );
 
         }
 
     }
 
 
-    return {
-
-        user,
-
-        profile
-
-    };
-
-}
+    box.textContent =
+        message;
 
 
-/* ============================================================
-   REQUIRE OWNER
-   ============================================================ */
+    if (
+        type ===
+        "success"
+    ) {
 
-export async function requireOwner() {
+        box.style.background =
+            "#eaf8f0";
 
-    return requireAuth({
+        box.style.color =
+            "#147a48";
 
-        allowedRoles: [
-            "owner",
-            "admin"
-        ]
+    }
+    else if (
+        type ===
+        "error"
+    ) {
 
-    });
+        box.style.background =
+            "#fff0f0";
 
-}
+        box.style.color =
+            "#b42318";
 
+    }
+    else {
 
-/* ============================================================
-   ACCESS DENIED
-   ============================================================ */
+        box.style.background =
+            "#eef5ff";
 
-function showAccessDenied() {
+        box.style.color =
+            "#174a91";
 
-    document.body.innerHTML = `
-
-        <div style="
-            min-height:100vh;
-            display:flex;
-            align-items:center;
-            justify-content:center;
-            padding:24px;
-            background:#f4f7fb;
-            font-family:Inter,Arial,sans-serif;
-        ">
-
-            <div style="
-                width:min(420px,100%);
-                padding:36px;
-                background:#ffffff;
-                border:1px solid #e2e8f0;
-                border-radius:18px;
-                text-align:center;
-                box-shadow:0 18px 50px rgba(15,23,42,.10);
-            ">
-
-                <div style="
-                    width:58px;
-                    height:58px;
-                    margin:0 auto 18px;
-                    border-radius:16px;
-                    display:flex;
-                    align-items:center;
-                    justify-content:center;
-                    background:#eff6ff;
-                    color:#0a3d91;
-                    font-size:28px;
-                    font-weight:700;
-                ">
-                    !
-                </div>
-
-                <h2 style="
-                    margin:0 0 10px;
-                    color:#0f172a;
-                ">
-                    Access Restricted
-                </h2>
-
-                <p style="
-                    margin:0 0 22px;
-                    color:#64748b;
-                    line-height:1.6;
-                ">
-                    You do not have permission to access
-                    this section of MMV Traders ERP.
-                </p>
-
-                <button
-                    onclick="history.back()"
-                    style="
-                        border:0;
-                        border-radius:10px;
-                        padding:11px 20px;
-                        background:#0a3d91;
-                        color:#ffffff;
-                        font-weight:700;
-                        cursor:pointer;
-                    "
-                >
-                    Go Back
-                </button>
-
-            </div>
-
-        </div>
-
-    `;
+    }
 
 }
 
 
 /* ============================================================
-   AUTH ERROR MESSAGES
+   FIREBASE AUTH ERROR MESSAGES
    ============================================================ */
 
 function getAuthErrorMessage(
@@ -615,78 +948,47 @@ function getAuthErrorMessage(
 ) {
 
     const code =
-        error?.code || "";
+        String(
+            error?.code ||
+            ""
+        );
 
 
-    const messages = {
+    switch (
+        code
+    ) {
 
+        case
         "auth/invalid-credential":
-            "Invalid email or password.",
 
+            return "Invalid email or password.";
+
+        case
         "auth/invalid-email":
-            "Please enter a valid email address.",
 
+            return "Please enter a valid email address.";
+
+        case
         "auth/user-disabled":
-            "This account has been disabled.",
 
-        "auth/user-not-found":
-            "Invalid email or password.",
+            return "This Firebase account has been disabled.";
 
-        "auth/wrong-password":
-            "Invalid email or password.",
-
+        case
         "auth/too-many-requests":
-            "Too many attempts. Please try again later.",
 
+            return "Too many unsuccessful attempts. Please try again later.";
+
+        case
         "auth/network-request-failed":
-            "Network error. Please check your internet connection."
 
-    };
+            return "Network error. Please check your internet connection.";
 
+        default:
 
-    return (
-
-        messages[code] ||
-
-        "Unable to sign in. Please try again."
-
-    );
-
-}
-
-
-/* ============================================================
-   SESSION INFORMATION
-   ============================================================ */
-
-export function getStoredSession() {
-
-    try {
-
-        const data =
-            localStorage.getItem(
-                AUTH_CONFIG.sessionKey
+            return (
+                error?.message ||
+                "Unable to sign in."
             );
-
-
-        if (!data) {
-
-            return null;
-
-        }
-
-
-        return JSON.parse(
-            data
-        );
-
-    } catch {
-
-        localStorage.removeItem(
-            AUTH_CONFIG.sessionKey
-        );
-
-        return null;
 
     }
 
@@ -694,55 +996,137 @@ export function getStoredSession() {
 
 
 /* ============================================================
-   AUTO LOGOUT HELPER
+   CURRENT USER API
    ============================================================ */
 
-export function clearLocalSession() {
+function getCurrentUser() {
 
-    localStorage.removeItem(
-        AUTH_CONFIG.sessionKey
-    );
+    return {
 
-    sessionStorage.clear();
+        firebaseUser:
+            authState.user,
+
+        profile:
+            authState.profile
+
+    };
 
 }
 
 
 /* ============================================================
-   SERVICE EXPORT
+   ROLE
    ============================================================ */
 
-export default {
+function getCurrentRole() {
 
-    initializeAuth,
+    return (
+        authState
+            .profile
+            ?.role ||
+        null
+    );
+
+}
+
+
+/* ============================================================
+   AUTHENTICATED CHECK
+   ============================================================ */
+
+function isAuthenticated() {
+
+    return Boolean(
+        authState.user &&
+        authState.profile
+    );
+
+}
+
+
+/* ============================================================
+   DOM READY
+   ============================================================ */
+
+document.addEventListener(
+    "DOMContentLoaded",
+    async () => {
+
+        bindLoginForm();
+
+        bindLogoutButtons();
+
+
+        /*
+         * Login page:
+         * don't allow already logged-in
+         * users to remain on login screen.
+         */
+
+        const isLoginPage =
+            window.location.pathname
+                .endsWith(
+                    LOGIN_PAGE
+                ) ||
+            window.location.pathname ===
+            "/";
+
+
+        if (
+            isLoginPage
+        ) {
+
+            await protectLoginPage();
+
+        }
+
+    }
+);
+
+
+/* ============================================================
+   GLOBAL AUTH API
+   ============================================================ */
+
+window.MMAuth = {
 
     login,
 
     logout,
 
+    checkSession,
+
+    protectPage,
+
+    protectLoginPage,
+
     getCurrentUser,
+
+    getCurrentRole,
+
+    isAuthenticated,
 
     getUserProfile,
 
-    waitForAuth,
-
-    requireAuth,
-
-    requireOwner,
-
-    getStoredSession,
-
-    clearLocalSession
+    isProfileActive
 
 };
 
 
-/* ============================================================
-   READY
-   ============================================================ */
+window.login =
+    login;
+
+
+window.logout =
+    logout;
+
+
+window.protectPage =
+    protectPage;
+
 
 console.info(
-    "%cMMV Auth Service%c ready",
-    "font-weight:700;color:#0a3d91;",
+    "%cMMV Authentication V2%c ready",
+    "font-weight:800;color:#0a3d91;",
     "color:inherit;"
 );
