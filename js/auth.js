@@ -1130,3 +1130,15 @@ console.info(
     "font-weight:800;color:#0a3d91;",
     "color:inherit;"
 );
+export {
+    login,
+    logout,
+    checkSession,
+    protectPage,
+    protectLoginPage,
+    getCurrentUser,
+    getCurrentRole,
+    isAuthenticated,
+    getUserProfile,
+    isProfileActive
+};
