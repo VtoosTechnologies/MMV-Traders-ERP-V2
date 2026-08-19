@@ -6,283 +6,620 @@ service cloud.firestore {
 
 
     /* ========================================================
-       COMMON FUNCTIONS
-    ======================================================== */
+       COMMON HELPERS
+       ======================================================== */
 
-    function signedIn() {
+    function isSignedIn() {
       return request.auth != null;
     }
 
 
-    function isOwner() {
-      return signedIn()
-        && (
-          request.auth.token.email != null
-          &&
-          request.auth.token.email ==
-          "YOUR_OWNER_EMAIL"
-        );
-    }
-
-
-    function userProfileExists() {
-      return signedIn()
-        &&
-        exists(
+    function currentUserExists() {
+      return isSignedIn()
+        && exists(
           /databases/$(database)/documents/users/$(request.auth.uid)
         );
     }
 
 
-    function userIsActive() {
-      return userProfileExists()
-        &&
-        get(
-          /databases/$(database)/documents/users/$(request.auth.uid)
-        ).data.status == "Active";
+    function currentUser() {
+      return get(
+        /databases/$(database)/documents/users/$(request.auth.uid)
+      ).data;
     }
 
 
-    function userRole() {
-      return userProfileExists()
-        ? get(
-            /databases/$(database)/documents/users/$(request.auth.uid)
-          ).data.role
-        : "";
+    function currentUserRole() {
+      return currentUser().role;
     }
 
 
     function isAdmin() {
-      return userIsActive()
-        &&
-        (
-          userRole() == "owner"
-          ||
-          userRole() == "admin"
-        );
+      return currentUserExists()
+        && currentUserRole() == "ADMIN";
     }
 
 
-    function canUseERP() {
-      return userIsActive()
-        &&
-        (
-          userRole() == "owner"
+    function isManager() {
+      return currentUserExists()
+        && currentUserRole() == "MANAGER";
+    }
+
+
+    function isStaff() {
+      return currentUserExists()
+        && currentUserRole() == "STAFF";
+    }
+
+
+    function isActiveUser() {
+      return currentUserExists()
+        && currentUser().status == "ACTIVE";
+    }
+
+
+    function hasPermission(permission) {
+      return isActiveUser()
+        && (
+          currentUserRole() == "ADMIN"
           ||
-          userRole() == "admin"
-          ||
-          userRole() == "manager"
-          ||
-          userRole() == "staff"
+          currentUser().permissions[permission] == true
         );
     }
 
 
     /* ========================================================
-       USERS
-    ======================================================== */
+       USER ACCESS
+       ======================================================== */
 
     match /users/{userId} {
 
       /*
-       * User can read only own profile.
+       * User can read own profile.
+       * Admin can read all users.
        */
 
       allow read:
-        if signedIn()
-        && request.auth.uid == userId;
+        if isActiveUser()
+        && (
+          userId == request.auth.uid
+          || isAdmin()
+        );
 
 
       /*
-       * Owner/Admin can manage user profiles.
+       * New user profile:
+       * only Admin.
        */
 
-      allow create, update, delete:
+      allow create:
         if isAdmin();
 
+
+      /*
+       * User can update limited own profile.
+       * Admin can update everything.
+       */
+
+      allow update:
+        if isAdmin()
+        ||
+        (
+          isActiveUser()
+          &&
+          userId == request.auth.uid
+          &&
+          request.resource.data.role ==
+            resource.data.role
+          &&
+          request.resource.data.status ==
+            resource.data.status
+          &&
+          request.resource.data.permissions ==
+            resource.data.permissions
+        );
+
+
+      /*
+       * Only Admin can delete user.
+       */
+
+      allow delete:
+        if isAdmin();
+    }
+
+
+    /* ========================================================
+       COMPANY SETTINGS
+       ======================================================== */
+
+    match /settings/{settingId} {
+
+      /*
+       * Active users can read company settings.
+       */
+
+      allow read:
+        if isActiveUser();
+
+
+      /*
+       * Only Admin can create/update settings.
+       */
+
+      allow create, update:
+        if isAdmin();
+
+
+      /*
+       * Prevent accidental deletion.
+       */
+
+      allow delete:
+        if isAdmin();
     }
 
 
     /* ========================================================
        CUSTOMERS
-    ======================================================== */
+       ======================================================== */
 
     match /customers/{customerId} {
 
       allow read:
-        if canUseERP();
+        if hasPermission("customers");
+
 
       allow create:
-        if canUseERP();
+        if hasPermission("customers");
+
 
       allow update:
-        if canUseERP();
+        if hasPermission("customers");
+
+
+      /*
+       * Delete restricted to Admin.
+       */
 
       allow delete:
         if isAdmin();
-
     }
 
 
     /* ========================================================
        SUPPLIERS
-    ======================================================== */
+       ======================================================== */
 
     match /suppliers/{supplierId} {
 
       allow read:
-        if canUseERP();
+        if hasPermission("suppliers");
+
 
       allow create:
-        if canUseERP();
+        if hasPermission("suppliers");
+
 
       allow update:
-        if canUseERP();
+        if hasPermission("suppliers");
+
 
       allow delete:
         if isAdmin();
-
-    }
-
-
-    /* ========================================================
-       MATERIALS
-    ======================================================== */
-
-    match /materials/{materialId} {
-
-      allow read:
-        if canUseERP();
-
-      allow create:
-        if isAdmin();
-
-      allow update:
-        if isAdmin();
-
-      allow delete:
-        if isAdmin();
-
     }
 
 
     /* ========================================================
        INVENTORY
-    ======================================================== */
+       ======================================================== */
 
-    match /inventory/{inventoryId} {
+    match /inventory/{itemId} {
 
       allow read:
-        if canUseERP();
+        if hasPermission("inventory");
 
-      allow create, update:
-        if canUseERP();
+
+      allow create:
+        if hasPermission("inventory");
+
+
+      allow update:
+        if hasPermission("inventory");
+
 
       allow delete:
         if isAdmin();
-
     }
 
 
     /* ========================================================
-       PURCHASES
-    ======================================================== */
+       PRODUCTS
+       ======================================================== */
 
-    match /purchases/{purchaseId} {
+    match /products/{productId} {
 
       allow read:
-        if canUseERP();
+        if hasPermission("inventory");
+
 
       allow create:
-        if canUseERP();
+        if hasPermission("inventory");
+
 
       allow update:
-        if canUseERP();
+        if hasPermission("inventory");
+
 
       allow delete:
         if isAdmin();
-
     }
 
 
     /* ========================================================
        SALES
-    ======================================================== */
+       ======================================================== */
 
     match /sales/{saleId} {
 
       allow read:
-        if canUseERP();
+        if hasPermission("sales");
+
 
       allow create:
-        if canUseERP();
+        if hasPermission("sales");
+
 
       allow update:
-        if canUseERP();
+        if hasPermission("sales");
+
+
+      /*
+       * Sales deletion is restricted.
+       */
 
       allow delete:
-        if isAdmin();
+        if hasPermission("deleteRecords");
+    }
 
+
+    /* ========================================================
+       SALES ITEMS
+       ======================================================== */
+
+    match /salesItems/{itemId} {
+
+      allow read:
+        if hasPermission("sales");
+
+
+      allow create:
+        if hasPermission("sales");
+
+
+      allow update:
+        if hasPermission("sales");
+
+
+      allow delete:
+        if hasPermission("deleteRecords");
+    }
+
+
+    /* ========================================================
+       PURCHASES
+       ======================================================== */
+
+    match /purchases/{purchaseId} {
+
+      allow read:
+        if hasPermission("purchases");
+
+
+      allow create:
+        if hasPermission("purchases");
+
+
+      allow update:
+        if hasPermission("purchases");
+
+
+      allow delete:
+        if hasPermission("deleteRecords");
+    }
+
+
+    /* ========================================================
+       PURCHASE ITEMS
+       ======================================================== */
+
+    match /purchaseItems/{itemId} {
+
+      allow read:
+        if hasPermission("purchases");
+
+
+      allow create:
+        if hasPermission("purchases");
+
+
+      allow update:
+        if hasPermission("purchases");
+
+
+      allow delete:
+        if hasPermission("deleteRecords");
     }
 
 
     /* ========================================================
        PAYMENTS
-    ======================================================== */
+       ======================================================== */
 
     match /payments/{paymentId} {
 
       allow read:
-        if canUseERP();
+        if hasPermission("payments");
+
 
       allow create:
-        if canUseERP();
+        if hasPermission("payments");
+
 
       allow update:
-        if isAdmin();
+        if hasPermission("payments");
+
 
       allow delete:
-        if isAdmin();
-
+        if hasPermission("deleteRecords");
     }
 
 
     /* ========================================================
-       ACCOUNTS
-    ======================================================== */
+       RECEIPTS
+       ======================================================== */
 
-    match /accounts/{accountId} {
+    match /receipts/{receiptId} {
 
       allow read:
-        if canUseERP();
+        if hasPermission("payments");
+
+
+      allow create:
+        if hasPermission("payments");
+
+
+      allow update:
+        if hasPermission("payments");
+
+
+      allow delete:
+        if hasPermission("deleteRecords");
+    }
+
+
+    /* ========================================================
+       SUPPLIER PAYMENTS
+       ======================================================== */
+
+    match /supplierPayments/{paymentId} {
+
+      allow read:
+        if hasPermission("payments");
+
+
+      allow create:
+        if hasPermission("payments");
+
+
+      allow update:
+        if hasPermission("payments");
+
+
+      allow delete:
+        if hasPermission("deleteRecords");
+    }
+
+
+    /* ========================================================
+       REPORTS / SUMMARY DATA
+       ======================================================== */
+
+    match /reports/{reportId} {
+
+      allow read:
+        if hasPermission("reports");
+
+
+      /*
+       * Reports should normally be
+       * generated by application logic.
+       */
 
       allow create, update:
         if isAdmin();
 
-      allow delete:
-        if isOwner();
 
+      allow delete:
+        if isAdmin();
     }
 
 
     /* ========================================================
-       SETTINGS
-    ======================================================== */
+       NOTIFICATIONS
+       ======================================================== */
 
-    match /settings/{settingId} {
+    match /notifications/{notificationId} {
 
       allow read:
-        if canUseERP();
+        if isActiveUser();
 
-      allow create, update, delete:
+
+      allow create:
+        if isActiveUser();
+
+
+      /*
+       * User can update notification read state.
+       */
+
+      allow update:
+        if isActiveUser();
+
+
+      allow delete:
         if isAdmin();
-
     }
 
 
     /* ========================================================
-       DENY EVERYTHING ELSE
-    ======================================================== */
+       QUOTATIONS
+       ======================================================== */
+
+    match /quotations/{quotationId} {
+
+      allow read:
+        if hasPermission("sales");
+
+
+      allow create:
+        if hasPermission("sales");
+
+
+      allow update:
+        if hasPermission("sales");
+
+
+      allow delete:
+        if hasPermission("deleteRecords");
+    }
+
+
+    /* ========================================================
+       EXPENSES
+       ======================================================== */
+
+    match /expenses/{expenseId} {
+
+      allow read:
+        if hasPermission("payments");
+
+
+      allow create:
+        if hasPermission("payments");
+
+
+      allow update:
+        if hasPermission("payments");
+
+
+      allow delete:
+        if hasPermission("deleteRecords");
+    }
+
+
+    /* ========================================================
+       CATEGORIES
+       ======================================================== */
+
+    match /categories/{categoryId} {
+
+      allow read:
+        if isActiveUser();
+
+
+      allow create:
+        if hasPermission("inventory");
+
+
+      allow update:
+        if hasPermission("inventory");
+
+
+      allow delete:
+        if isAdmin();
+    }
+
+
+    /* ========================================================
+       UNITS
+       ======================================================== */
+
+    match /units/{unitId} {
+
+      allow read:
+        if isActiveUser();
+
+
+      allow create:
+        if hasPermission("inventory");
+
+
+      allow update:
+        if hasPermission("inventory");
+
+
+      allow delete:
+        if isAdmin();
+    }
+
+
+    /* ========================================================
+       COMPANY / BRANCH
+       ======================================================== */
+
+    match /branches/{branchId} {
+
+      allow read:
+        if isActiveUser();
+
+
+      allow create, update:
+        if isAdmin();
+
+
+      allow delete:
+        if isAdmin();
+    }
+
+
+    /* ========================================================
+       AUDIT / ACTIVITY
+       ======================================================== */
+
+    match /activityLogs/{logId} {
+
+      /*
+       * Users may read only when they
+       * have reporting access.
+       */
+
+      allow read:
+        if hasPermission("reports");
+
+
+      /*
+       * Application can create logs
+       * for active users.
+       */
+
+      allow create:
+        if isActiveUser();
+
+
+      /*
+       * Logs should never be edited/deleted
+       * by normal users.
+       */
+
+      allow update, delete:
+        if isAdmin();
+    }
+
+
+    /* ========================================================
+       DEFAULT DENY
+       ======================================================== */
 
     match /{document=**} {
 
