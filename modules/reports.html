@@ -1976,10 +1976,73 @@ document
     dateString;
 
 /* =====================================================
-   REPORT BUTTON CONTROLLER - FINAL FIX
+   REPORTS PAGE - FINAL BUTTON CONTROLLER
+   CLEAN VERSION
 ===================================================== */
 
 let reportApplying = false;
+
+
+/* =====================================================
+   DATE DEFAULT
+===================================================== */
+
+(function setDefaultReportDates() {
+
+    const fromDateInput =
+        document.getElementById("fromDate");
+
+    const toDateInput =
+        document.getElementById("toDate");
+
+    const today =
+        new Date().toISOString().split("T")[0];
+
+    if (
+        fromDateInput &&
+        !fromDateInput.value
+    ) {
+        fromDateInput.value = today;
+    }
+
+    if (
+        toDateInput &&
+        !toDateInput.value
+    ) {
+        toDateInput.value = today;
+    }
+
+})();
+
+
+/* =====================================================
+   GET SELECTED REPORT FILTERS
+===================================================== */
+
+function getReportFilters() {
+
+    const fromDate =
+        document
+            .getElementById("fromDate")
+            ?.value || "";
+
+    const toDate =
+        document
+            .getElementById("toDate")
+            ?.value || "";
+
+    const reportType =
+        document
+            .getElementById("reportType")
+            ?.value || "summary";
+
+    return {
+        fromDate,
+        toDate,
+        reportType
+    };
+
+}
 
 
 /* =====================================================
@@ -2013,40 +2076,27 @@ async function applyCurrentReport() {
 
     reportApplying = true;
 
-
-    const originalText =
+    const originalHTML =
         button.innerHTML;
 
-
-    button.disabled = true;
-
-    button.textContent =
-        "Applying...";
-
-
     try {
+
+        button.disabled = true;
+
+        button.textContent =
+            "Applying...";
+
 
         console.log(
             "Reports: Apply Report clicked."
         );
 
 
-        const fromDate =
-            document
-                .getElementById("fromDate")
-                ?.value || "";
-
-
-        const toDate =
-            document
-                .getElementById("toDate")
-                ?.value || "";
-
-
-        const reportType =
-            document
-                .getElementById("reportType")
-                ?.value || "summary";
+        const {
+            fromDate,
+            toDate,
+            reportType
+        } = getReportFilters();
 
 
         console.log(
@@ -2054,18 +2104,14 @@ async function applyCurrentReport() {
             {
                 fromDate,
                 toDate,
-                reportType,
-                firebaseReady:
-                    reportFirebaseReady,
-                authenticated:
-                    !!reportFirebaseUser
+                reportType
             }
         );
 
 
-        /* ---------------------------------------------
+        /* =============================================
            DATE VALIDATION
-        --------------------------------------------- */
+        ============================================= */
 
         if (
             fromDate &&
@@ -2081,153 +2127,127 @@ async function applyCurrentReport() {
         }
 
 
-        /* ---------------------------------------------
-           FIREBASE DATA AVAILABLE
-        --------------------------------------------- */
+        /* =============================================
+           PRIORITY 1
+           EXISTING REPORT FUNCTION
+        ============================================= */
 
         if (
-            reportFirebaseReady &&
-            reportFirebaseUser
+            typeof window.loadReportData ===
+            "function"
         ) {
 
             console.log(
-                "Reports: Loading latest Firebase data..."
+                "Reports: Using existing loadReportData()."
             );
 
-
-            await loadFirebaseReports();
-
-
-            calculateFirebaseReport();
-
-
-            console.log(
-                "Reports: Firebase report applied successfully."
-            );
+            await window.loadReportData({
+                fromDate,
+                toDate,
+                reportType
+            });
 
         }
 
 
-        /* ---------------------------------------------
-           EXISTING LOADED DATA
-        --------------------------------------------- */
+        /* =============================================
+           PRIORITY 2
+           EXISTING UPDATE FUNCTION
+        ============================================= */
 
         else if (
-            window.MMVR &&
-            (
-                Array.isArray(
-                    window.MMVR.sales
-                ) ||
-                Array.isArray(
-                    window.MMVR.purchases
-                ) ||
-                Array.isArray(
-                    window.MMVR.payments
-                )
-            )
+            typeof window.updateReport ===
+            "function"
         ) {
 
             console.log(
-                "Reports: Firebase authentication unavailable. " +
-                "Calculating using existing loaded data."
+                "Reports: Using existing updateReport()."
             );
 
-
-            calculateFirebaseReport();
+            await window.updateReport(
+                fromDate,
+                toDate,
+                reportType
+            );
 
         }
 
 
-        /* ---------------------------------------------
-           NORMAL PAGE FALLBACK
-        --------------------------------------------- */
+        /* =============================================
+           PRIORITY 3
+           EXISTING FIREBASE/MMVR DATA
+        ============================================= */
 
-        else {
+        else if (
+            window.MMVR
+        ) {
 
-            console.warn(
-                "Reports: Firebase authentication is not ready. " +
-                "Applying current page report data."
+            console.log(
+                "Reports: Applying report using existing MMVR data."
             );
+
+
+            window.MMVR.reportFilters = {
+                fromDate,
+                toDate,
+                reportType
+            };
 
 
             if (
-                typeof updateReport ===
+                typeof window.calculateFirebaseReport ===
                 "function"
             ) {
 
-                updateReport();
+                await window.calculateFirebaseReport();
+
+            }
+
+            else if (
+                typeof calculateReport ===
+                "function"
+            ) {
+
+                await calculateReport();
+
+            }
+
+            else {
+
+                console.log(
+                    "Reports: MMVR data available. Existing page data retained."
+                );
 
             }
 
         }
 
 
-        /* ---------------------------------------------
-           REPORT TYPE ACTION
-        --------------------------------------------- */
+        /* =============================================
+           PRIORITY 4
+           GENERIC FALLBACK
+        ============================================= */
 
-        switch (reportType) {
+        else {
 
-            case "summary":
-
-                console.log(
-                    "Reports: Business Summary applied."
-                );
-
-                break;
-
-
-            case "sales":
-
-                console.log(
-                    "Reports: Sales Report applied."
-                );
-
-                break;
-
-
-            case "purchase":
-
-                console.log(
-                    "Reports: Purchase Report applied."
-                );
-
-                break;
-
-
-            case "payments":
-
-                console.log(
-                    "Reports: Payment Report applied."
-                );
-
-                break;
-
-
-            case "outstanding":
-
-                console.log(
-                    "Reports: Outstanding Report applied."
-                );
-
-                break;
-
-
-            default:
-
-                console.log(
-                    "Reports: Default report applied."
-                );
+            console.warn(
+                "Reports: No external report loader found."
+            );
 
         }
 
 
-        /* ---------------------------------------------
-           VISUAL FEEDBACK
-        --------------------------------------------- */
+        /* =============================================
+           SUCCESS
+        ============================================= */
 
         button.textContent =
             "Applied ✓";
+
+
+        console.log(
+            "Reports: Report applied successfully."
+        );
 
 
         setTimeout(
@@ -2235,13 +2255,11 @@ async function applyCurrentReport() {
 
                 if (
                     button &&
-                    document.body.contains(
-                        button
-                    )
+                    document.body.contains(button)
                 ) {
 
                     button.innerHTML =
-                        originalText;
+                        originalHTML;
 
                 }
 
@@ -2275,17 +2293,7 @@ async function applyCurrentReport() {
 
         reportApplying = false;
 
-
-        if (
-            button &&
-            document.body.contains(
-                button
-            )
-        ) {
-
-            button.disabled = false;
-
-        }
+        button.disabled = false;
 
     }
 
@@ -2293,23 +2301,29 @@ async function applyCurrentReport() {
 
 
 /* =====================================================
-   APPLY REPORT BUTTON EVENT
+   APPLY REPORT BUTTON
 ===================================================== */
 
-const applyReportButton =
-    document.getElementById(
-        "applyFilter"
-    );
+(function initializeApplyReportButton() {
+
+    const applyButton =
+        document.getElementById("applyFilter");
+
+    if (!applyButton) {
+
+        console.error(
+            "Reports: #applyFilter button not found."
+        );
+
+        return;
+    }
 
 
-if (applyReportButton) {
-
-    applyReportButton.addEventListener(
+    applyButton.addEventListener(
         "click",
-        async event => {
+        async function(event) {
 
             event.preventDefault();
-
 
             await applyCurrentReport();
 
@@ -2321,85 +2335,79 @@ if (applyReportButton) {
         "Reports: Apply Report button ready."
     );
 
-}
-
-
-else {
-
-    console.error(
-        "Reports: #applyFilter button not found."
-    );
-
-}
+})();
 
 
 /* =====================================================
-   REFRESH BUTTON EVENT
+   REFRESH BUTTON
 ===================================================== */
 
-const refreshReportButton =
-    document.getElementById(
-        "refreshBtn"
-    );
+(function initializeRefreshButton() {
+
+    const refreshButton =
+        document.getElementById("refreshBtn");
+
+    if (!refreshButton) {
+
+        console.log(
+            "Reports: Refresh button not available."
+        );
+
+        return;
+    }
 
 
-if (refreshReportButton) {
-
-    refreshReportButton.addEventListener(
+    refreshButton.addEventListener(
         "click",
-        async event => {
+        async function(event) {
 
             event.preventDefault();
 
 
-            const originalText =
-                refreshReportButton.innerHTML;
-
-
-            refreshReportButton.disabled =
-                true;
-
-
-            refreshReportButton.textContent =
-                "Refreshing...";
-
+            const originalHTML =
+                refreshButton.innerHTML;
 
             try {
 
-                if (
-                    reportFirebaseReady &&
-                    reportFirebaseUser
-                ) {
+                refreshButton.disabled =
+                    true;
 
-                    await loadFirebaseReports();
-
-                    calculateFirebaseReport();
-
-                }
-
-                else {
-
-                    await applyCurrentReport();
-
-                }
+                refreshButton.textContent =
+                    "Refreshing...";
 
 
-                refreshReportButton.textContent =
+                console.log(
+                    "Reports: Refresh clicked."
+                );
+
+
+                await applyCurrentReport();
+
+
+                refreshButton.textContent =
                     "Refreshed ✓";
 
 
                 setTimeout(
                     () => {
 
-                        refreshReportButton.innerHTML =
-                            originalText;
+                        if (
+                            refreshButton &&
+                            document.body.contains(
+                                refreshButton
+                            )
+                        ) {
+
+                            refreshButton.innerHTML =
+                                originalHTML;
+
+                        }
 
                     },
                     1200
                 );
 
             }
-
 
             catch (error) {
 
@@ -2413,16 +2421,15 @@ if (refreshReportButton) {
                     "Refresh failed.\n\n" +
                     (
                         error?.message ||
-                        "Please check the console."
+                        "Please check the browser console."
                     )
                 );
 
             }
 
-
             finally {
 
-                refreshReportButton.disabled =
+                refreshButton.disabled =
                     false;
 
             }
@@ -2430,136 +2437,22 @@ if (refreshReportButton) {
         }
     );
 
-}
+
+    console.log(
+        "Reports: Refresh button ready."
+    );
+
+})();
 
 
 /* =====================================================
-   FIREBASE AUTH STATE
+   FINAL REPORTS READY LOG
 ===================================================== */
 
-onAuthStateChanged(
-    reportAuth,
-
-    async user => {
-
-        reportFirebaseUser =
-            user || null;
-
-
-        reportFirebaseReady =
-            !!user;
-
-
-        if (!user) {
-
-            console.warn(
-                "Reports: Firebase user is not authenticated. " +
-                "Apply Report button will continue to work " +
-                "with already loaded report data."
-            );
-
-
-            return;
-
-        }
-
-
-        console.log(
-            "Reports Firebase authenticated:",
-            user.uid
-        );
-
-
-        try {
-
-            await loadFirebaseReports();
-
-
-            calculateFirebaseReport();
-
-
-            console.log(
-                "Reports: Firebase initial data loaded successfully."
-            );
-
-        }
-
-
-        catch (error) {
-
-            console.error(
-                "Reports: Firebase initialization failed:",
-                error
-            );
-
-        }
-
-    }
+console.log(
+    "MMV Reports: Final controller initialized successfully."
 );
-</script>
-document.addEventListener("DOMContentLoaded", () => {
-
-    const applyReportBtn = document.getElementById("applyReportBtn");
-
-    if (!applyReportBtn) {
-        console.error("Reports: Apply Report button not found.");
-        return;
-    }
-
-    console.log("Reports: Apply Report button ready.");
-
-    applyReportBtn.addEventListener("click", async (event) => {
-
-        event.preventDefault();
-
-        console.log("Reports: Apply Report clicked.");
-
-        try {
-
-            const fromDate =
-                document.getElementById("fromDate")?.value || "";
-
-            const toDate =
-                document.getElementById("toDate")?.value || "";
-
-            const reportType =
-                document.getElementById("reportType")?.value ||
-                "business-summary";
-
-            console.log("Reports: Applying report", {
-                fromDate,
-                toDate,
-                reportType
-            });
-
-            if (typeof loadReportData === "function") {
-
-                await loadReportData({
-                    fromDate,
-                    toDate,
-                    reportType
-                });
-
-            } else {
-
-                console.error(
-                    "Reports: loadReportData function is not available."
-                );
-
-            }
-
-        } catch (error) {
-
-            console.error(
-                "Reports: Apply Report error:",
-                error
-            );
-
-        }
-
-    });
-
-});
+</script>    
 </body>
 
 </html>
