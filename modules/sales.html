@@ -860,7 +860,7 @@ select:focus{
 
     @page{
         size:A4;
-        margin:10mm;
+        margin:10mm 10mm 16mm;
     }
 
     body{
@@ -1000,16 +1000,19 @@ select:focus{
 
     .print-footer{
         position:fixed;
-        bottom:0;
-        left:0;
-        right:0;
-        padding-top:8px;
-        border-top:1px solid #ddd;
+        bottom:5mm;
+        left:10mm;
+        right:10mm;
+        padding-top:7px;
+        border-top:1px solid #d7dce3;
         display:flex;
+        align-items:center;
         justify-content:space-between;
-        font-size:7px;
-        color:#666;
+        font-size:7.5px;
+        color:#64748b;
     }
+    .print-footer-brand,.print-footer-vtoos{display:flex;align-items:center;gap:6px}
+    .print-footer-brand strong,.print-footer-vtoos strong{color:#0b3b82;font-size:8px}
 
 }
 
@@ -2086,15 +2089,14 @@ select:focus{
 
 
     <div class="print-footer">
-
-        <span>
-            MMV Traders ERP V2
-        </span>
-
-        <span>
-            Powered by VTOOS Software Solutions
-        </span>
-
+        <div class="print-footer-brand">
+            <strong>MMV TRADERS</strong>
+            <span>Business Management System</span>
+        </div>
+        <div class="print-footer-vtoos">
+            <span>Powered by</span>
+            <strong>VTOOS Software Solutions</strong>
+        </div>
     </div>
 
 </section>
