@@ -4134,7 +4134,2469 @@ window.addEventListener("focus", async function(){
     }
 });
 </script>
+<!-- =========================================================
+     MMV PREMIUM A4 SALES INVOICE UPGRADE
+     MMV TRADERS + VTOOS SOFTWARE SOLUTIONS
+========================================================= -->
 
+<style id="mmvPremiumInvoiceUpgrade">
+
+/* =========================================================
+   TRANSPORT DETAILS - PREMIUM SALES ENTRY
+========================================================= */
+
+.transport-section{
+    grid-column:1 / -1;
+    margin-top:4px;
+    padding:16px;
+    border:1px solid #e2e8f0;
+    border-radius:14px;
+    background:linear-gradient(135deg,#f8fbff,#ffffff);
+}
+
+.transport-section-title{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    margin-bottom:14px;
+    color:#0b3b82;
+    font-size:13px;
+    font-weight:800;
+}
+
+.transport-section-title span{
+    width:28px;
+    height:28px;
+    display:grid;
+    place-items:center;
+    border-radius:8px;
+    background:#eaf2ff;
+}
+
+.transport-grid{
+    display:grid;
+    grid-template-columns:repeat(4,minmax(0,1fr));
+    gap:12px;
+}
+
+.transport-grid .form-group{
+    margin:0;
+}
+
+@media(max-width:900px){
+
+    .transport-grid{
+        grid-template-columns:repeat(2,minmax(0,1fr));
+    }
+
+}
+
+@media(max-width:560px){
+
+    .transport-section{
+        padding:13px;
+    }
+
+    .transport-grid{
+        grid-template-columns:1fr 1fr;
+        gap:10px;
+    }
+
+}
+
+
+/* =========================================================
+   PREMIUM A4 INVOICE
+========================================================= */
+
+#printInvoice{
+    display:none;
+}
+
+@media print{
+
+    @page{
+        size:A4 portrait;
+        margin:8mm;
+    }
+
+    html,
+    body{
+        width:210mm !important;
+        min-height:297mm !important;
+        margin:0 !important;
+        padding:0 !important;
+        background:#ffffff !important;
+        -webkit-print-color-adjust:exact !important;
+        print-color-adjust:exact !important;
+    }
+
+    body *{
+        visibility:hidden !important;
+    }
+
+    #printInvoice,
+    #printInvoice *{
+        visibility:visible !important;
+    }
+
+    #printInvoice{
+        display:block !important;
+        position:absolute !important;
+        left:0 !important;
+        top:0 !important;
+        width:194mm !important;
+        min-height:281mm !important;
+        margin:0 !important;
+        padding:0 !important;
+        background:#ffffff !important;
+        color:#111827 !important;
+        font-family:Arial,Helvetica,sans-serif !important;
+    }
+
+    .app,
+    .sidebar,
+    .topbar,
+    .content,
+    .record-modal,
+    .print-purchase{
+        display:none !important;
+    }
+
+    .mmv-a4-sheet{
+        width:194mm !important;
+        min-height:281mm !important;
+        position:relative !important;
+        box-sizing:border-box !important;
+        overflow:hidden !important;
+    }
+
+    .mmv-invoice-header{
+        display:grid !important;
+        grid-template-columns:28mm 1fr 48mm !important;
+        align-items:center !important;
+        gap:5mm !important;
+        padding-bottom:3mm !important;
+        border-bottom:1px solid #173f78 !important;
+    }
+
+    .mmv-logo-wrap{
+        display:flex !important;
+        align-items:center !important;
+        justify-content:center !important;
+    }
+
+    .mmv-logo-wrap img{
+        width:25mm !important;
+        max-height:19mm !important;
+        object-fit:contain !important;
+    }
+
+    .mmv-company-center{
+        text-align:center !important;
+    }
+
+    .mmv-company-center h1{
+        margin:0 !important;
+        color:#173f78 !important;
+        font-size:20px !important;
+        letter-spacing:.8px !important;
+        line-height:1.1 !important;
+    }
+
+    .mmv-company-center p{
+        margin:1.5mm 0 0 !important;
+        font-size:8px !important;
+        line-height:1.35 !important;
+    }
+
+    .mmv-company-right{
+        text-align:right !important;
+        font-size:7px !important;
+        line-height:1.65 !important;
+        font-weight:700 !important;
+    }
+
+    .mmv-invoice-title{
+        width:55% !important;
+        margin:3mm auto 3mm !important;
+        padding:2mm 4mm !important;
+        text-align:center !important;
+        background:#173f78 !important;
+        color:#ffffff !important;
+        font-size:10px !important;
+        font-weight:800 !important;
+        letter-spacing:.4px !important;
+    }
+
+    .mmv-info-grid{
+        display:grid !important;
+        grid-template-columns:1fr 1fr !important;
+        gap:4mm !important;
+        margin-bottom:3mm !important;
+    }
+
+    .mmv-info-box{
+        border:1px solid #cbd5e1 !important;
+        min-height:27mm !important;
+    }
+
+    .mmv-box-title{
+        padding:2.2mm 3mm !important;
+        background:#173f78 !important;
+        color:#ffffff !important;
+        font-size:8px !important;
+        font-weight:800 !important;
+        letter-spacing:.2px !important;
+    }
+
+    .mmv-box-body{
+        padding:2.5mm 3mm !important;
+        font-size:8px !important;
+        line-height:1.5 !important;
+    }
+
+    .mmv-detail-line{
+        display:grid !important;
+        grid-template-columns:31mm 1fr !important;
+        gap:2mm !important;
+        margin-bottom:1mm !important;
+    }
+
+    .mmv-detail-label{
+        font-weight:700 !important;
+        color:#334155 !important;
+    }
+
+    .mmv-items-table{
+        width:100% !important;
+        border-collapse:collapse !important;
+        table-layout:fixed !important;
+        margin-top:1mm !important;
+    }
+
+    .mmv-items-table th{
+        padding:2.2mm 1.5mm !important;
+        border:1px solid #cbd5e1 !important;
+        background:#173f78 !important;
+        color:#ffffff !important;
+        font-size:7.5px !important;
+        text-align:left !important;
+        font-weight:800 !important;
+    }
+
+    .mmv-items-table td{
+        height:6.5mm !important;
+        padding:1.7mm 1.5mm !important;
+        border:1px solid #d7dee8 !important;
+        font-size:7.5px !important;
+        vertical-align:top !important;
+    }
+
+    .mmv-items-table .text-right{
+        text-align:right !important;
+    }
+
+    .mmv-bottom-area{
+        display:grid !important;
+        grid-template-columns:1.08fr .92fr !important;
+        gap:4mm !important;
+        margin-top:3mm !important;
+    }
+
+    .mmv-bottom-left{
+        display:flex !important;
+        flex-direction:column !important;
+        gap:3mm !important;
+    }
+
+    .mmv-words-box,
+    .mmv-bank-box{
+        border:1px solid #cbd5e1 !important;
+    }
+
+    .mmv-small-title{
+        padding:2mm 3mm !important;
+        background:#f1f5f9 !important;
+        color:#173f78 !important;
+        font-size:8px !important;
+        font-weight:800 !important;
+    }
+
+    .mmv-words-content,
+    .mmv-bank-content{
+        padding:2.5mm 3mm !important;
+        font-size:7.5px !important;
+        line-height:1.55 !important;
+    }
+
+    .mmv-total-box{
+        border:1px solid #cbd5e1 !important;
+        align-self:start !important;
+    }
+
+    .mmv-total-row{
+        display:grid !important;
+        grid-template-columns:1fr 35mm !important;
+        border-bottom:1px solid #d7dee8 !important;
+        min-height:7mm !important;
+        font-size:8px !important;
+    }
+
+    .mmv-total-row span,
+    .mmv-total-row strong{
+        padding:2mm 3mm !important;
+        display:flex !important;
+        align-items:center !important;
+    }
+
+    .mmv-total-row strong{
+        justify-content:flex-end !important;
+        border-left:1px solid #d7dee8 !important;
+    }
+
+    .mmv-grand-row{
+        background:#173f78 !important;
+        color:#ffffff !important;
+        border-bottom:0 !important;
+        font-size:9px !important;
+        font-weight:800 !important;
+    }
+
+    .mmv-signature-grid{
+        display:grid !important;
+        grid-template-columns:1fr 1.35fr 1fr !important;
+        border:1px solid #cbd5e1 !important;
+        margin-top:3mm !important;
+        min-height:23mm !important;
+    }
+
+    .mmv-sign-box{
+        padding:3mm !important;
+        border-right:1px solid #d7dee8 !important;
+        position:relative !important;
+        font-size:7.5px !important;
+    }
+
+    .mmv-sign-box:last-child{
+        border-right:0 !important;
+    }
+
+    .mmv-sign-company{
+        text-align:center !important;
+        font-weight:800 !important;
+        color:#173f78 !important;
+    }
+
+    .mmv-sign-line{
+        position:absolute !important;
+        left:8mm !important;
+        right:8mm !important;
+        bottom:7mm !important;
+        border-top:1px solid #94a3b8 !important;
+    }
+
+    .mmv-sign-label{
+        position:absolute !important;
+        bottom:2.5mm !important;
+        left:0 !important;
+        right:0 !important;
+        text-align:center !important;
+        font-size:7px !important;
+        font-weight:700 !important;
+    }
+
+    .mmv-vtoos-footer{
+        position:absolute !important;
+        left:0 !important;
+        right:0 !important;
+        bottom:0 !important;
+        text-align:center !important;
+        padding-top:2mm !important;
+        border-top:1px solid #d7dee8 !important;
+        color:#64748b !important;
+        font-size:6.8px !important;
+        line-height:1.5 !important;
+    }
+
+    .mmv-vtoos-footer strong{
+        color:#173f78 !important;
+    }
+
+}
+
+</style>
+
+
+<script>
+
+(() => {
+
+    /* =====================================================
+       VTOOS SUPPORT DETAILS
+       Change mobile number here once confirmed.
+    ===================================================== */
+
+    const MMV_VTOOS_SUPPORT = {
+        name: "VTOOS Software Solutions",
+        phone: "+91 XXXXX XXXXX"
+    };
+
+
+    /* =====================================================
+       MMV COMPANY DEFAULTS
+       Existing company details are used automatically.
+    ===================================================== */
+
+    const MMV_COMPANY_DEFAULT = {
+        companyName: "MMV TRADERS",
+        address: "1/134, Pallipatti Village, O.G.Halli Post, Pennagaram Tk, Dharmapuri - 636809",
+        gstin: "33BMTPM3619K1ZL",
+        state: "Tamil Nadu",
+        stateCode: "33",
+        ownerName: "M. MANIVANNAN",
+        mobile: "9443910500 / 9003888080",
+        accountName: "MMV Traders",
+        accountNumber: "6690479706",
+        bankBranch: "Indian Bank / Fairlands, Salem",
+        ifsc: "IDIB000F003"
+    };
+
+
+    window.MMV_COMPANY_PROFILE =
+        window.MMV_COMPANY_PROFILE ||
+        {
+            ...MMV_COMPANY_DEFAULT
+        };
+
+
+    /* =====================================================
+       ADD TRANSPORT DETAILS TO EXISTING SALES FORM
+    ===================================================== */
+
+    function addMMVTransportFields(){
+
+        const formGrid =
+            document.querySelector(
+                ".sales-top .card .form-grid"
+            );
+
+        if(
+            !formGrid ||
+            document.getElementById("transportMode")
+        ){
+            return;
+        }
+
+
+        formGrid.insertAdjacentHTML(
+            "beforeend",
+            `
+
+            <div class="transport-section">
+
+                <div class="transport-section-title">
+                    <span>🚚</span>
+                    Transport & Delivery Details
+                </div>
+
+                <div class="transport-grid">
+
+                    <div class="form-group">
+
+                        <label>
+                            Trans. Mode
+                        </label>
+
+                        <select id="transportMode">
+
+                            <option value="By Road">
+                                By Road
+                            </option>
+
+                            <option value="By Hand">
+                                By Hand
+                            </option>
+
+                            <option value="Courier">
+                                Courier
+                            </option>
+
+                            <option value="Transport">
+                                Transport
+                            </option>
+
+                            <option value="Pickup">
+                                Customer Pickup
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label>
+                            Vehicle No.
+                        </label>
+
+                        <input
+                            id="vehicleNo"
+                            type="text"
+                            placeholder="Optional"
+                        >
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label>
+                            Driver Name
+                        </label>
+
+                        <input
+                            id="driverName"
+                            type="text"
+                            placeholder="Optional"
+                        >
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label>
+                            Driver Mobile
+                        </label>
+
+                        <input
+                            id="driverMobile"
+                            type="tel"
+                            inputmode="numeric"
+                            maxlength="15"
+                            placeholder="Optional"
+                        >
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            `
+        );
+    }
+
+
+    addMMVTransportFields();
+
+
+    /* =====================================================
+       TRANSPORT DATA
+    ===================================================== */
+
+    function getMMVTransportData(){
+
+        return {
+
+            transportMode:
+                document.getElementById(
+                    "transportMode"
+                )?.value ||
+                "By Road",
+
+            vehicleNo:
+                document.getElementById(
+                    "vehicleNo"
+                )?.value
+                .trim() ||
+                "",
+
+            driverName:
+                document.getElementById(
+                    "driverName"
+                )?.value
+                .trim() ||
+                "",
+
+            driverMobile:
+                document.getElementById(
+                    "driverMobile"
+                )?.value
+                .trim() ||
+                ""
+
+        };
+
+    }
+
+
+    /* =====================================================
+       PREMIUM PRINT TEMPLATE
+    ===================================================== */
+
+    function createMMVPremiumPrintTemplate(){
+
+        const oldInvoice =
+            document.getElementById(
+                "printInvoice"
+            );
+
+        if(!oldInvoice){
+            return;
+        }
+
+
+        oldInvoice.outerHTML = `
+
+        <section
+            class="print-invoice"
+            id="printInvoice"
+        >
+
+            <div class="mmv-a4-sheet">
+
+
+                <!-- COMPANY HEADER -->
+
+                <div class="mmv-invoice-header">
+
+                    <div class="mmv-logo-wrap">
+
+                        <img
+                            src="../assets/logo/mmv-logo.png"
+                            alt="MMV Traders"
+                        >
+
+                    </div>
+
+
+                    <div class="mmv-company-center">
+
+                        <h1
+                            id="printCompanyName"
+                        >
+                            MMV TRADERS
+                        </h1>
+
+                        <p
+                            id="printCompanyAddress"
+                        >
+                        </p>
+
+                    </div>
+
+
+                    <div
+                        class="mmv-company-right"
+                    >
+
+                        <div>
+                            GSTIN :
+                            <span
+                                id="printCompanyGSTIN"
+                            >
+                            </span>
+                        </div>
+
+                        <div>
+                            State :
+                            <span
+                                id="printCompanyState"
+                            >
+                            </span>
+                        </div>
+
+                        <div>
+                            <span
+                                id="printCompanyOwner"
+                            >
+                            </span>
+                        </div>
+
+                        <div>
+                            Cell :
+                            <span
+                                id="printCompanyMobile"
+                            >
+                            </span>
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- TITLE -->
+
+                <div class="mmv-invoice-title">
+
+                    GST INVOICE / BILL OF SUPPLY
+
+                </div>
+
+
+                <!-- CUSTOMER + INVOICE DETAILS -->
+
+                <div class="mmv-info-grid">
+
+
+                    <div class="mmv-info-box">
+
+                        <div class="mmv-box-title">
+
+                            DETAILS OF RECEIVER / BILLED TO
+
+                        </div>
+
+                        <div class="mmv-box-body">
+
+                            <div class="mmv-detail-line">
+
+                                <span class="mmv-detail-label">
+                                    Name
+                                </span>
+
+                                <span
+                                    id="printCustomer"
+                                >
+                                    Walk-in Customer
+                                </span>
+
+                            </div>
+
+
+                            <div class="mmv-detail-line">
+
+                                <span class="mmv-detail-label">
+                                    Address
+                                </span>
+
+                                <span
+                                    id="printCustomerAddress"
+                                >
+                                    -
+                                </span>
+
+                            </div>
+
+
+                            <div class="mmv-detail-line">
+
+                                <span class="mmv-detail-label">
+                                    GSTIN
+                                </span>
+
+                                <span
+                                    id="printCustomerGSTIN"
+                                >
+                                    -
+                                </span>
+
+                            </div>
+
+
+                            <div class="mmv-detail-line">
+
+                                <span class="mmv-detail-label">
+                                    Mobile
+                                </span>
+
+                                <span
+                                    id="printCustomerMobile"
+                                >
+                                    -
+                                </span>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="mmv-info-box">
+
+                        <div class="mmv-box-title">
+
+                            INVOICE DETAILS
+
+                        </div>
+
+                        <div class="mmv-box-body">
+
+                            <div class="mmv-detail-line">
+
+                                <span class="mmv-detail-label">
+                                    Date
+                                </span>
+
+                                <span
+                                    id="printInvoiceDate"
+                                >
+                                    -
+                                </span>
+
+                            </div>
+
+
+                            <div class="mmv-detail-line">
+
+                                <span class="mmv-detail-label">
+                                    Invoice No.
+                                </span>
+
+                                <strong
+                                    id="printInvoiceNo"
+                                >
+                                    -
+                                </strong>
+
+                            </div>
+
+
+                            <div class="mmv-detail-line">
+
+                                <span class="mmv-detail-label">
+                                    Trans. Mode
+                                </span>
+
+                                <span
+                                    id="printTransportMode"
+                                >
+                                    By Road
+                                </span>
+
+                            </div>
+
+
+                            <div class="mmv-detail-line">
+
+                                <span class="mmv-detail-label">
+                                    Vehicle No.
+                                </span>
+
+                                <span
+                                    id="printVehicleNo"
+                                >
+                                    -
+                                </span>
+
+                            </div>
+
+
+                            <div class="mmv-detail-line">
+
+                                <span class="mmv-detail-label">
+                                    Driver
+                                </span>
+
+                                <span
+                                    id="printDriverDetails"
+                                >
+                                    -
+                                </span>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                </div>
+
+
+                <!-- ITEMS -->
+
+                <table class="mmv-items-table">
+
+                    <thead>
+
+                        <tr>
+
+                            <th style="width:7%">
+                                S.No.
+                            </th>
+
+                            <th style="width:37%">
+                                Product / Description
+                            </th>
+
+                            <th style="width:11%">
+                                HSN
+                            </th>
+
+                            <th
+                                style="width:11%"
+                                class="text-right"
+                            >
+                                Qty
+                            </th>
+
+                            <th
+                                style="width:16%"
+                                class="text-right"
+                            >
+                                Rate (₹)
+                            </th>
+
+                            <th
+                                style="width:18%"
+                                class="text-right"
+                            >
+                                Amount (₹)
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody
+                        id="printItemBody"
+                    >
+                    </tbody>
+
+                </table>
+
+
+                <!-- BOTTOM -->
+
+                <div class="mmv-bottom-area">
+
+
+                    <div class="mmv-bottom-left">
+
+
+                        <div class="mmv-words-box">
+
+                            <div class="mmv-small-title">
+
+                                Total Invoice Amount in Words
+
+                            </div>
+
+                            <div
+                                class="mmv-words-content"
+                                id="printAmountWords"
+                            >
+                                -
+                            </div>
+
+                        </div>
+
+
+                        <div class="mmv-bank-box">
+
+                            <div class="mmv-small-title">
+
+                                BANK DETAILS
+
+                            </div>
+
+                            <div
+                                class="mmv-bank-content"
+                            >
+
+                                <div>
+                                    Account Name :
+                                    <strong
+                                        id="printBankAccountName"
+                                    >
+                                    </strong>
+                                </div>
+
+                                <div>
+                                    Account No. :
+                                    <strong
+                                        id="printBankAccountNo"
+                                    >
+                                    </strong>
+                                </div>
+
+                                <div>
+                                    Bank / Branch :
+                                    <strong
+                                        id="printBankBranch"
+                                    >
+                                    </strong>
+                                </div>
+
+                                <div>
+                                    IFSC Code :
+                                    <strong
+                                        id="printBankIFSC"
+                                    >
+                                    </strong>
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+                    </div>
+
+
+                    <div class="mmv-total-box">
+
+
+                        <div class="mmv-total-row">
+
+                            <span>
+                                Sub Total
+                            </span>
+
+                            <strong
+                                id="printSubtotal"
+                            >
+                                ₹0.00
+                            </strong>
+
+                        </div>
+
+
+                        <div class="mmv-total-row">
+
+                            <span>
+                                CGST
+                            </span>
+
+                            <strong
+                                id="printCGST"
+                            >
+                                ₹0.00
+                            </strong>
+
+                        </div>
+
+
+                        <div class="mmv-total-row">
+
+                            <span>
+                                SGST
+                            </span>
+
+                            <strong
+                                id="printSGST"
+                            >
+                                ₹0.00
+                            </strong>
+
+                        </div>
+
+
+                        <div class="mmv-total-row">
+
+                            <span>
+                                IGST
+                            </span>
+
+                            <strong
+                                id="printIGST"
+                            >
+                                ₹0.00
+                            </strong>
+
+                        </div>
+
+
+                        <div class="mmv-total-row">
+
+                            <span>
+                                Discount
+                            </span>
+
+                            <strong
+                                id="printDiscount"
+                            >
+                                ₹0.00
+                            </strong>
+
+                        </div>
+
+
+                        <div
+                            class="
+                                mmv-total-row
+                                mmv-grand-row
+                            "
+                        >
+
+                            <span>
+                                Grand Total
+                            </span>
+
+                            <strong
+                                id="printTotal"
+                            >
+                                ₹0.00
+                            </strong>
+
+                        </div>
+
+
+                    </div>
+
+
+                </div>
+
+
+                <!-- SIGNATURE -->
+
+                <div class="mmv-signature-grid">
+
+
+                    <div class="mmv-sign-box">
+
+                        <div class="mmv-sign-line"></div>
+
+                        <div class="mmv-sign-label">
+
+                            Receiver's Signature
+
+                        </div>
+
+                    </div>
+
+
+                    <div
+                        class="
+                            mmv-sign-box
+                            mmv-sign-company
+                        "
+                    >
+
+                        For MMV TRADERS
+
+                    </div>
+
+
+                    <div class="mmv-sign-box">
+
+                        <div class="mmv-sign-line"></div>
+
+                        <div class="mmv-sign-label">
+
+                            Authorised Signatory
+
+                        </div>
+
+                    </div>
+
+
+                </div>
+
+
+                <!-- VTOOS BRANDING -->
+
+                <div class="mmv-vtoos-footer">
+
+                    <strong>
+                        Billing System by VTOOS Software Solutions
+                    </strong>
+
+                    &nbsp; | &nbsp;
+
+                    Support :
+                    <span
+                        id="printVTOOSPhone"
+                    >
+                    </span>
+
+                    <br>
+
+                    ORIGINAL - CUSTOMER COPY - OFFICE / ACCOUNTS COPY
+
+                </div>
+
+
+            </div>
+
+        </section>
+
+        `;
+
+    }
+
+
+    createMMVPremiumPrintTemplate();
+
+
+    /* =====================================================
+       AMOUNT IN WORDS
+    ===================================================== */
+
+    function mmvNumberToWords(number){
+
+        number =
+            Math.round(
+                Number(number || 0)
+            );
+
+        if(number === 0){
+            return "Zero Rupees Only";
+        }
+
+
+        const ones = [
+            "",
+            "One",
+            "Two",
+            "Three",
+            "Four",
+            "Five",
+            "Six",
+            "Seven",
+            "Eight",
+            "Nine",
+            "Ten",
+            "Eleven",
+            "Twelve",
+            "Thirteen",
+            "Fourteen",
+            "Fifteen",
+            "Sixteen",
+            "Seventeen",
+            "Eighteen",
+            "Nineteen"
+        ];
+
+
+        const tens = [
+            "",
+            "",
+            "Twenty",
+            "Thirty",
+            "Forty",
+            "Fifty",
+            "Sixty",
+            "Seventy",
+            "Eighty",
+            "Ninety"
+        ];
+
+
+        function twoDigits(n){
+
+            if(n < 20){
+                return ones[n];
+            }
+
+            return (
+                tens[
+                    Math.floor(n / 10)
+                ] +
+                (
+                    n % 10
+                        ? " " + ones[n % 10]
+                        : ""
+                )
+            );
+
+        }
+
+
+        function threeDigits(n){
+
+            let result = "";
+
+            if(n >= 100){
+
+                result =
+                    ones[
+                        Math.floor(n / 100)
+                    ] +
+                    " Hundred";
+
+                n %= 100;
+
+                if(n){
+                    result += " ";
+                }
+
+            }
+
+            if(n){
+                result += twoDigits(n);
+            }
+
+            return result;
+
+        }
+
+
+        let result = "";
+
+
+        if(number >= 10000000){
+
+            result +=
+                threeDigits(
+                    Math.floor(
+                        number / 10000000
+                    )
+                ) +
+                " Crore ";
+
+            number %= 10000000;
+
+        }
+
+
+        if(number >= 100000){
+
+            result +=
+                twoDigits(
+                    Math.floor(
+                        number / 100000
+                    )
+                ) +
+                " Lakh ";
+
+            number %= 100000;
+
+        }
+
+
+        if(number >= 1000){
+
+            result +=
+                twoDigits(
+                    Math.floor(
+                        number / 1000
+                    )
+                ) +
+                " Thousand ";
+
+            number %= 1000;
+
+        }
+
+
+        if(number){
+
+            result +=
+                threeDigits(number);
+
+        }
+
+
+        return (
+            result
+                .replace(/\s+/g," ")
+                .trim() +
+            " Rupees Only"
+        );
+
+    }
+
+
+    /* =====================================================
+       GET CUSTOMER DETAILS
+    ===================================================== */
+
+    function getMMVCustomerDetails(customerCode){
+
+        if(
+            customerCode === "walkin" ||
+            !customerCode
+        ){
+
+            return {
+                name:"Walk-in Customer",
+                address:"-",
+                gstin:"-",
+                mobile:"-",
+                stateCode:"33",
+                state:"Tamil Nadu"
+            };
+
+        }
+
+
+        const customer =
+            (
+                window.customers ||
+                []
+            ).find(
+                item =>
+                    (
+                        item.code ||
+                        item.id
+                    ) === customerCode
+            );
+
+
+        if(!customer){
+
+            return {
+                name:customerCode,
+                address:"-",
+                gstin:"-",
+                mobile:"-",
+                stateCode:"33",
+                state:"Tamil Nadu"
+            };
+
+        }
+
+
+        return {
+
+            name:
+                customer.name ||
+                customer.customerName ||
+                customerCode,
+
+            address:
+                customer.address ||
+                customer.fullAddress ||
+                [
+                    customer.address1,
+                    customer.city,
+                    customer.district,
+                    customer.pincode
+                ]
+                .filter(Boolean)
+                .join(", ") ||
+                "-",
+
+            gstin:
+                customer.gstin ||
+                customer.gst ||
+                "-",
+
+            mobile:
+                customer.mobile ||
+                customer.phone ||
+                "-",
+
+            stateCode:
+                String(
+                    customer.stateCode ||
+                    "33"
+                ),
+
+            state:
+                customer.state ||
+                "Tamil Nadu"
+
+        };
+
+    }
+
+
+    /* =====================================================
+       SET PRINT COMPANY DETAILS
+    ===================================================== */
+
+    function setMMVCompanyPrintDetails(){
+
+        const company =
+            {
+                ...MMV_COMPANY_DEFAULT,
+                ...(
+                    window.MMV_COMPANY_PROFILE ||
+                    {}
+                )
+            };
+
+
+        document.getElementById(
+            "printCompanyName"
+        ).textContent =
+            company.companyName;
+
+
+        document.getElementById(
+            "printCompanyAddress"
+        ).textContent =
+            company.address;
+
+
+        document.getElementById(
+            "printCompanyGSTIN"
+        ).textContent =
+            company.gstin;
+
+
+        document.getElementById(
+            "printCompanyState"
+        ).textContent =
+            (
+                company.state ||
+                "Tamil Nadu"
+            ) +
+            " - " +
+            (
+                company.stateCode ||
+                "33"
+            );
+
+
+        document.getElementById(
+            "printCompanyOwner"
+        ).textContent =
+            company.ownerName ||
+            "";
+
+
+        document.getElementById(
+            "printCompanyMobile"
+        ).textContent =
+            company.mobile ||
+            "";
+
+
+        document.getElementById(
+            "printBankAccountName"
+        ).textContent =
+            company.accountName ||
+            "";
+
+
+        document.getElementById(
+            "printBankAccountNo"
+        ).textContent =
+            company.accountNumber ||
+            "";
+
+
+        document.getElementById(
+            "printBankBranch"
+        ).textContent =
+            company.bankBranch ||
+            "";
+
+
+        document.getElementById(
+            "printBankIFSC"
+        ).textContent =
+            company.ifsc ||
+            "";
+
+
+        document.getElementById(
+            "printVTOOSPhone"
+        ).textContent =
+            MMV_VTOOS_SUPPORT.phone;
+
+    }
+
+
+    /* =====================================================
+       BUILD A4 INVOICE
+    ===================================================== */
+
+    function buildMMVPremiumInvoice(data = {}){
+
+
+        const company =
+            {
+                ...MMV_COMPANY_DEFAULT,
+                ...(
+                    window.MMV_COMPANY_PROFILE ||
+                    {}
+                )
+            };
+
+
+        setMMVCompanyPrintDetails();
+
+
+        const customerCode =
+            data.customer ||
+            document.getElementById(
+                "customerSelect"
+            )?.value ||
+            "walkin";
+
+
+        const customer =
+            getMMVCustomerDetails(
+                customerCode
+            );
+
+
+        document.getElementById(
+            "printCustomer"
+        ).textContent =
+            customer.name;
+
+
+        document.getElementById(
+            "printCustomerAddress"
+        ).textContent =
+            customer.address;
+
+
+        document.getElementById(
+            "printCustomerGSTIN"
+        ).textContent =
+            customer.gstin;
+
+
+        document.getElementById(
+            "printCustomerMobile"
+        ).textContent =
+            customer.mobile;
+
+
+        document.getElementById(
+            "printInvoiceNo"
+        ).textContent =
+            data.number ||
+            document.getElementById(
+                "invoiceNumber"
+            )?.textContent ||
+            "-";
+
+
+        document.getElementById(
+            "printInvoiceDate"
+        ).textContent =
+            data.date ||
+            document.getElementById(
+                "invoiceDate"
+            )?.value ||
+            "-";
+
+
+        const transport =
+            {
+
+                ...getMMVTransportData(),
+
+                transportMode:
+                    data.transportMode ||
+                    getMMVTransportData()
+                    .transportMode,
+
+                vehicleNo:
+                    data.vehicleNo ||
+                    getMMVTransportData()
+                    .vehicleNo,
+
+                driverName:
+                    data.driverName ||
+                    getMMVTransportData()
+                    .driverName,
+
+                driverMobile:
+                    data.driverMobile ||
+                    getMMVTransportData()
+                    .driverMobile
+
+            };
+
+
+        document.getElementById(
+            "printTransportMode"
+        ).textContent =
+            transport.transportMode ||
+            "-";
+
+
+        document.getElementById(
+            "printVehicleNo"
+        ).textContent =
+            transport.vehicleNo ||
+            "-";
+
+
+        document.getElementById(
+            "printDriverDetails"
+        ).textContent =
+            [
+                transport.driverName,
+                transport.driverMobile
+            ]
+            .filter(Boolean)
+            .join(" / ") ||
+            "-";
+
+
+        const tbody =
+            document.getElementById(
+                "printItemBody"
+            );
+
+
+        tbody.innerHTML = "";
+
+
+        let itemDetails =
+            Array.isArray(
+                data.itemDetails
+            )
+                ? data.itemDetails
+                : [];
+
+
+        if(!itemDetails.length){
+
+            itemDetails =
+                [
+                    ...document.querySelectorAll(
+                        ".sales-item"
+                    )
+                ]
+                .map(
+                    row => {
+
+                        const select =
+                            row.querySelector(
+                                ".item-product"
+                            );
+
+                        const code =
+                            select?.value ||
+                            "";
+
+                        const product =
+                            (
+                                window.products ||
+                                []
+                            ).find(
+                                item =>
+                                    (
+                                        item.code ||
+                                        item.productCode ||
+                                        item.itemCode ||
+                                        item.id
+                                    ) === code
+                            );
+
+
+                        const qty =
+                            Number(
+                                row.querySelector(
+                                    ".item-qty"
+                                )?.value || 0
+                            );
+
+
+                        const rate =
+                            Number(
+                                row.querySelector(
+                                    ".item-rate"
+                                )?.value || 0
+                            );
+
+
+                        const discountPercent =
+                            Number(
+                                row.querySelector(
+                                    ".item-discount"
+                                )?.value || 0
+                            );
+
+
+                        const taxPercent =
+                            Number(
+                                row.querySelector(
+                                    ".item-tax"
+                                )?.value || 0
+                            );
+
+
+                        const gross =
+                            qty * rate;
+
+
+                        const discountAmount =
+                            gross *
+                            discountPercent /
+                            100;
+
+
+                        const taxable =
+                            gross -
+                            discountAmount;
+
+
+                        const taxAmount =
+                            taxable *
+                            taxPercent /
+                            100;
+
+
+                        return {
+
+                            product:
+                                code,
+
+                            productName:
+                                product?.name ||
+                                product?.productName ||
+                                select?.options[
+                                    select.selectedIndex
+                                ]?.text ||
+                                "Product",
+
+                            hsn:
+                                product?.hsn ||
+                                product?.hsnCode ||
+                                product?.hsnNumber ||
+                                "-",
+
+                            qty,
+
+                            rate,
+
+                            amount:
+                                taxable +
+                                taxAmount,
+
+                            taxAmount
+
+                        };
+
+                    }
+                );
+
+        }
+
+
+        itemDetails.forEach(
+            (
+                item,
+                index
+            ) => {
+
+                const product =
+                    (
+                        window.products ||
+                        []
+                    ).find(
+                        p =>
+                            (
+                                p.code ||
+                                p.productCode ||
+                                p.itemCode ||
+                                p.id
+                            ) === (
+                                item.product ||
+                                ""
+                            )
+                    );
+
+
+                const hsn =
+                    item.hsn ||
+                    item.hsnCode ||
+                    product?.hsn ||
+                    product?.hsnCode ||
+                    product?.hsnNumber ||
+                    "-";
+
+
+                const tr =
+                    document.createElement(
+                        "tr"
+                    );
+
+
+                tr.innerHTML = `
+
+                    <td>
+                        ${index + 1}
+                    </td>
+
+                    <td>
+                        ${
+                            typeof escapeHtml === "function"
+                                ? escapeHtml(
+                                    item.productName ||
+                                    item.name ||
+                                    product?.name ||
+                                    item.product ||
+                                    "Product"
+                                )
+                                :
+                                (
+                                    item.productName ||
+                                    "Product"
+                                )
+                        }
+                    </td>
+
+                    <td>
+                        ${hsn}
+                    </td>
+
+                    <td class="text-right">
+                        ${Number(
+                            item.qty || 0
+                        )}
+                    </td>
+
+                    <td class="text-right">
+                        ${Number(
+                            item.rate || 0
+                        ).toFixed(2)}
+                    </td>
+
+                    <td class="text-right">
+                        ${Number(
+                            item.amount || 0
+                        ).toFixed(2)}
+                    </td>
+
+                `;
+
+
+                tbody.appendChild(tr);
+
+            }
+        );
+
+
+        /* Reference bill style - keep blank rows */
+
+        const minimumRows = 10;
+
+
+        for(
+            let i =
+                itemDetails.length;
+            i < minimumRows;
+            i++
+        ){
+
+            const tr =
+                document.createElement(
+                    "tr"
+                );
+
+
+            tr.innerHTML =
+                `
+                    <td>&nbsp;</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                `;
+
+
+            tbody.appendChild(tr);
+
+        }
+
+
+        let totals;
+
+
+        if(
+            data.total !== undefined
+        ){
+
+            totals =
+                {
+
+                    subtotal:
+                        Number(
+                            data.subtotal || 0
+                        ),
+
+                    discount:
+                        Number(
+                            data.discount || 0
+                        ),
+
+                    tax:
+                        Number(
+                            data.tax || 0
+                        ),
+
+                    total:
+                        Number(
+                            data.total || 0
+                        )
+
+                };
+
+        }else{
+
+            totals =
+                typeof getTotals === "function"
+                    ? getTotals()
+                    :
+                    {
+                        subtotal:0,
+                        discount:0,
+                        tax:0,
+                        total:0
+                    };
+
+        }
+
+
+        const customerStateCode =
+            String(
+                customer.stateCode ||
+                "33"
+            );
+
+
+        const companyStateCode =
+            String(
+                company.stateCode ||
+                "33"
+            );
+
+
+        let cgst = 0;
+        let sgst = 0;
+        let igst = 0;
+
+
+        if(
+            customerStateCode ===
+            companyStateCode
+        ){
+
+            cgst =
+                Number(
+                    totals.tax || 0
+                ) / 2;
+
+
+            sgst =
+                Number(
+                    totals.tax || 0
+                ) / 2;
+
+        }else{
+
+            igst =
+                Number(
+                    totals.tax || 0
+                );
+
+        }
+
+
+        document.getElementById(
+            "printSubtotal"
+        ).textContent =
+            money(
+                totals.subtotal
+            );
+
+
+        document.getElementById(
+            "printCGST"
+        ).textContent =
+            money(cgst);
+
+
+        document.getElementById(
+            "printSGST"
+        ).textContent =
+            money(sgst);
+
+
+        document.getElementById(
+            "printIGST"
+        ).textContent =
+            money(igst);
+
+
+        document.getElementById(
+            "printDiscount"
+        ).textContent =
+            money(
+                totals.discount
+            );
+
+
+        document.getElementById(
+            "printTotal"
+        ).textContent =
+            money(
+                totals.total
+            );
+
+
+        document.getElementById(
+            "printAmountWords"
+        ).textContent =
+            mmvNumberToWords(
+                totals.total
+            );
+
+    }
+
+
+    /* =====================================================
+       OVERRIDE EXISTING PRINT FUNCTIONS
+    ===================================================== */
+
+    window.preparePrintInvoice =
+        function(){
+
+            buildMMVPremiumInvoice();
+
+        };
+
+
+    window.preparePrintInvoiceFromRecord =
+        function(invoice){
+
+            buildMMVPremiumInvoice(
+                invoice || {}
+            );
+
+        };
+
+
+    window.printInvoiceRecord =
+        function(invoice){
+
+            if(
+                !invoice
+            ){
+                return;
+            }
+
+            preparePrintInvoiceFromRecord(
+                invoice
+            );
+
+            window.print();
+
+        };
+
+
+    /* =====================================================
+       SAVE TRANSPORT DETAILS TO FIREBASE
+       Existing sales save logic is preserved.
+    ===================================================== */
+
+    if(
+        typeof saveSalesInvoiceToFirebase ===
+        "function"
+    ){
+
+        const originalSaveSalesInvoiceToFirebase =
+            saveSalesInvoiceToFirebase;
+
+
+        window.saveSalesInvoiceToFirebase =
+            async function(invoice){
+
+                Object.assign(
+                    invoice,
+                    getMMVTransportData()
+                );
+
+
+                const invoiceId =
+                    await originalSaveSalesInvoiceToFirebase(
+                        invoice
+                    );
+
+
+                const {
+                    doc,
+                    updateDoc,
+                    serverTimestamp
+                } =
+                    await import(
+                        "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js"
+                    );
+
+
+                await updateDoc(
+                    doc(
+                        salesFirebaseDb,
+                        "sales",
+                        invoiceId
+                    ),
+                    {
+
+                        transportMode:
+                            invoice.transportMode,
+
+                        vehicleNo:
+                            invoice.vehicleNo,
+
+                        driverName:
+                            invoice.driverName,
+
+                        driverMobile:
+                            invoice.driverMobile,
+
+                        updatedAt:
+                            serverTimestamp()
+
+                    }
+                );
+
+
+                return invoiceId;
+
+            };
+
+    }
+
+
+    /* =====================================================
+       UPDATE TRANSPORT DETAILS WHEN EDITING
+    ===================================================== */
+
+    if(
+        typeof updateSalesInvoiceToFirebase ===
+        "function"
+    ){
+
+        const originalUpdateSalesInvoiceToFirebase =
+            updateSalesInvoiceToFirebase;
+
+
+        window.updateSalesInvoiceToFirebase =
+            async function(
+                invoice,
+                invoiceId
+            ){
+
+                Object.assign(
+                    invoice,
+                    getMMVTransportData()
+                );
+
+
+                const result =
+                    await originalUpdateSalesInvoiceToFirebase(
+                        invoice,
+                        invoiceId
+                    );
+
+
+                const {
+                    doc,
+                    updateDoc,
+                    serverTimestamp
+                } =
+                    await import(
+                        "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js"
+                    );
+
+
+                await updateDoc(
+                    doc(
+                        salesFirebaseDb,
+                        "sales",
+                        invoiceId
+                    ),
+                    {
+
+                        transportMode:
+                            invoice.transportMode,
+
+                        vehicleNo:
+                            invoice.vehicleNo,
+
+                        driverName:
+                            invoice.driverName,
+
+                        driverMobile:
+                            invoice.driverMobile,
+
+                        updatedAt:
+                            serverTimestamp()
+
+                    }
+                );
+
+
+                return result;
+
+            };
+
+    }
+
+
+    /* =====================================================
+       EDIT EXISTING INVOICE - LOAD TRANSPORT DETAILS
+    ===================================================== */
+
+    if(
+        typeof editInvoiceRecord ===
+        "function"
+    ){
+
+        const originalEditInvoiceRecord =
+            editInvoiceRecord;
+
+
+        window.editInvoiceRecord =
+            function(invoice){
+
+                originalEditInvoiceRecord(
+                    invoice
+                );
+
+
+                setTimeout(
+                    () => {
+
+                        const transportMode =
+                            document.getElementById(
+                                "transportMode"
+                            );
+
+                        if(transportMode){
+
+                            transportMode.value =
+                                invoice.transportMode ||
+                                "By Road";
+
+                        }
+
+
+                        document.getElementById(
+                            "vehicleNo"
+                        ).value =
+                            invoice.vehicleNo ||
+                            "";
+
+
+                        document.getElementById(
+                            "driverName"
+                        ).value =
+                            invoice.driverName ||
+                            "";
+
+
+                        document.getElementById(
+                            "driverMobile"
+                        ).value =
+                            invoice.driverMobile ||
+                            "";
+
+                    },
+                    0
+                );
+
+            };
+
+    }
+
+
+    /* =====================================================
+       CLEAR TRANSPORT DETAILS
+    ===================================================== */
+
+    if(
+        typeof clearSalesForm ===
+        "function"
+    ){
+
+        const originalClearSalesForm =
+            clearSalesForm;
+
+
+        window.clearSalesForm =
+            function(){
+
+                originalClearSalesForm();
+
+
+                const transportMode =
+                    document.getElementById(
+                        "transportMode"
+                    );
+
+                if(transportMode){
+
+                    transportMode.value =
+                        "By Road";
+
+                }
+
+
+                [
+                    "vehicleNo",
+                    "driverName",
+                    "driverMobile"
+                ]
+                .forEach(
+                    id => {
+
+                        const input =
+                            document.getElementById(
+                                id
+                            );
+
+                        if(input){
+
+                            input.value =
+                                "";
+
+                        }
+
+                    }
+                );
+
+            };
+
+    }
+
+
+    /* =====================================================
+       OPTIONAL: LOAD COMPANY SETTINGS
+       Uses saved local profile if available.
+    ===================================================== */
+
+    try{
+
+        const savedCompanyProfile =
+            localStorage.getItem(
+                "mmvCompanyProfile"
+            );
+
+
+        if(savedCompanyProfile){
+
+            window.MMV_COMPANY_PROFILE =
+                {
+                    ...MMV_COMPANY_DEFAULT,
+                    ...JSON.parse(
+                        savedCompanyProfile
+                    )
+                };
+
+        }
+
+    }catch(error){
+
+        console.warn(
+            "Company profile fallback used.",
+            error
+        );
+
+    }
+
+
+    console.log(
+        "MMV Premium A4 Invoice Upgrade Loaded"
+    );
+
+})();
+
+</script>
+
+<!-- =========================================================
+     END MMV PREMIUM A4 SALES INVOICE UPGRADE
+========================================================= -->
 </body>
 
 </html>
