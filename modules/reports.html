@@ -1,15 +1,21 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
 
 <meta charset="UTF-8">
 
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+>
 
 <title>MMV Traders ERP | Reports</title>
 
-<link rel="icon" type="image/png" href="../assets/logo/mmv-logo.png">
+<link
+    rel="icon"
+    type="image/png"
+    href="../assets/logo/mmv-logo.png"
+>
 
 <style>
 
@@ -57,6 +63,11 @@ button{
     cursor:pointer;
 }
 
+button:disabled{
+    cursor:not-allowed;
+    opacity:.72;
+}
+
 /* =====================================================
    APP
 ===================================================== */
@@ -77,7 +88,12 @@ button{
     height:100vh;
     display:flex;
     flex-direction:column;
-    background:linear-gradient(180deg,#082e66,#0b3b82);
+    background:
+        linear-gradient(
+            180deg,
+            #082e66,
+            #0b3b82
+        );
     color:white;
     z-index:100;
 }
@@ -88,7 +104,9 @@ button{
     align-items:center;
     gap:12px;
     padding:15px 20px;
-    border-bottom:1px solid rgba(255,255,255,.10);
+    border-bottom:
+        1px solid
+        rgba(255,255,255,.10);
 }
 
 .brand img{
@@ -109,7 +127,8 @@ button{
 .brand-text span{
     display:block;
     margin-top:3px;
-    color:rgba(255,255,255,.58);
+    color:
+        rgba(255,255,255,.58);
     font-size:9px;
     letter-spacing:.10em;
     text-transform:uppercase;
@@ -123,7 +142,8 @@ button{
 
 .nav-title{
     padding:0 12px 9px;
-    color:rgba(255,255,255,.42);
+    color:
+        rgba(255,255,255,.42);
     font-size:10px;
     font-weight:800;
     letter-spacing:.12em;
@@ -138,7 +158,8 @@ button{
     margin-bottom:4px;
     padding:0 13px;
     border-radius:10px;
-    color:rgba(255,255,255,.74);
+    color:
+        rgba(255,255,255,.74);
     font-size:13px;
     font-weight:600;
     text-decoration:none;
@@ -146,12 +167,14 @@ button{
 
 .nav-link:hover,
 .nav-link.active{
-    background:rgba(255,255,255,.13);
+    background:
+        rgba(255,255,255,.13);
     color:white;
 }
 
 .nav-link.active{
-    box-shadow:inset 3px 0 0 white;
+    box-shadow:
+        inset 3px 0 0 white;
 }
 
 .nav-icon{
@@ -163,23 +186,28 @@ button{
 .nav-divider{
     height:1px;
     margin:16px 12px;
-    background:rgba(255,255,255,.09);
+    background:
+        rgba(255,255,255,.09);
 }
 
 .sidebar-footer{
     padding:15px 18px;
-    border-top:1px solid rgba(255,255,255,.09);
+    border-top:
+        1px solid
+        rgba(255,255,255,.09);
 }
 
 .sidebar-footer small{
-    color:rgba(255,255,255,.42);
+    color:
+        rgba(255,255,255,.42);
     font-size:9px;
 }
 
 .sidebar-footer strong{
     display:block;
     margin-top:4px;
-    color:rgba(255,255,255,.72);
+    color:
+        rgba(255,255,255,.72);
     font-size:10px;
 }
 
@@ -202,7 +230,9 @@ button{
     gap:20px;
     padding:0 30px;
     background:white;
-    border-bottom:1px solid var(--border);
+    border-bottom:
+        1px solid
+        var(--border);
 }
 
 .top-left{
@@ -215,7 +245,9 @@ button{
     display:none;
     width:38px;
     height:38px;
-    border:1px solid var(--border);
+    border:
+        1px solid
+        var(--border);
     border-radius:9px;
     background:white;
 }
@@ -240,7 +272,9 @@ button{
 
 .date{
     padding:8px 11px;
-    border:1px solid var(--border);
+    border:
+        1px solid
+        var(--border);
     border-radius:9px;
     background:#f8fafc;
     color:var(--muted);
@@ -253,7 +287,12 @@ button{
     display:grid;
     place-items:center;
     border-radius:10px;
-    background:linear-gradient(135deg,var(--primary),var(--blue));
+    background:
+        linear-gradient(
+            135deg,
+            var(--primary),
+            var(--blue)
+        );
     color:white;
     font-size:12px;
     font-weight:800;
@@ -313,7 +352,9 @@ button{
     justify-content:center;
     gap:7px;
     padding:0 14px;
-    border:1px solid var(--border);
+    border:
+        1px solid
+        var(--border);
     border-radius:9px;
     background:white;
     color:var(--text);
@@ -322,10 +363,18 @@ button{
 }
 
 .btn-primary{
-    border-color:var(--primary);
-    background:linear-gradient(135deg,var(--primary),var(--blue));
+    border-color:
+        var(--primary);
+    background:
+        linear-gradient(
+            135deg,
+            var(--primary),
+            var(--blue)
+        );
     color:white;
-    box-shadow:0 7px 18px rgba(11,59,130,.16);
+    box-shadow:
+        0 7px 18px
+        rgba(11,59,130,.16);
 }
 
 /* =====================================================
@@ -334,10 +383,14 @@ button{
 
 .filter-card{
     padding:16px;
-    border:1px solid var(--border);
-    border-radius:var(--radius);
+    border:
+        1px solid
+        var(--border);
+    border-radius:
+        var(--radius);
     background:white;
-    box-shadow:var(--shadow);
+    box-shadow:
+        var(--shadow);
     margin-bottom:20px;
 }
 
@@ -356,7 +409,9 @@ select{
     width:100%;
     height:43px;
     padding:0 12px;
-    border:1px solid var(--border);
+    border:
+        1px solid
+        var(--border);
     border-radius:9px;
     outline:none;
     background:white;
@@ -366,8 +421,11 @@ select{
 
 input:focus,
 select:focus{
-    border-color:var(--blue);
-    box-shadow:0 0 0 3px rgba(29,111,232,.09);
+    border-color:
+        var(--blue);
+    box-shadow:
+        0 0 0 3px
+        rgba(29,111,232,.09);
 }
 
 /* =====================================================
@@ -384,10 +442,14 @@ select:focus{
 
 .summary-card{
     padding:17px;
-    border:1px solid var(--border);
-    border-radius:var(--radius);
+    border:
+        1px solid
+        var(--border);
+    border-radius:
+        var(--radius);
     background:white;
-    box-shadow:var(--shadow);
+    box-shadow:
+        var(--shadow);
 }
 
 .summary-card span{
@@ -422,10 +484,14 @@ select:focus{
 
 .card{
     padding:20px;
-    border:1px solid var(--border);
-    border-radius:var(--radius);
+    border:
+        1px solid
+        var(--border);
+    border-radius:
+        var(--radius);
     background:white;
-    box-shadow:var(--shadow);
+    box-shadow:
+        var(--shadow);
     margin-bottom:18px;
 }
 
@@ -435,7 +501,9 @@ select:focus{
     justify-content:space-between;
     gap:15px;
     padding-bottom:15px;
-    border-bottom:1px solid #edf1f5;
+    border-bottom:
+        1px solid
+        #edf1f5;
     margin-bottom:18px;
 }
 
@@ -473,7 +541,9 @@ select:focus{
 .metric-row{
     display:grid;
     grid-template-columns:
-        150px minmax(0,1fr) auto;
+        150px
+        minmax(0,1fr)
+        auto;
     align-items:center;
     gap:12px;
 }
@@ -495,11 +565,12 @@ select:focus{
     height:100%;
     width:0;
     border-radius:999px;
-    background:linear-gradient(
-        90deg,
-        var(--primary),
-        var(--blue)
-    );
+    background:
+        linear-gradient(
+            90deg,
+            var(--primary),
+            var(--blue)
+        );
 }
 
 .metric-value{
@@ -524,7 +595,9 @@ select:focus{
     justify-content:space-between;
     gap:15px;
     padding:11px 0;
-    border-bottom:1px solid #edf1f5;
+    border-bottom:
+        1px solid
+        #edf1f5;
 }
 
 .profit-row:last-child{
@@ -588,7 +661,9 @@ th{
 
 td{
     padding:12px 10px;
-    border-top:1px solid #edf1f5;
+    border-top:
+        1px solid
+        #edf1f5;
     color:#334155;
     font-size:10px;
 }
@@ -610,7 +685,9 @@ td strong{
 
 .insight{
     padding:15px;
-    border:1px solid var(--border);
+    border:
+        1px solid
+        var(--border);
     border-radius:12px;
     background:#fafcff;
 }
@@ -646,7 +723,9 @@ td strong{
 .page-footer{
     margin-top:8px;
     padding:18px 5px 5px;
-    border-top:1px solid var(--border);
+    border-top:
+        1px solid
+        var(--border);
     display:flex;
     align-items:center;
     justify-content:space-between;
@@ -711,19 +790,25 @@ td strong{
         left:0;
         top:0;
         width:250px;
-        transform:translateX(-100%);
-        transition:transform .22s ease;
-        box-shadow:12px 0 35px rgba(15,23,42,.18);
+        transform:
+            translateX(-100%);
+        transition:
+            transform .22s ease;
+        box-shadow:
+            12px 0 35px
+            rgba(15,23,42,.18);
     }
 
     .sidebar.open{
-        transform:translateX(0);
+        transform:
+            translateX(0);
     }
 
     .overlay{
         position:fixed;
         inset:0;
-        background:rgba(15,23,42,.35);
+        background:
+            rgba(15,23,42,.35);
         z-index:90;
     }
 
@@ -825,10 +910,6 @@ td strong{
         grid-template-columns:1fr;
     }
 
-    .table-wrap{
-        overflow-x:auto;
-    }
-
     .page-footer{
         flex-direction:column;
         align-items:flex-start;
@@ -855,21 +936,16 @@ td strong{
 }
 
 </style>
-
 </head>
-
 
 <body>
 
-
 <div class="app">
 
-
-<!-- =====================================================
-     SIDEBAR
-===================================================== -->
-
-<aside class="sidebar" id="sidebar">
+<aside
+    class="sidebar"
+    id="sidebar"
+>
 
     <div class="brand">
 
@@ -892,13 +968,11 @@ td strong{
 
     </div>
 
-
     <nav class="nav">
 
         <div class="nav-title">
             Main Menu
         </div>
-
 
         <a
             href="../index.html"
@@ -908,7 +982,6 @@ td strong{
             Dashboard
         </a>
 
-
         <a
             href="purchase.html"
             class="nav-link"
@@ -916,7 +989,6 @@ td strong{
             <span class="nav-icon">↗</span>
             Purchase
         </a>
-
 
         <a
             href="sales.html"
@@ -926,7 +998,6 @@ td strong{
             Sales / Invoice
         </a>
 
-
         <a
             href="inventory.html"
             class="nav-link"
@@ -934,7 +1005,6 @@ td strong{
             <span class="nav-icon">▦</span>
             Inventory
         </a>
-
 
         <a
             href="customers.html"
@@ -944,7 +1014,6 @@ td strong{
             Customers
         </a>
 
-
         <a
             href="suppliers.html"
             class="nav-link"
@@ -953,14 +1022,11 @@ td strong{
             Suppliers
         </a>
 
-
         <div class="nav-divider"></div>
-
 
         <div class="nav-title">
             Finance & Reports
         </div>
-
 
         <a
             href="payments.html"
@@ -970,7 +1036,6 @@ td strong{
             Accounts
         </a>
 
-
         <a
             href="reports.html"
             class="nav-link active"
@@ -979,14 +1044,11 @@ td strong{
             Reports
         </a>
 
-
         <div class="nav-divider"></div>
-
 
         <div class="nav-title">
             System
         </div>
-
 
         <a
             href="#"
@@ -997,7 +1059,6 @@ td strong{
         </a>
 
     </nav>
-
 
     <div class="sidebar-footer">
 
@@ -1013,16 +1074,12 @@ td strong{
 
 </aside>
 
-
-<div class="overlay" id="overlay"></div>
-
-
-<!-- =====================================================
-     MAIN
-===================================================== -->
+<div
+    class="overlay"
+    id="overlay"
+></div>
 
 <main class="main">
-
 
 <header class="topbar">
 
@@ -1031,10 +1088,10 @@ td strong{
         <button
             class="menu-btn"
             id="menuBtn"
+            type="button"
         >
             ☰
         </button>
-
 
         <div class="context">
 
@@ -1050,18 +1107,18 @@ td strong{
 
     </div>
 
-
     <div class="top-right">
 
-        <div class="date">
-            19 Aug 2026
+        <div
+            class="date"
+            id="topDate"
+        >
+            --
         </div>
-
 
         <div class="avatar">
             O
         </div>
-
 
         <div class="user-info">
 
@@ -1079,13 +1136,7 @@ td strong{
 
 </header>
 
-
 <div class="content">
-
-
-<!-- =====================================================
-     HEADER
-===================================================== -->
 
 <section class="page-header">
 
@@ -1102,28 +1153,28 @@ td strong{
 
     </div>
 
-
     <div class="header-actions">
 
         <button
             class="btn"
             id="refreshBtn"
+            type="button"
         >
             ↻ Refresh
         </button>
 
-
         <button
             class="btn"
             id="printBtn"
+            type="button"
         >
             ⎙ Print A4
         </button>
 
-
         <button
             class="btn btn-primary"
             id="exportBtn"
+            type="button"
         >
             ↓ Export
         </button>
@@ -1131,11 +1182,6 @@ td strong{
     </div>
 
 </section>
-
-
-<!-- =====================================================
-     FILTER
-===================================================== -->
 
 <section class="filter-card">
 
@@ -1146,12 +1192,10 @@ td strong{
             id="fromDate"
         >
 
-
         <input
             type="date"
             id="toDate"
         >
-
 
         <select id="reportType">
 
@@ -1177,10 +1221,10 @@ td strong{
 
         </select>
 
-
         <button
             class="btn btn-primary"
             id="applyFilter"
+            type="button"
         >
             Apply Report
         </button>
@@ -1189,13 +1233,7 @@ td strong{
 
 </section>
 
-
-<!-- =====================================================
-     SUMMARY
-===================================================== -->
-
 <section class="summary-grid">
-
 
     <div class="summary-card green">
 
@@ -1209,7 +1247,6 @@ td strong{
 
     </div>
 
-
     <div class="summary-card">
 
         <span>
@@ -1221,7 +1258,6 @@ td strong{
         </strong>
 
     </div>
-
 
     <div class="summary-card orange">
 
@@ -1235,7 +1271,6 @@ td strong{
 
     </div>
 
-
     <div class="summary-card red">
 
         <span>
@@ -1248,16 +1283,9 @@ td strong{
 
     </div>
 
-
 </section>
 
-
-<!-- =====================================================
-     BUSINESS PERFORMANCE
-===================================================== -->
-
 <div class="report-grid">
-
 
 <section class="card">
 
@@ -1277,9 +1305,7 @@ td strong{
 
     </div>
 
-
     <div class="metric-list">
-
 
         <div class="metric-row">
 
@@ -1300,11 +1326,10 @@ td strong{
                 class="metric-value"
                 id="salesMetric"
             >
-                ₹0
+                ₹0.00
             </div>
 
         </div>
-
 
         <div class="metric-row">
 
@@ -1325,11 +1350,10 @@ td strong{
                 class="metric-value"
                 id="purchaseMetric"
             >
-                ₹0
+                ₹0.00
             </div>
 
         </div>
-
 
         <div class="metric-row">
 
@@ -1350,11 +1374,10 @@ td strong{
                 class="metric-value"
                 id="collectionMetric"
             >
-                ₹0
+                ₹0.00
             </div>
 
         </div>
-
 
         <div class="metric-row">
 
@@ -1375,16 +1398,14 @@ td strong{
                 class="metric-value"
                 id="paymentMetric"
             >
-                ₹0
+                ₹0.00
             </div>
 
         </div>
 
-
     </div>
 
 </section>
-
 
 <section class="card">
 
@@ -1404,9 +1425,7 @@ td strong{
 
     </div>
 
-
     <div class="profit-box">
-
 
         <div class="profit-row">
 
@@ -1420,7 +1439,6 @@ td strong{
 
         </div>
 
-
         <div class="profit-row">
 
             <span>
@@ -1432,7 +1450,6 @@ td strong{
             </strong>
 
         </div>
-
 
         <div class="profit-row">
 
@@ -1446,7 +1463,6 @@ td strong{
 
         </div>
 
-
         <div class="profit-total">
 
             <span>
@@ -1459,20 +1475,13 @@ td strong{
 
         </div>
 
-
     </div>
 
 </section>
 
 </div>
 
-
-<!-- =====================================================
-     TOP PARTIES
-===================================================== -->
-
 <div class="report-grid">
-
 
 <section class="card">
 
@@ -1491,7 +1500,6 @@ td strong{
         </div>
 
     </div>
-
 
     <div class="table-wrap">
 
@@ -1517,7 +1525,6 @@ td strong{
 
             </thead>
 
-
             <tbody id="customerTable">
 
                 <tr>
@@ -1536,7 +1543,6 @@ td strong{
 
 </section>
 
-
 <section class="card">
 
     <div class="card-header">
@@ -1554,7 +1560,6 @@ td strong{
         </div>
 
     </div>
-
 
     <div class="table-wrap">
 
@@ -1580,7 +1585,6 @@ td strong{
 
             </thead>
 
-
             <tbody id="supplierTable">
 
                 <tr>
@@ -1601,11 +1605,6 @@ td strong{
 
 </div>
 
-
-<!-- =====================================================
-     MANAGEMENT INSIGHTS
-===================================================== -->
-
 <section class="card">
 
     <div class="card-header">
@@ -1624,9 +1623,7 @@ td strong{
 
     </div>
 
-
     <div class="insight-grid">
-
 
         <div class="insight">
 
@@ -1646,7 +1643,6 @@ td strong{
 
         </div>
 
-
         <div class="insight">
 
             <div class="insight-icon">
@@ -1664,7 +1660,6 @@ td strong{
             </p>
 
         </div>
-
 
         <div class="insight">
 
@@ -1684,15 +1679,9 @@ td strong{
 
         </div>
 
-
     </div>
 
 </section>
-
-
-<!-- =====================================================
-     FOOTER
-===================================================== -->
 
 <footer class="page-footer">
 
@@ -1709,10 +1698,10 @@ td strong{
 
     </div>
 
-
     <div class="footer-right">
 
         Powered by
+
         <strong>
             VTOOS Software Solutions
         </strong>
@@ -1721,57 +1710,71 @@ td strong{
 
 </footer>
 
-
 </div>
-
 </main>
-
 </div>
-
 
 <script>
 
 /* =====================================================
-   MOBILE MENU
+   UI STATE
 ===================================================== */
 
 const menuBtn =
-    document.getElementById("menuBtn");
+    document.getElementById(
+        "menuBtn"
+    );
 
 const sidebar =
-    document.getElementById("sidebar");
+    document.getElementById(
+        "sidebar"
+    );
 
 const overlay =
-    document.getElementById("overlay");
+    document.getElementById(
+        "overlay"
+    );
 
+if (menuBtn) {
 
-menuBtn.addEventListener(
-    "click",
-    () => {
+    menuBtn.addEventListener(
+        "click",
+        () => {
 
-        sidebar.classList.add("open");
+            sidebar?.classList.add(
+                "open"
+            );
 
-        overlay.classList.add("show");
+            overlay?.classList.add(
+                "show"
+            );
 
-    }
-);
+        }
+    );
 
+}
 
-overlay.addEventListener(
-    "click",
-    () => {
+if (overlay) {
 
-        sidebar.classList.remove("open");
+    overlay.addEventListener(
+        "click",
+        () => {
 
-        overlay.classList.remove("show");
+            sidebar?.classList.remove(
+                "open"
+            );
 
-    }
-);
+            overlay?.classList.remove(
+                "show"
+            );
 
+        }
+    );
+
+}
 
 /* =====================================================
-   DEMO REPORT VALUES
-   Firebase V2 will replace these.
+   REPORT DATA
 ===================================================== */
 
 let reportData = {
@@ -1790,15 +1793,17 @@ let reportData = {
 
 };
 
-
 /* =====================================================
-   FORMAT
+   FORMAT MONEY
 ===================================================== */
 
 function money(value){
 
     return "₹" +
-        Number(value || 0)
+
+        Number(
+            value || 0
+        )
         .toLocaleString(
             "en-IN",
             {
@@ -1809,35 +1814,86 @@ function money(value){
 
 }
 
+/* =====================================================
+   SAFE ELEMENT UPDATE
+===================================================== */
+
+function setText(
+    id,
+    value
+){
+
+    const element =
+        document.getElementById(
+            id
+        );
+
+    if (element) {
+
+        element.textContent =
+            value;
+
+    }
+
+}
+
+function setWidth(
+    id,
+    value
+){
+
+    const element =
+        document.getElementById(
+            id
+        );
+
+    if (element) {
+
+        element.style.width =
+            value;
+
+    }
+
+}
 
 /* =====================================================
-   UPDATE REPORT
+   UPDATE REPORT UI
 ===================================================== */
 
 function updateReport(){
 
     const sales =
-        Number(reportData.sales || 0);
+        Number(
+            reportData.sales || 0
+        );
 
     const purchase =
-        Number(reportData.purchase || 0);
+        Number(
+            reportData.purchase || 0
+        );
 
     const received =
-        Number(reportData.received || 0);
+        Number(
+            reportData.received || 0
+        );
 
     const paid =
-        Number(reportData.paid || 0);
+        Number(
+            reportData.paid || 0
+        );
 
     const receivable =
-        Number(reportData.receivable || 0);
+        Number(
+            reportData.receivable || 0
+        );
 
     const payable =
-        Number(reportData.payable || 0);
-
+        Number(
+            reportData.payable || 0
+        );
 
     const grossProfit =
         sales - purchase;
-
 
     const maxValue =
         Math.max(
@@ -1848,111 +1904,90 @@ function updateReport(){
             1
         );
 
+    setText(
+        "salesTotal",
+        money(sales)
+    );
 
-    document
-        .getElementById("salesTotal")
-        .textContent =
-        money(sales);
+    setText(
+        "purchaseTotal",
+        money(purchase)
+    );
 
+    setText(
+        "receivableTotal",
+        money(receivable)
+    );
 
-    document
-        .getElementById("purchaseTotal")
-        .textContent =
-        money(purchase);
+    setText(
+        "payableTotal",
+        money(payable)
+    );
 
+    setText(
+        "salesMetric",
+        money(sales)
+    );
 
-    document
-        .getElementById("receivableTotal")
-        .textContent =
-        money(receivable);
+    setText(
+        "purchaseMetric",
+        money(purchase)
+    );
 
+    setText(
+        "collectionMetric",
+        money(received)
+    );
 
-    document
-        .getElementById("payableTotal")
-        .textContent =
-        money(payable);
+    setText(
+        "paymentMetric",
+        money(paid)
+    );
 
+    setWidth(
+        "salesBar",
+        ((sales / maxValue) * 100) + "%"
+    );
 
-    document
-        .getElementById("salesMetric")
-        .textContent =
-        money(sales);
+    setWidth(
+        "purchaseBar",
+        ((purchase / maxValue) * 100) + "%"
+    );
 
+    setWidth(
+        "collectionBar",
+        ((received / maxValue) * 100) + "%"
+    );
 
-    document
-        .getElementById("purchaseMetric")
-        .textContent =
-        money(purchase);
+    setWidth(
+        "paymentBar",
+        ((paid / maxValue) * 100) + "%"
+    );
 
+    setText(
+        "profitSales",
+        money(sales)
+    );
 
-    document
-        .getElementById("collectionMetric")
-        .textContent =
-        money(received);
+    setText(
+        "profitPurchase",
+        money(purchase)
+    );
 
+    setText(
+        "grossMargin",
+        money(grossProfit)
+    );
 
-    document
-        .getElementById("paymentMetric")
-        .textContent =
-        money(paid);
-
-
-    document
-        .getElementById("salesBar")
-        .style.width =
-        ((sales / maxValue) * 100) +
-        "%";
-
-
-    document
-        .getElementById("purchaseBar")
-        .style.width =
-        ((purchase / maxValue) * 100) +
-        "%";
-
-
-    document
-        .getElementById("collectionBar")
-        .style.width =
-        ((received / maxValue) * 100) +
-        "%";
-
-
-    document
-        .getElementById("paymentBar")
-        .style.width =
-        ((paid / maxValue) * 100) +
-        "%";
-
-
-    document
-        .getElementById("profitSales")
-        .textContent =
-        money(sales);
-
-
-    document
-        .getElementById("profitPurchase")
-        .textContent =
-        money(purchase);
-
-
-    document
-        .getElementById("grossMargin")
-        .textContent =
-        money(grossProfit);
-
-
-    document
-        .getElementById("grossProfit")
-        .textContent =
-        money(grossProfit);
+    setText(
+        "grossProfit",
+        money(grossProfit)
+    );
 
 }
 
-
 /* =====================================================
-   DATE
+   DEFAULT DATE
 ===================================================== */
 
 const today =
@@ -1961,339 +1996,914 @@ const today =
 const dateString =
     today
         .toISOString()
-        .split("T")[0];
+        .split(
+            "T"
+        )[0];
 
+const fromDateInput =
+    document.getElementById(
+        "fromDate"
+    );
 
-document
-    .getElementById("fromDate")
-    .value =
-    dateString;
+const toDateInput =
+    document.getElementById(
+        "toDate"
+    );
 
+if (fromDateInput) {
 
-document
-    .getElementById("toDate")
-    .value =
-    dateString;
+    fromDateInput.value =
+        dateString;
+
+}
+
+if (toDateInput) {
+
+    toDateInput.value =
+        dateString;
+
+}
+
+const topDate =
+    document.getElementById(
+        "topDate"
+    );
+
+if (topDate) {
+
+    topDate.textContent =
+        today.toLocaleDateString(
+            "en-IN",
+            {
+                day:"2-digit",
+                month:"short",
+                year:"numeric"
+            }
+        );
+
+}
 
 /* =====================================================
-   REPORTS PAGE - FINAL BUTTON CONTROLLER
-   CLEAN VERSION
+   PRINT
 ===================================================== */
 
-let reportApplying = false;
+document
+    .getElementById(
+        "printBtn"
+    )
+    ?.addEventListener(
+        "click",
+        () => {
+
+            window.print();
+
+        }
+    );
+
+/* =====================================================
+   INITIAL
+===================================================== */
+
+updateReport();
+
+</script>
+
+
+<!-- =====================================================
+     MMV TRADERS ERP V2
+     FINAL REPORTS FIREBASE ENGINE
+     Uses SAME ERP Firebase auth/db
+===================================================== -->
+
+<script type="module">
+
+import {
+
+    collection,
+
+    getDocs
+
+} from
+"https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
+
+
+import {
+
+    onAuthStateChanged
+
+} from
+"https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js";
+
+
+import {
+
+    db,
+
+    auth
+
+} from
+"../js/firebase.js";
 
 
 /* =====================================================
-   DATE DEFAULT
+   FIREBASE REPORT STATE
 ===================================================== */
 
-(function setDefaultReportDates() {
+const reportState = {
 
-    const fromDateInput =
-        document.getElementById("fromDate");
+    user:null,
 
-    const toDateInput =
-        document.getElementById("toDate");
+    ready:false,
 
-    const today =
-        new Date().toISOString().split("T")[0];
+    loading:false,
 
-    if (
-        fromDateInput &&
-        !fromDateInput.value
-    ) {
-        fromDateInput.value = today;
+    loaded:false,
+
+    sales:[],
+
+    purchases:[],
+
+    payments:[],
+
+    customers:[],
+
+    suppliers:[]
+
+};
+
+
+/* =====================================================
+   GLOBAL DATA BRIDGE
+===================================================== */
+
+window.MMVR =
+    window.MMVR || {};
+
+
+/* =====================================================
+   NUMBER
+===================================================== */
+
+function numberValue(value){
+
+    const number =
+        Number(
+            value ?? 0
+        );
+
+    return Number.isFinite(number)
+        ? number
+        : 0;
+
+}
+
+
+/* =====================================================
+   RECORD AMOUNT
+===================================================== */
+
+function recordAmount(item){
+
+    return numberValue(
+
+        item?.grandTotal ??
+
+        item?.total ??
+
+        item?.netTotal ??
+
+        item?.amount ??
+
+        item?.totalAmount ??
+
+        item?.invoiceTotal ??
+
+        0
+
+    );
+
+}
+
+
+/* =====================================================
+   DATE NORMALIZATION
+===================================================== */
+
+function reportDateValue(value){
+
+    if (!value) {
+
+        return "";
+
     }
 
     if (
-        toDateInput &&
-        !toDateInput.value
+
+        value?.toDate instanceof
+        Function
+
     ) {
-        toDateInput.value = today;
+
+        value =
+            value.toDate();
+
     }
 
-})();
+    if (
+
+        value instanceof Date &&
+
+        !Number.isNaN(
+            value.getTime()
+        )
+
+    ) {
+
+        return value
+            .toISOString()
+            .slice(
+                0,
+                10
+            );
+
+    }
+
+    if (
+
+        typeof value ===
+        "number"
+
+    ) {
+
+        const date =
+            new Date(value);
+
+        return Number.isNaN(
+            date.getTime()
+        )
+
+            ? ""
+
+            : date
+                .toISOString()
+                .slice(
+                    0,
+                    10
+                );
+
+    }
+
+    const text =
+        String(
+            value
+        ).trim();
+
+    if (!text) {
+
+        return "";
+
+    }
+
+    if (
+
+        /^\d{4}-\d{2}-\d{2}/
+        .test(text)
+
+    ) {
+
+        return text.slice(
+            0,
+            10
+        );
+
+    }
+
+    const match =
+        text.match(
+
+            /^(\d{2})[\/-](\d{2})[\/-](\d{4})$/
+
+        );
+
+    if (match) {
+
+        return (
+
+            match[3] +
+
+            "-" +
+
+            match[2] +
+
+            "-" +
+
+            match[1]
+
+        );
+
+    }
+
+    const date =
+        new Date(text);
+
+    return Number.isNaN(
+        date.getTime()
+    )
+
+        ? ""
+
+        : date
+            .toISOString()
+            .slice(
+                0,
+                10
+            );
+
+}
 
 
 /* =====================================================
-   GET SELECTED REPORT FILTERS
+   RECORD DATE
 ===================================================== */
 
-function getReportFilters() {
+function getRecordDate(
+    item,
+    type
+){
 
-    const fromDate =
-        document
-            .getElementById("fromDate")
-            ?.value || "";
+    let candidates;
 
-    const toDate =
-        document
-            .getElementById("toDate")
-            ?.value || "";
+    if (
 
-    const reportType =
-        document
-            .getElementById("reportType")
-            ?.value || "summary";
+        type ===
+        "purchase"
+
+    ) {
+
+        candidates = [
+
+            item?.purchaseDate,
+
+            item?.billDate,
+
+            item?.invoiceDate,
+
+            item?.date,
+
+            item?.createdAt
+
+        ];
+
+    }
+
+    else if (
+
+        type ===
+        "payment"
+
+    ) {
+
+        candidates = [
+
+            item?.paymentDate,
+
+            item?.date,
+
+            item?.createdAt
+
+        ];
+
+    }
+
+    else {
+
+        candidates = [
+
+            item?.invoiceDate,
+
+            item?.saleDate,
+
+            item?.date,
+
+            item?.createdAt
+
+        ];
+
+    }
+
+    for (
+
+        const value
+        of candidates
+
+    ) {
+
+        const date =
+            reportDateValue(
+                value
+            );
+
+        if (date) {
+
+            return date;
+
+        }
+
+    }
+
+    return "";
+
+}
+
+
+/* =====================================================
+   DATE FILTER
+===================================================== */
+
+function isInDateRange(
+    item,
+    fromDate,
+    toDate,
+    type
+){
+
+    const date =
+        getRecordDate(
+            item,
+            type
+        );
+
+    if (!date) {
+
+        return true;
+
+    }
+
+    if (
+
+        fromDate &&
+
+        date < fromDate
+
+    ) {
+
+        return false;
+
+    }
+
+    if (
+
+        toDate &&
+
+        date > toDate
+
+    ) {
+
+        return false;
+
+    }
+
+    return true;
+
+}
+
+
+/* =====================================================
+   ESCAPE HTML
+===================================================== */
+
+function escapeHtmlValue(value){
+
+    return String(
+        value ?? ""
+    )
+
+    .replace(
+        /&/g,
+        "&amp;"
+    )
+
+    .replace(
+        /</g,
+        "&lt;"
+    )
+
+    .replace(
+        />/g,
+        "&gt;"
+    )
+
+    .replace(
+        /"/g,
+        "&quot;"
+    )
+
+    .replace(
+        /'/g,
+        "&#039;"
+    );
+
+}
+
+
+/* =====================================================
+   FORMAT MONEY
+===================================================== */
+
+function formatMoneyValue(value){
+
+    return "₹" +
+
+        numberValue(value)
+        .toLocaleString(
+
+            "en-IN",
+
+            {
+
+                minimumFractionDigits:2,
+
+                maximumFractionDigits:2
+
+            }
+
+        );
+
+}
+
+
+/* =====================================================
+   FILTERS
+===================================================== */
+
+function getFilters(){
 
     return {
-        fromDate,
-        toDate,
-        reportType
+
+        fromDate:
+
+            document
+            .getElementById(
+                "fromDate"
+            )
+            ?.value ||
+
+            "",
+
+        toDate:
+
+            document
+            .getElementById(
+                "toDate"
+            )
+            ?.value ||
+
+            "",
+
+        reportType:
+
+            document
+            .getElementById(
+                "reportType"
+            )
+            ?.value ||
+
+            "summary"
+
     };
 
 }
 
 
 /* =====================================================
-   APPLY REPORT
+   BUTTON STATE
 ===================================================== */
 
-async function applyCurrentReport() {
-
-    const button =
-        document.getElementById("applyFilter");
+function setButtonState(
+    button,
+    text,
+    disabled
+){
 
     if (!button) {
 
-        console.error(
-            "Reports: Apply Report button not found."
-        );
-
         return;
+
+    }
+
+    button.disabled =
+        !!disabled;
+
+    button.textContent =
+        text;
+
+}
+
+
+/* =====================================================
+   PAYMENT TYPE
+===================================================== */
+
+function paymentKind(item){
+
+    const text = [
+
+        item?.type,
+
+        item?.paymentType,
+
+        item?.category,
+
+        item?.direction,
+
+        item?.mode
+
+    ]
+
+    .join(" ")
+
+    .toLowerCase();
+
+
+    if (
+
+        text.includes(
+            "receive"
+        ) ||
+
+        text.includes(
+            "receipt"
+        ) ||
+
+        text.includes(
+            "customer"
+        ) ||
+
+        text.includes(
+            "collection"
+        )
+
+    ) {
+
+        return "received";
+
     }
 
 
-    if (reportApplying) {
+    if (
 
-        console.log(
-            "Reports: Report calculation already running."
+        text.includes(
+            "paid"
+        ) ||
+
+        text.includes(
+            "payable"
+        ) ||
+
+        text.includes(
+            "supplier"
+        ) ||
+
+        text.includes(
+            "purchase"
+        )
+
+    ) {
+
+        return "paid";
+
+    }
+
+    return "";
+
+}
+
+
+/* =====================================================
+   LOAD COLLECTION
+===================================================== */
+
+async function getCollectionData(name){
+
+    const snapshot =
+        await getDocs(
+
+            collection(
+                db,
+                name
+            )
+
         );
 
+
+    return snapshot.docs.map(
+
+        documentSnapshot => (
+
+            {
+
+                id:
+                    documentSnapshot.id,
+
+                ...documentSnapshot.data()
+
+            }
+
+        )
+
+    );
+
+}
+
+
+/* =====================================================
+   LOAD FIREBASE REPORT DATA
+===================================================== */
+
+async function loadFirebaseReports(
+    force = false
+){
+
+    if (
+
+        reportState.loading
+
+    ) {
+
         return;
+
     }
 
 
-    reportApplying = true;
+    if (
 
-    const originalHTML =
-        button.innerHTML;
+        !reportState.user &&
+
+        !auth.currentUser
+
+    ) {
+
+        console.warn(
+
+            "Reports: Firebase user is not authenticated."
+
+        );
+
+        return;
+
+    }
+
+
+    if (
+
+        reportState.loaded &&
+
+        !force
+
+    ) {
+
+        calculateFirebaseReport();
+
+        return;
+
+    }
+
+
+    reportState.loading =
+        true;
+
 
     try {
 
-        button.disabled = true;
+        const [
 
-        button.textContent =
-            "Applying...";
+            sales,
+
+            purchases,
+
+            payments,
+
+            customers,
+
+            suppliers
+
+        ] = await Promise.all([
+
+            getCollectionData(
+                "sales"
+            ),
+
+            getCollectionData(
+                "purchases"
+            ),
+
+            getCollectionData(
+                "payments"
+            ),
+
+            getCollectionData(
+                "customers"
+            ),
+
+            getCollectionData(
+                "suppliers"
+            )
+
+        ]);
 
 
-        console.log(
-            "Reports: Apply Report clicked."
-        );
+        reportState.sales =
+            sales;
+
+        reportState.purchases =
+            purchases;
+
+        reportState.payments =
+            payments;
+
+        reportState.customers =
+            customers;
+
+        reportState.suppliers =
+            suppliers;
+
+        reportState.loaded =
+            true;
+
+        reportState.ready =
+            true;
 
 
-        const {
-            fromDate,
-            toDate,
-            reportType
-        } = getReportFilters();
+        window.MMVR = {
+
+            sales,
+
+            purchases,
+
+            payments,
+
+            customers,
+
+            suppliers,
+
+            loadedAt:
+                new Date()
+                .toISOString()
+
+        };
 
 
-        console.log(
-            "Reports: Selected filters:",
+        calculateFirebaseReport();
+
+
+        console.info(
+
+            "Reports: Firebase data loaded.",
+
             {
-                fromDate,
-                toDate,
-                reportType
-            }
-        );
 
+                sales:
+                    sales.length,
 
-        /* =============================================
-           DATE VALIDATION
-        ============================================= */
+                purchases:
+                    purchases.length,
 
-        if (
-            fromDate &&
-            toDate &&
-            fromDate > toDate
-        ) {
+                payments:
+                    payments.length,
 
-            alert(
-                "From Date cannot be greater than To Date."
-            );
+                customers:
+                    customers.length,
 
-            return;
-        }
-
-
-        /* =============================================
-           PRIORITY 1
-           EXISTING REPORT FUNCTION
-        ============================================= */
-
-        if (
-            typeof window.loadReportData ===
-            "function"
-        ) {
-
-            console.log(
-                "Reports: Using existing loadReportData()."
-            );
-
-            await window.loadReportData({
-                fromDate,
-                toDate,
-                reportType
-            });
-
-        }
-
-
-        /* =============================================
-           PRIORITY 2
-           EXISTING UPDATE FUNCTION
-        ============================================= */
-
-        else if (
-            typeof window.updateReport ===
-            "function"
-        ) {
-
-            console.log(
-                "Reports: Using existing updateReport()."
-            );
-
-            await window.updateReport(
-                fromDate,
-                toDate,
-                reportType
-            );
-
-        }
-
-
-        /* =============================================
-           PRIORITY 3
-           EXISTING FIREBASE/MMVR DATA
-        ============================================= */
-
-        else if (
-            window.MMVR
-        ) {
-
-            console.log(
-                "Reports: Applying report using existing MMVR data."
-            );
-
-
-            window.MMVR.reportFilters = {
-                fromDate,
-                toDate,
-                reportType
-            };
-
-
-            if (
-                typeof window.calculateFirebaseReport ===
-                "function"
-            ) {
-
-                await window.calculateFirebaseReport();
+                suppliers:
+                    suppliers.length
 
             }
 
-            else if (
-                typeof calculateReport ===
-                "function"
-            ) {
-
-                await calculateReport();
-
-            }
-
-            else {
-
-                console.log(
-                    "Reports: MMVR data available. Existing page data retained."
-                );
-
-            }
-
-        }
-
-
-        /* =============================================
-           PRIORITY 4
-           GENERIC FALLBACK
-        ============================================= */
-
-        else {
-
-            console.warn(
-                "Reports: No external report loader found."
-            );
-
-        }
-
-
-        /* =============================================
-           SUCCESS
-        ============================================= */
-
-        button.textContent =
-            "Applied ✓";
-
-
-        console.log(
-            "Reports: Report applied successfully."
-        );
-
-
-        setTimeout(
-            () => {
-
-                if (
-                    button &&
-                    document.body.contains(button)
-                ) {
-
-                    button.innerHTML =
-                        originalHTML;
-
-                }
-
-            },
-            1200
         );
 
     }
 
-
-    catch (error) {
+    catch(error){
 
         console.error(
-            "Reports: Apply Report failed:",
+
+            "Reports: Firebase load failed:",
+
             error
+
         );
 
+        reportState.ready =
+            false;
 
-        alert(
-            "Unable to apply the report.\n\n" +
-            (
-                error?.message ||
-                "Please check the browser console."
-            )
-        );
+        throw error;
 
     }
-
 
     finally {
 
-        reportApplying = false;
-
-        button.disabled = false;
+        reportState.loading =
+            false;
 
     }
 
@@ -2301,158 +2911,1311 @@ async function applyCurrentReport() {
 
 
 /* =====================================================
-   APPLY REPORT BUTTON
+   CALCULATE REPORT
 ===================================================== */
 
-(function initializeApplyReportButton() {
+function calculateFirebaseReport(){
 
-    const applyButton =
-        document.getElementById("applyFilter");
+    const filters =
+        getFilters();
 
-    if (!applyButton) {
 
-        console.error(
-            "Reports: #applyFilter button not found."
+    if (
+
+        filters.fromDate &&
+
+        filters.toDate &&
+
+        filters.fromDate >
+        filters.toDate
+
+    ) {
+
+        throw new Error(
+
+            "From Date cannot be greater than To Date."
+
         );
 
-        return;
     }
 
 
-    applyButton.addEventListener(
-        "click",
-        async function(event) {
+    const filteredSales =
 
-            event.preventDefault();
+        reportState.sales.filter(
 
-            await applyCurrentReport();
+            item =>
+
+                isInDateRange(
+
+                    item,
+
+                    filters.fromDate,
+
+                    filters.toDate,
+
+                    "sales"
+
+                )
+
+        );
+
+
+    const filteredPurchases =
+
+        reportState.purchases.filter(
+
+            item =>
+
+                isInDateRange(
+
+                    item,
+
+                    filters.fromDate,
+
+                    filters.toDate,
+
+                    "purchase"
+
+                )
+
+        );
+
+
+    const filteredPayments =
+
+        reportState.payments.filter(
+
+            item =>
+
+                isInDateRange(
+
+                    item,
+
+                    filters.fromDate,
+
+                    filters.toDate,
+
+                    "payment"
+
+                )
+
+        );
+
+
+    const salesTotal =
+
+        filteredSales.reduce(
+
+            (sum,item) =>
+
+                sum +
+
+                recordAmount(
+                    item
+                ),
+
+            0
+
+        );
+
+
+    const purchaseTotal =
+
+        filteredPurchases.reduce(
+
+            (sum,item) =>
+
+                sum +
+
+                recordAmount(
+                    item
+                ),
+
+            0
+
+        );
+
+
+    const received =
+
+        filteredPayments
+
+        .filter(
+
+            item =>
+
+                paymentKind(item) ===
+                "received"
+
+        )
+
+        .reduce(
+
+            (sum,item) =>
+
+                sum +
+
+                recordAmount(
+                    item
+                ),
+
+            0
+
+        );
+
+
+    const paid =
+
+        filteredPayments
+
+        .filter(
+
+            item =>
+
+                paymentKind(item) ===
+                "paid"
+
+        )
+
+        .reduce(
+
+            (sum,item) =>
+
+                sum +
+
+                recordAmount(
+                    item
+                ),
+
+            0
+
+        );
+
+
+    const receivable =
+
+        reportState.customers.reduce(
+
+            (sum,item) =>
+
+                sum +
+
+                numberValue(
+
+                    item?.outstanding ??
+
+                    item?.balance ??
+
+                    item?.receivable ??
+
+                    item?.dueAmount ??
+
+                    0
+
+                ),
+
+            0
+
+        );
+
+
+    const payable =
+
+        reportState.suppliers.reduce(
+
+            (sum,item) =>
+
+                sum +
+
+                numberValue(
+
+                    item?.outstanding ??
+
+                    item?.balance ??
+
+                    item?.payable ??
+
+                    item?.dueAmount ??
+
+                    0
+
+                ),
+
+            0
+
+        );
+
+
+    reportData.sales =
+        salesTotal;
+
+    reportData.purchase =
+        purchaseTotal;
+
+    reportData.received =
+        received;
+
+    reportData.paid =
+        paid;
+
+    reportData.receivable =
+        receivable;
+
+    reportData.payable =
+        payable;
+
+
+    updateReport();
+
+
+    renderTopCustomers(
+        filteredSales
+    );
+
+    renderTopSuppliers(
+        filteredPurchases
+    );
+
+
+    return {
+
+        sales:
+            salesTotal,
+
+        purchase:
+            purchaseTotal,
+
+        received,
+
+        paid,
+
+        receivable,
+
+        payable
+
+    };
+
+}
+
+
+/* =====================================================
+   TOP CUSTOMERS
+===================================================== */
+
+function renderTopCustomers(sales){
+
+    const table =
+        document.getElementById(
+            "customerTable"
+        );
+
+    if (!table) {
+
+        return;
+
+    }
+
+
+    const map =
+        new Map();
+
+
+    sales.forEach(
+
+        item => {
+
+            const name =
+
+                String(
+
+                    item?.customerName ??
+
+                    item?.customer ??
+
+                    item?.partyName ??
+
+                    item?.party ??
+
+                    "Unknown Customer"
+
+                )
+
+                .trim()
+
+                ||
+
+                "Unknown Customer";
+
+
+            const current =
+
+                map.get(name)
+
+                ||
+
+                {
+
+                    name,
+
+                    invoices:0,
+
+                    sales:0
+
+                };
+
+
+            current.invoices +=
+                1;
+
+            current.sales +=
+
+                recordAmount(
+                    item
+                );
+
+
+            map.set(
+
+                name,
+
+                current
+
+            );
 
         }
+
     );
 
 
-    console.log(
-        "Reports: Apply Report button ready."
+    const rows =
+
+        Array
+        .from(
+            map.values()
+        )
+
+        .sort(
+
+            (a,b) =>
+
+                b.sales -
+                a.sales
+
+        )
+
+        .slice(
+            0,
+            10
+        );
+
+
+    if (!rows.length) {
+
+        table.innerHTML =
+
+            `
+
+            <tr>
+
+                <td colspan="3">
+
+                    No customer data
+
+                </td>
+
+            </tr>
+
+            `;
+
+        return;
+
+    }
+
+
+    table.innerHTML =
+
+        rows.map(
+
+            item =>
+
+                `
+
+                <tr>
+
+                    <td>
+
+                        <strong>
+
+                            ${escapeHtmlValue(
+                                item.name
+                            )}
+
+                        </strong>
+
+                    </td>
+
+                    <td>
+
+                        ${item.invoices}
+
+                    </td>
+
+                    <td>
+
+                        <strong>
+
+                            ${formatMoneyValue(
+                                item.sales
+                            )}
+
+                        </strong>
+
+                    </td>
+
+                </tr>
+
+                `
+
+        )
+
+        .join("");
+
+}
+
+
+/* =====================================================
+   TOP SUPPLIERS
+===================================================== */
+
+function renderTopSuppliers(purchases){
+
+    const table =
+        document.getElementById(
+            "supplierTable"
+        );
+
+    if (!table) {
+
+        return;
+
+    }
+
+
+    const map =
+        new Map();
+
+
+    purchases.forEach(
+
+        item => {
+
+            const name =
+
+                String(
+
+                    item?.supplierName ??
+
+                    item?.supplier ??
+
+                    item?.partyName ??
+
+                    item?.party ??
+
+                    "Unknown Supplier"
+
+                )
+
+                .trim()
+
+                ||
+
+                "Unknown Supplier";
+
+
+            const current =
+
+                map.get(name)
+
+                ||
+
+                {
+
+                    name,
+
+                    bills:0,
+
+                    purchase:0
+
+                };
+
+
+            current.bills +=
+                1;
+
+            current.purchase +=
+
+                recordAmount(
+                    item
+                );
+
+
+            map.set(
+
+                name,
+
+                current
+
+            );
+
+        }
+
     );
 
-})();
+
+    const rows =
+
+        Array
+        .from(
+            map.values()
+        )
+
+        .sort(
+
+            (a,b) =>
+
+                b.purchase -
+                a.purchase
+
+        )
+
+        .slice(
+            0,
+            10
+        );
+
+
+    if (!rows.length) {
+
+        table.innerHTML =
+
+            `
+
+            <tr>
+
+                <td colspan="3">
+
+                    No supplier data
+
+                </td>
+
+            </tr>
+
+            `;
+
+        return;
+
+    }
+
+
+    table.innerHTML =
+
+        rows.map(
+
+            item =>
+
+                `
+
+                <tr>
+
+                    <td>
+
+                        <strong>
+
+                            ${escapeHtmlValue(
+                                item.name
+                            )}
+
+                        </strong>
+
+                    </td>
+
+                    <td>
+
+                        ${item.bills}
+
+                    </td>
+
+                    <td>
+
+                        <strong>
+
+                            ${formatMoneyValue(
+                                item.purchase
+                            )}
+
+                        </strong>
+
+                    </td>
+
+                </tr>
+
+                `
+
+        )
+
+        .join("");
+
+}
+
+
+/* =====================================================
+   APPLY / REFRESH
+===================================================== */
+
+async function applyReportAction(
+    button,
+    forceReload = false
+){
+
+    const originalText =
+        button?.textContent ||
+
+        "Apply Report";
+
+
+    try {
+
+        const filters =
+            getFilters();
+
+
+        if (
+
+            filters.fromDate &&
+
+            filters.toDate &&
+
+            filters.fromDate >
+            filters.toDate
+
+        ) {
+
+            throw new Error(
+
+                "From Date cannot be greater than To Date."
+
+            );
+
+        }
+
+
+        setButtonState(
+
+            button,
+
+            forceReload
+
+                ? "Refreshing..."
+
+                : "Applying...",
+
+            true
+
+        );
+
+
+        if (
+
+            !auth.currentUser
+
+        ) {
+
+            throw new Error(
+
+                "Firebase login session is not ready. Please wait a moment and try again."
+
+            );
+
+        }
+
+
+        reportState.user =
+            auth.currentUser;
+
+
+        await loadFirebaseReports(
+
+            forceReload ||
+
+            !reportState.loaded
+
+        );
+
+
+        setButtonState(
+
+            button,
+
+            "Applied ✓",
+
+            false
+
+        );
+
+
+        window.setTimeout(
+
+            () => {
+
+                if (
+
+                    button &&
+
+                    document.body.contains(
+                        button
+                    )
+
+                ) {
+
+                    setButtonState(
+
+                        button,
+
+                        originalText,
+
+                        false
+
+                    );
+
+                }
+
+            },
+
+            1200
+
+        );
+
+    }
+
+    catch(error){
+
+        console.error(
+
+            "Reports: Apply failed:",
+
+            error
+
+        );
+
+
+        setButtonState(
+
+            button,
+
+            originalText,
+
+            false
+
+        );
+
+
+        alert(
+
+            "Unable to apply the report.\n\n" +
+
+            (
+
+                error?.message ||
+
+                "Please check the browser console."
+
+            )
+
+        );
+
+    }
+
+}
+
+
+/* =====================================================
+   APPLY BUTTON
+===================================================== */
+
+const applyButton =
+    document.getElementById(
+        "applyFilter"
+    );
+
+
+applyButton
+?.addEventListener(
+
+    "click",
+
+    event => {
+
+        event.preventDefault();
+
+        event.stopImmediatePropagation();
+
+
+        applyReportAction(
+
+            applyButton,
+
+            false
+
+        );
+
+    },
+
+    true
+
+);
 
 
 /* =====================================================
    REFRESH BUTTON
 ===================================================== */
 
-(function initializeRefreshButton() {
+const refreshButton =
+    document.getElementById(
+        "refreshBtn"
+    );
 
-    const refreshButton =
-        document.getElementById("refreshBtn");
 
-    if (!refreshButton) {
+refreshButton
+?.addEventListener(
 
-        console.log(
-            "Reports: Refresh button not available."
+    "click",
+
+    event => {
+
+        event.preventDefault();
+
+        event.stopImmediatePropagation();
+
+
+        applyReportAction(
+
+            refreshButton,
+
+            true
+
         );
 
-        return;
-    }
+    },
 
+    true
 
-    refreshButton.addEventListener(
-        "click",
-        async function(event) {
-
-            event.preventDefault();
-
-
-            const originalHTML =
-                refreshButton.innerHTML;
-
-            try {
-
-                refreshButton.disabled =
-                    true;
-
-                refreshButton.textContent =
-                    "Refreshing...";
-
-
-                console.log(
-                    "Reports: Refresh clicked."
-                );
-
-
-                await applyCurrentReport();
-
-
-                refreshButton.textContent =
-                    "Refreshed ✓";
-
-
-                setTimeout(
-                    () => {
-
-                        if (
-                            refreshButton &&
-                            document.body.contains(
-                                refreshButton
-                            )
-                        ) {
-
-                            refreshButton.innerHTML =
-                                originalHTML;
-
-                        }
-
-                    },
-                    1200
-                );
-
-            }
-
-            catch (error) {
-
-                console.error(
-                    "Reports: Refresh failed:",
-                    error
-                );
-
-
-                alert(
-                    "Refresh failed.\n\n" +
-                    (
-                        error?.message ||
-                        "Please check the browser console."
-                    )
-                );
-
-            }
-
-            finally {
-
-                refreshButton.disabled =
-                    false;
-
-            }
-
-        }
-    );
-
-
-    console.log(
-        "Reports: Refresh button ready."
-    );
-
-})();
+);
 
 
 /* =====================================================
-   FINAL REPORTS READY LOG
+   EXPORT CSV
 ===================================================== */
 
-console.log(
-    "MMV Reports: Final controller initialized successfully."
-);
-</script>    
-</body>
+function csvCell(value){
 
+    const text =
+
+        String(
+            value ?? ""
+        )
+
+        .replace(
+            /"/g,
+            "\"\""
+        );
+
+
+    return
+
+        `"${text}"`;
+
+}
+
+
+function exportReportCsv(){
+
+    if (
+
+        !reportState.loaded
+
+    ) {
+
+        throw new Error(
+
+            "Report data is not loaded yet. Click Apply Report first."
+
+        );
+
+    }
+
+
+    const filters =
+        getFilters();
+
+
+    const rows = [
+
+        [
+
+            "MMV TRADERS ERP - REPORT"
+
+        ],
+
+        [
+
+            "From Date",
+
+            filters.fromDate ||
+            "All"
+
+        ],
+
+        [
+
+            "To Date",
+
+            filters.toDate ||
+            "All"
+
+        ],
+
+        [
+
+            "Report Type",
+
+            filters.reportType
+
+        ],
+
+        [],
+
+        [
+
+            "SUMMARY"
+
+        ],
+
+        [
+
+            "Total Sales",
+
+            reportData.sales || 0
+
+        ],
+
+        [
+
+            "Total Purchase",
+
+            reportData.purchase || 0
+
+        ],
+
+        [
+
+            "Receivable",
+
+            reportData.receivable || 0
+
+        ],
+
+        [
+
+            "Payable",
+
+            reportData.payable || 0
+
+        ],
+
+        [
+
+            "Collections",
+
+            reportData.received || 0
+
+        ],
+
+        [
+
+            "Supplier Payments",
+
+            reportData.paid || 0
+
+        ]
+
+    ];
+
+
+    const csv =
+
+        rows
+
+        .map(
+
+            row =>
+
+                row
+                .map(
+                    csvCell
+                )
+                .join(",")
+
+        )
+
+        .join(
+            "\n"
+        );
+
+
+    const blob =
+
+        new Blob(
+
+            [csv],
+
+            {
+
+                type:
+
+                    "text/csv;charset=utf-8"
+
+            }
+
+        );
+
+
+    const url =
+        URL.createObjectURL(
+            blob
+        );
+
+
+    const link =
+        document.createElement(
+            "a"
+        );
+
+
+    link.href =
+        url;
+
+
+    link.download =
+
+        `MMV-Traders-Report-${
+
+            filters.fromDate ||
+
+            "all"
+
+        }-${
+
+            filters.toDate ||
+
+            "all"
+
+        }.csv`;
+
+
+    document.body.appendChild(
+        link
+    );
+
+
+    link.click();
+
+
+    link.remove();
+
+
+    URL.revokeObjectURL(
+        url
+    );
+
+}
+
+
+/* =====================================================
+   EXPORT BUTTON
+===================================================== */
+
+const exportButton =
+    document.getElementById(
+        "exportBtn"
+    );
+
+
+exportButton
+?.addEventListener(
+
+    "click",
+
+    event => {
+
+        event.preventDefault();
+
+        event.stopImmediatePropagation();
+
+
+        try {
+
+            exportReportCsv();
+
+        }
+
+        catch(error){
+
+            console.error(
+
+                "Reports: Export failed:",
+
+                error
+
+            );
+
+
+            alert(
+
+                error?.message ||
+
+                "Unable to export the report."
+
+            );
+
+        }
+
+    },
+
+    true
+
+);
+
+
+/* =====================================================
+   FIREBASE AUTH
+===================================================== */
+
+onAuthStateChanged(
+
+    auth,
+
+    async user => {
+
+        reportState.user =
+            user || null;
+
+        reportState.ready =
+            !!user;
+
+
+        if (!user) {
+
+            console.warn(
+
+                "Reports: Firebase user is not authenticated."
+
+            );
+
+            return;
+
+        }
+
+
+        try {
+
+            await loadFirebaseReports(
+                true
+            );
+
+
+            console.info(
+
+                "Reports: Firebase authenticated and report data ready."
+
+            );
+
+        }
+
+        catch(error){
+
+            console.error(
+
+                "Reports: Initial Firebase load failed:",
+
+                error
+
+            );
+
+        }
+
+    }
+
+);
+
+
+/* =====================================================
+   GLOBAL REPORT SERVICE
+===================================================== */
+
+window.loadFirebaseReports =
+    loadFirebaseReports;
+
+
+window.calculateFirebaseReport =
+    calculateFirebaseReport;
+
+
+window.MMVReports = {
+
+    state:
+        reportState,
+
+
+    getReportSnapshot(){
+
+        return {
+
+            sales:
+                reportState.sales,
+
+            purchases:
+                reportState.purchases,
+
+            payments:
+                reportState.payments,
+
+            customers:
+                reportState.customers,
+
+            suppliers:
+                reportState.suppliers
+
+        };
+
+    },
+
+
+    loadReportData:
+        loadFirebaseReports,
+
+
+    calculate:
+        calculateFirebaseReport
+
+};
+
+
+console.info(
+    "MMV Reports V2 ready."
+);
+
+</script>
+
+</body>
 </html>
