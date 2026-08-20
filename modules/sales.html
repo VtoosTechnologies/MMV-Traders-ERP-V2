@@ -1013,6 +1013,19 @@ select:focus{
 
 }
 
+
+
+/* =====================================================
+   RECORD ACTIONS / VIEW / PRINT
+===================================================== */
+.record-actions{display:flex;gap:6px;align-items:center;justify-content:flex-start;white-space:nowrap}
+.record-btn{border:1px solid #d7e0ea;background:#fff;color:#163b6c;border-radius:7px;padding:6px 9px;font-size:10px;font-weight:700;cursor:pointer}
+.record-btn:hover{background:#eef4fb}.record-btn.print{color:#166534}.record-btn.edit{color:#9a6700}.record-btn.view{color:#0b3b82}
+.record-modal{position:fixed;inset:0;background:rgba(15,23,42,.45);z-index:9999;display:none;align-items:center;justify-content:center;padding:20px}.record-modal.show{display:flex}
+.record-modal-card{width:min(900px,96vw);max-height:90vh;overflow:auto;background:#fff;border-radius:14px;box-shadow:0 24px 80px rgba(15,23,42,.25);padding:22px}.record-modal-head{display:flex;justify-content:space-between;gap:15px;align-items:center;border-bottom:1px solid #e5e7eb;padding-bottom:12px}.record-modal-head h3{margin:0;color:#173b6c}.record-close{border:0;background:#eef2f7;border-radius:8px;padding:7px 11px;cursor:pointer;font-weight:700}.record-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:18px 0}.record-summary div{border:1px solid #e5e7eb;border-radius:9px;padding:10px}.record-summary span{display:block;color:#64748b;font-size:10px;margin-bottom:4px}.record-summary strong{font-size:13px}.record-modal-table{width:100%;border-collapse:collapse}.record-modal-table th,.record-modal-table td{border-bottom:1px solid #e5e7eb;padding:8px;text-align:left;font-size:11px}
+ .print-purchase{display:none}
+@media print{.app,.sidebar,.topbar,.content,.record-modal{display:none!important} .print-purchase{display:block!important;width:100%;color:#111;font-family:Arial,sans-serif} .print-purchase .print-header{display:flex;align-items:center;justify-content:space-between;gap:20px;padding-bottom:12px;border-bottom:2px solid #0b3b82} .print-purchase .print-brand{display:flex;align-items:center;gap:12px} .print-purchase .print-brand img{width:65px;height:65px;object-fit:contain} .print-purchase .print-brand h1{margin:0;font-size:22px;color:#0b3b82} .print-purchase .print-brand p{margin:4px 0 0;font-size:9px;color:#555} .print-purchase .print-title{text-align:right} .print-purchase .print-title h2{margin:0;font-size:20px} .print-purchase .print-title span{display:block;margin-top:4px;font-size:9px} .print-purchase .print-details{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin:18px 0} .print-purchase .print-box{padding:10px;border:1px solid #ddd} .print-purchase .print-box h3{margin:0 0 7px;font-size:10px;color:#0b3b82} .print-purchase .print-box p{margin:3px 0;font-size:9px} .print-purchase .print-items{width:100%;border-collapse:collapse} .print-purchase .print-items th{padding:7px;border:1px solid #ccc;background:#f1f5f9;text-align:left;font-size:8px} .print-purchase .print-items td{padding:7px;border:1px solid #ccc;font-size:8px} .print-purchase .print-bottom{display:flex;justify-content:flex-end;margin-top:15px} .print-purchase .print-summary{width:270px} .print-purchase .print-summary div{display:flex;justify-content:space-between;padding:5px 0;font-size:9px} .print-purchase .print-summary .grand{padding-top:8px;margin-top:4px;border-top:2px solid #0b3b82;font-size:12px;font-weight:bold} .print-purchase .print-footer{position:fixed;bottom:0;left:0;right:0;padding-top:8px;border-top:1px solid #ddd;display:flex;justify-content:space-between;font-size:7px;color:#666}}
+
 </style>
 
 </head>
@@ -1787,6 +1800,10 @@ select:focus{
                         Status
                     </th>
 
+                    <th>
+                        Actions
+                    </th>
+
                 </tr>
 
             </thead>
@@ -1796,7 +1813,7 @@ select:focus{
 
                 <tr>
 
-                    <td colspan="7">
+                    <td colspan="8">
 
                         <div
                             style="
@@ -2479,6 +2496,7 @@ async function saveSalesInvoiceToFirebase(invoice){
 
         customer: invoice.customer,
         items: invoice.items,
+        itemDetails: Array.isArray(invoice.itemDetails) ? invoice.itemDetails : [],
         subtotal: Number(invoice.subtotal || 0),
         discount: Number(invoice.discount || 0),
         tax: Number(invoice.tax || 0),
@@ -2600,6 +2618,7 @@ let customers = [];
 
 
 let invoices = [];
+let editingInvoiceId = null;
 
 
 let selectedPayment =
@@ -3339,6 +3358,27 @@ function getTotals(){
 }
 
 
+function getCurrentSalesItemDetails(){
+    return Array.from(document.querySelectorAll(".sales-item")).map(row=>{
+        const select=row.querySelector(".item-product");
+        const code=select?.value||"manual";
+        const product=products.find(p=>(p.code||p.productCode||p.itemCode||p.id)===code);
+        const qty=Number(row.querySelector(".item-qty")?.value||0),rate=Number(row.querySelector(".item-rate")?.value||0),discountPercent=Number(row.querySelector(".item-discount")?.value||0),taxPercent=Number(row.querySelector(".item-tax")?.value||0);
+        const gross=qty*rate,discountAmount=gross*discountPercent/100,taxable=gross-discountAmount,taxAmount=taxable*taxPercent/100;
+        return {product:code,productName:product?.name||product?.productName||select?.options[select.selectedIndex]?.text||code,qty,rate,discountPercent,discountAmount,taxPercent,taxAmount,amount:taxable+taxAmount};
+    });
+}
+
+async function updateSalesInvoiceToFirebase(invoice,invoiceId){
+    const {getDoc,updateDoc,doc,serverTimestamp}=await import("https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js");
+    const ref=doc(salesFirebaseDb,"sales",invoiceId);const snap=await getDoc(ref);if(!snap.exists())throw new Error("Invoice record was not found.");
+    const old=snap.data();const oldDetails=Array.isArray(old.itemDetails)?old.itemDetails:[];const newDetails=Array.isArray(invoice.itemDetails)?invoice.itemDetails:[];
+    const oldQty={},newQty={};oldDetails.forEach(i=>{if(i.product&&i.product!=="manual")oldQty[i.product]=(oldQty[i.product]||0)+Number(i.qty||0);});newDetails.forEach(i=>{if(i.product&&i.product!=="manual")newQty[i.product]=(newQty[i.product]||0)+Number(i.qty||0);});
+    for(const code of new Set([...Object.keys(oldQty),...Object.keys(newQty)])){const product=products.find(p=>(p.code||p.productCode||p.itemCode||p.id)===code);if(!product?.id)continue;const corrected=Number(product.stock||0)+Number(oldQty[code]||0)-Number(newQty[code]||0);await updateDoc(doc(salesFirebaseDb,"products",product.id),{stock:Math.max(0,corrected),updatedAt:serverTimestamp()});}
+    await updateDoc(ref,{number:invoice.number,date:invoice.date,dueDate:document.getElementById("dueDate")?.value||"",referenceNo:document.getElementById("referenceNo")?.value||"",salesType:document.getElementById("salesType")?.value||"retail",taxType:document.getElementById("taxType")?.value||"exclusive",customer:invoice.customer,items:invoice.items,itemDetails:newDetails,subtotal:Number(invoice.subtotal||0),discount:Number(invoice.discount||0),tax:Number(invoice.tax||0),total:Number(invoice.total||0),payment:invoice.payment,notes:document.getElementById("invoiceNotes")?.value||"",status:invoice.payment==="credit"?"Credit":"Paid",updatedAt:serverTimestamp()});
+    return invoiceId;
+}
+
 /* =====================================================
    SAVE INVOICE
 ===================================================== */
@@ -3427,6 +3467,9 @@ async function saveInvoice(){
         items:
             rows.length,
 
+        itemDetails:
+            getCurrentSalesItemDetails(),
+
         subtotal:
             totals.subtotal,
 
@@ -3457,12 +3500,19 @@ async function saveInvoice(){
     try{
 
         const firebaseInvoiceId =
-            await saveSalesInvoiceToFirebase(
+            editingInvoiceId
+            ? await updateSalesInvoiceToFirebase(
+                invoice,
+                editingInvoiceId
+            )
+            : await saveSalesInvoiceToFirebase(
                 invoice
             );
 
         invoice.id =
             firebaseInvoiceId;
+
+        editingInvoiceId = null;
 
     }catch(error){
 
@@ -3506,146 +3556,22 @@ async function saveInvoice(){
 ===================================================== */
 
 function renderRecentInvoices(){
-
-    const tbody =
-        document.getElementById(
-            "recentInvoices"
-        );
-
-
-    tbody.innerHTML = "";
-
-
-    if(!invoices.length){
-
-        tbody.innerHTML = `
-
-            <tr>
-
-                <td colspan="7">
-
-                    <div
-                        style="
-                        padding:25px;
-                        text-align:center;
-                        color:#64748b;
-                        font-size:10px;
-                        "
-                    >
-                        No sales invoices yet.
-                    </div>
-
-                </td>
-
-            </tr>
-
-        `;
-
-        return;
-
-    }
-
-
-    invoices
-        .slice(0,10)
-        .forEach(
-            invoice => {
-
-                const row =
-                    document.createElement(
-                        "tr"
-                    );
-
-
-                const customerName =
-                    invoice.customer ===
-                    "walkin"
-                    ? "Walk-in Customer"
-                    : invoice.customer;
-
-
-                row.innerHTML = `
-
-                    <td>
-
-                        <strong>
-                            ${escapeHtml(
-                                invoice.number
-                            )}
-                        </strong>
-
-                    </td>
-
-
-                    <td>
-                        ${escapeHtml(
-                            invoice.date
-                        )}
-                    </td>
-
-
-                    <td>
-                        ${escapeHtml(
-                            customerName
-                        )}
-                    </td>
-
-
-                    <td>
-                        ${invoice.items}
-                    </td>
-
-
-                    <td>
-
-                        <strong>
-                            ${money(
-                                invoice.total
-                            )}
-                        </strong>
-
-                    </td>
-
-
-                    <td>
-                        ${paymentName(
-                            invoice.payment
-                        )}
-                    </td>
-
-
-                    <td>
-
-                        <span
-                            class="status ${
-                                invoice.payment ===
-                                "credit"
-                                ? "credit"
-                                : "paid"
-                            }"
-                        >
-                            ${
-                                invoice.payment ===
-                                "credit"
-                                ? "Credit"
-                                : "Paid"
-                            }
-                        </span>
-
-                    </td>
-
-                `;
-
-
-                tbody.appendChild(
-                    row
-                );
-
-            }
-        );
-
+    const tbody=document.getElementById("recentInvoices");tbody.innerHTML="";
+    if(!invoices.length){tbody.innerHTML='<tr><td colspan="8"><div style="padding:25px;text-align:center;color:#64748b;font-size:10px;">No sales invoices yet.</div></td></tr>';return;}
+    invoices.slice(0,10).forEach(invoice=>{const row=document.createElement("tr");const customerName=invoice.customer==="walkin"?"Walk-in Customer":invoice.customer;const count=Array.isArray(invoice.itemDetails)?invoice.itemDetails.length:Number(invoice.items||0);row.innerHTML=`<td><strong>${escapeHtml(invoice.number||"")}</strong></td><td>${escapeHtml(invoice.date||"")}</td><td>${escapeHtml(customerName||"")}</td><td>${count||"-"}</td><td><strong>${money(invoice.total||0)}</strong></td><td>${paymentName(invoice.payment)}</td><td><span class="status ${invoice.payment==="credit"?"credit":"paid"}">${escapeHtml(invoice.status||(invoice.payment==="credit"?"Credit":"Paid"))}</span></td><td><div class="record-actions"><button type="button" class="record-btn view">View</button><button type="button" class="record-btn edit">Edit</button><button type="button" class="record-btn print">Print</button></div></td>`;const [v,e,p]=row.querySelectorAll(".record-btn");v.addEventListener("click",()=>viewInvoiceRecord(invoice));e.addEventListener("click",()=>editInvoiceRecord(invoice));p.addEventListener("click",()=>printInvoiceRecord(invoice));tbody.appendChild(row);});
 }
 
+
+/* =====================================================
+   SAVED INVOICE VIEW / EDIT / PRINT
+===================================================== */
+function closeInvoiceRecordView(){document.getElementById("invoiceRecordModal").classList.remove("show");}
+function invoiceProductName(item){return item?.productName||item?.name||products.find(p=>(p.code||p.productCode||p.itemCode||p.id)===(item?.product||""))?.name||item?.product||"Product";}
+function viewInvoiceRecord(invoice){document.getElementById("invoiceRecordTitle").textContent=`Invoice Details - ${invoice.number||""}`;document.getElementById("invoiceRecordSummary").innerHTML=`<div><span>Customer</span><strong>${escapeHtml(invoice.customer==="walkin"?"Walk-in Customer":invoice.customer||"")}</strong></div><div><span>Invoice Date</span><strong>${escapeHtml(invoice.date||"")}</strong></div><div><span>Total</span><strong>${money(invoice.total||0)}</strong></div>`;const tbody=document.getElementById("invoiceRecordItems");tbody.innerHTML="";const items=Array.isArray(invoice.itemDetails)?invoice.itemDetails:[];if(!items.length){tbody.innerHTML='<tr><td colspan="7" style="text-align:center;color:#64748b;padding:20px">Item details are not available for this older invoice.</td></tr>';}else items.forEach((item,index)=>{const tr=document.createElement("tr");tr.innerHTML=`<td>${index+1}</td><td>${escapeHtml(invoiceProductName(item))}</td><td>${Number(item.qty||0)}</td><td>${money(item.rate||0)}</td><td>${money(item.discountAmount||0)}</td><td>${money(item.taxAmount||0)}</td><td><strong>${money(item.amount||0)}</strong></td>`;tbody.appendChild(tr);});document.getElementById("invoiceRecordModal").classList.add("show");}
+function editInvoiceRecord(invoice){if(!Array.isArray(invoice.itemDetails)||!invoice.itemDetails.length){alert("This older invoice does not contain item-level details, so it cannot be safely edited.");return;}editingInvoiceId=invoice.id||null;document.getElementById("invoiceNumber").textContent=invoice.number||"";document.getElementById("invoiceDate").value=invoice.date||"";document.getElementById("dueDate").value=invoice.dueDate||"";document.getElementById("referenceNo").value=invoice.referenceNo||"";document.getElementById("salesType").value=invoice.salesType||"retail";document.getElementById("taxType").value=invoice.taxType||"exclusive";document.getElementById("customerSelect").value=invoice.customer||"";document.getElementById("invoiceNotes").value=invoice.notes||"";selectedPayment=invoice.payment||"cash";document.querySelectorAll(".payment-btn").forEach(b=>b.classList.toggle("active",b.dataset.payment===selectedPayment));const body=document.getElementById("itemBody");body.innerHTML="";invoice.itemDetails.forEach(item=>{addItem();const row=body.lastElementChild;const sel=row.querySelector(".item-product");if([...sel.options].some(o=>o.value===item.product))sel.value=item.product;row.querySelector(".item-qty").value=Number(item.qty||0);row.querySelector(".item-rate").value=Number(item.rate||0);row.querySelector(".item-discount").value=Number(item.discountPercent||0);row.querySelector(".item-tax").value=Number(item.taxPercent||0);});calculate();const btn=document.getElementById("saveInvoice");if(btn)btn.textContent="Update Invoice";window.scrollTo({top:0,behavior:"smooth"});}
+function preparePrintInvoiceFromRecord(invoice){const customerValue=invoice.customer||"walkin";let customerName=customerValue==="walkin"?"Walk-in Customer":customerValue,customerInfo="Customer details";const customer=customers.find(c=>c.code===customerValue);if(customer){customerName=customer.name||customerName;customerInfo=[customer.mobile,customer.city,customer.gstin].filter(Boolean).join(" · ")||customerInfo;}document.getElementById("printCustomer").textContent=customerName;document.getElementById("printCustomerInfo").textContent=customerInfo;document.getElementById("printInvoiceNo").textContent=invoice.number||"-";document.getElementById("printInvoiceDate").textContent=invoice.date||"-";document.getElementById("printDueDate").textContent=invoice.dueDate||"-";const tbody=document.getElementById("printItemBody");tbody.innerHTML="";(invoice.itemDetails||[]).forEach((item,index)=>{const tr=document.createElement("tr");tr.innerHTML=`<td>${index+1}</td><td>${escapeHtml(invoiceProductName(item))}</td><td>${Number(item.qty||0)}</td><td>${money(item.rate||0)}</td><td>${money(item.discountAmount||0)}</td><td>${money(item.taxAmount||0)}</td><td>${money(item.amount||0)}</td>`;tbody.appendChild(tr);});document.getElementById("printSubtotal").textContent=money(invoice.subtotal||0);document.getElementById("printDiscount").textContent=money(invoice.discount||0);document.getElementById("printTax").textContent=money(invoice.tax||0);document.getElementById("printTotal").textContent=money(invoice.total||0);}
+function printInvoiceRecord(invoice){if(!Array.isArray(invoice.itemDetails)||!invoice.itemDetails.length){alert("This older invoice does not contain item-level details, so an exact invoice print is not available.");return;}preparePrintInvoiceFromRecord(invoice);window.print();}
+document.getElementById("invoiceRecordModal").addEventListener("click",e=>{if(e.target.id==="invoiceRecordModal")closeInvoiceRecordView();});
 
 /* =====================================================
    PREPARE PRINT INVOICE
@@ -3981,6 +3907,10 @@ document
 
 
 function clearSalesForm(){
+
+    editingInvoiceId = null;
+    const saveButton = document.getElementById("saveInvoice");
+    if(saveButton) saveButton.textContent = "Save Invoice";
 
     document
         .getElementById(
