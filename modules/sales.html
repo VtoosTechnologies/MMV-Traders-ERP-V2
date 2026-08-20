@@ -10928,7 +10928,1019 @@ window.addEventListener("focus", async function(){
     );
 
 })();
+/* =====================================================
+   FINAL INVOICE VIEW FIX
+===================================================== */
 
+window.closeInvoiceRecordView = function () {
+
+    const modal =
+        document.getElementById(
+            "invoiceRecordModal"
+        );
+
+    if (modal) {
+        modal.classList.remove("show");
+    }
+
+};
+
+
+/* =====================================================
+   VIEW FULL INVOICE
+===================================================== */
+
+window.viewInvoiceRecord = function (invoice) {
+
+    try {
+
+        if (!invoice) {
+
+            alert(
+                "Invoice not found."
+            );
+
+            return;
+
+        }
+
+
+        const modal =
+            document.getElementById(
+                "invoiceRecordModal"
+            );
+
+        const title =
+            document.getElementById(
+                "invoiceRecordTitle"
+            );
+
+        const body =
+            document.getElementById(
+                "invoiceRecordBody"
+            );
+
+
+        if (!modal) {
+
+            console.error(
+                "invoiceRecordModal not found in HTML"
+            );
+
+            alert(
+                "Invoice view window is not available."
+            );
+
+            return;
+
+        }
+
+
+        if (!body) {
+
+            console.error(
+                "invoiceRecordBody not found in HTML"
+            );
+
+            alert(
+                "Invoice view content area is not available."
+            );
+
+            return;
+
+        }
+
+
+        const customerCode =
+            invoice.customer ||
+            "walkin";
+
+
+        let customer =
+            null;
+
+
+        if (
+            Array.isArray(customers) &&
+            customerCode !== "walkin"
+        ) {
+
+            customer =
+                customers.find(
+                    c =>
+                        String(
+                            c.code ||
+                            c.customerCode ||
+                            c.id
+                        ) ===
+                        String(customerCode)
+                );
+
+        }
+
+
+        const customerName =
+            customerCode === "walkin"
+                ? "Walk-in Customer"
+                : (
+                    customer?.name ||
+                    customer?.customerName ||
+                    invoice.customerName ||
+                    customerCode ||
+                    "-"
+                );
+
+
+        const customerAddress =
+            customer?.address ||
+            customer?.city ||
+            invoice.customerAddress ||
+            "-";
+
+
+        const customerGSTIN =
+            customer?.gstin ||
+            customer?.gstNumber ||
+            invoice.customerGSTIN ||
+            "-";
+
+
+        const customerMobile =
+            customer?.mobile ||
+            customer?.phone ||
+            invoice.customerMobile ||
+            "-";
+
+
+        /* =============================================
+           SHIP TO
+        ============================================= */
+
+        const shipToName =
+            invoice.shipToName ||
+            invoice.receiverName ||
+            invoice.deliveryName ||
+            customerName;
+
+
+        const shipToAddress =
+            invoice.shipToAddress ||
+            invoice.receiverAddress ||
+            invoice.deliveryAddress ||
+            customerAddress;
+
+
+        const shipToGSTIN =
+            invoice.shipToGSTIN ||
+            invoice.receiverGSTIN ||
+            customerGSTIN;
+
+
+        const shipToMobile =
+            invoice.shipToMobile ||
+            invoice.receiverMobile ||
+            customerMobile;
+
+
+        /* =============================================
+           TRANSPORT
+        ============================================= */
+
+        const transportMode =
+            invoice.transportMode ||
+            invoice.transport ||
+            "-";
+
+
+        const vehicleNo =
+            invoice.vehicleNo ||
+            invoice.vehicleNumber ||
+            "-";
+
+
+        const driverName =
+            invoice.driverName ||
+            invoice.driver ||
+            "-";
+
+
+        const driverMobile =
+            invoice.driverMobile ||
+            invoice.driverPhone ||
+            "-";
+
+
+        /* =============================================
+           INVOICE DETAILS
+        ============================================= */
+
+        const invoiceNo =
+            invoice.number ||
+            invoice.invoiceNo ||
+            invoice.id ||
+            "-";
+
+
+        const invoiceDate =
+            invoice.date ||
+            invoice.invoiceDate ||
+            "-";
+
+
+        const payment =
+            invoice.payment ||
+            invoice.paymentMode ||
+            "-";
+
+
+        const referenceNo =
+            invoice.referenceNo ||
+            invoice.reference ||
+            "-";
+
+
+        const items =
+            Array.isArray(
+                invoice.itemDetails
+            )
+                ? invoice.itemDetails
+                : [];
+
+
+        let itemsHTML =
+            "";
+
+
+        if (!items.length) {
+
+            itemsHTML = `
+                <tr>
+                    <td
+                        colspan="6"
+                        style="
+                            text-align:center;
+                            padding:20px;
+                        "
+                    >
+                        No item details available
+                    </td>
+                </tr>
+            `;
+
+        } else {
+
+            items.forEach(
+                (
+                    item,
+                    index
+                ) => {
+
+                    const productName =
+                        item.productName ||
+                        item.name ||
+                        (
+                            typeof invoiceProductName ===
+                            "function"
+                                ? invoiceProductName(
+                                    item
+                                )
+                                : item.product
+                        ) ||
+                        "Product";
+
+
+                    const qty =
+                        Number(
+                            item.qty || 0
+                        );
+
+
+                    const rate =
+                        Number(
+                            item.rate || 0
+                        );
+
+
+                    const amount =
+                        Number(
+                            item.amount ||
+                            (
+                                qty * rate
+                            )
+                        );
+
+
+                    itemsHTML += `
+
+                        <tr>
+
+                            <td>
+                                ${index + 1}
+                            </td>
+
+                            <td>
+                                ${escapeHtml(
+                                    String(
+                                        productName
+                                    )
+                                )}
+                            </td>
+
+                            <td>
+                                ${escapeHtml(
+                                    String(
+                                        item.hsn ||
+                                        item.hsnCode ||
+                                        "-"
+                                    )
+                                )}
+                            </td>
+
+                            <td>
+                                ${qty}
+                            </td>
+
+                            <td>
+                                ₹${rate.toFixed(2)}
+                            </td>
+
+                            <td>
+                                ₹${amount.toFixed(2)}
+                            </td>
+
+                        </tr>
+
+                    `;
+
+                }
+            );
+
+        }
+
+
+        const subtotal =
+            Number(
+                invoice.subtotal || 0
+            );
+
+
+        const discount =
+            Number(
+                invoice.discount || 0
+            );
+
+
+        const tax =
+            Number(
+                invoice.tax || 0
+            );
+
+
+        const total =
+            Number(
+                invoice.total ||
+                invoice.grandTotal ||
+                0
+            );
+
+
+        if (title) {
+
+            title.textContent =
+                "Full Invoice Preview - " +
+                invoiceNo;
+
+        }
+
+
+        body.innerHTML = `
+
+            <div
+                style="
+                    background:#ffffff;
+                    color:#1e293b;
+                    padding:28px;
+                    max-width:1000px;
+                    margin:auto;
+                    font-size:13px;
+                "
+            >
+
+                <!-- COMPANY HEADER -->
+
+                <div
+                    style="
+                        display:flex;
+                        justify-content:space-between;
+                        align-items:flex-start;
+                        border-bottom:2px solid #334e75;
+                        padding-bottom:16px;
+                        margin-bottom:14px;
+                    "
+                >
+
+                    <div>
+
+                        <div
+                            style="
+                                font-size:26px;
+                                font-weight:800;
+                                color:#334e75;
+                                letter-spacing:2px;
+                            "
+                        >
+                            MMV TRADERS
+                        </div>
+
+                        <div
+                            style="
+                                margin-top:6px;
+                                font-size:11px;
+                            "
+                        >
+                            1/134, Pallapati Village,
+                            O.G Halli Post,
+                            Pennagaram Tk,
+                            Dharmapuri - 636809
+                        </div>
+
+                    </div>
+
+
+                    <div
+                        style="
+                            text-align:right;
+                            font-size:11px;
+                            line-height:1.8;
+                        "
+                    >
+
+                        <div>
+                            <strong>
+                                GSTIN:
+                            </strong>
+                            -
+                        </div>
+
+                        <div>
+                            <strong>
+                                State:
+                            </strong>
+                            Tamil Nadu - 33
+                        </div>
+
+                        <div>
+                            <strong>
+                                Cell:
+                            </strong>
+                            9789388987
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- INVOICE TITLE -->
+
+                <div
+                    style="
+                        background:#334e75;
+                        color:#ffffff;
+                        text-align:center;
+                        padding:10px;
+                        font-size:17px;
+                        font-weight:800;
+                        letter-spacing:1px;
+                        margin-bottom:14px;
+                    "
+                >
+                    GST INVOICE / BILL OF SUPPLY
+                </div>
+
+
+                <!-- CUSTOMER / SHIP TO -->
+
+                <div
+                    style="
+                        display:grid;
+                        grid-template-columns:1fr 1fr;
+                        gap:12px;
+                        margin-bottom:12px;
+                    "
+                >
+
+                    <div
+                        style="
+                            border:1px solid #cbd5e1;
+                        "
+                    >
+
+                        <div
+                            style="
+                                background:#334e75;
+                                color:#ffffff;
+                                padding:8px;
+                                font-weight:700;
+                            "
+                        >
+                            BILL TO / BUYER
+                        </div>
+
+                        <div
+                            style="
+                                padding:10px;
+                                line-height:1.9;
+                            "
+                        >
+                            <div>
+                                <strong>Name:</strong>
+                                ${escapeHtml(customerName)}
+                            </div>
+
+                            <div>
+                                <strong>Address:</strong>
+                                ${escapeHtml(customerAddress)}
+                            </div>
+
+                            <div>
+                                <strong>GSTIN:</strong>
+                                ${escapeHtml(customerGSTIN)}
+                            </div>
+
+                            <div>
+                                <strong>Mobile:</strong>
+                                ${escapeHtml(customerMobile)}
+                            </div>
+                        </div>
+
+                    </div>
+
+
+                    <div
+                        style="
+                            border:1px solid #cbd5e1;
+                        "
+                    >
+
+                        <div
+                            style="
+                                background:#334e75;
+                                color:#ffffff;
+                                padding:8px;
+                                font-weight:700;
+                            "
+                        >
+                            SHIP TO / RECEIVER
+                        </div>
+
+                        <div
+                            style="
+                                padding:10px;
+                                line-height:1.9;
+                            "
+                        >
+                            <div>
+                                <strong>Name:</strong>
+                                ${escapeHtml(shipToName)}
+                            </div>
+
+                            <div>
+                                <strong>Address:</strong>
+                                ${escapeHtml(shipToAddress)}
+                            </div>
+
+                            <div>
+                                <strong>GSTIN:</strong>
+                                ${escapeHtml(shipToGSTIN)}
+                            </div>
+
+                            <div>
+                                <strong>Mobile:</strong>
+                                ${escapeHtml(shipToMobile)}
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- INVOICE / TRANSPORT -->
+
+                <div
+                    style="
+                        display:grid;
+                        grid-template-columns:1fr 1fr;
+                        gap:12px;
+                        margin-bottom:12px;
+                    "
+                >
+
+                    <div
+                        style="
+                            border:1px solid #cbd5e1;
+                        "
+                    >
+
+                        <div
+                            style="
+                                background:#334e75;
+                                color:#ffffff;
+                                padding:8px;
+                                font-weight:700;
+                            "
+                        >
+                            INVOICE DETAILS
+                        </div>
+
+                        <div
+                            style="
+                                padding:10px;
+                                line-height:1.9;
+                            "
+                        >
+                            <div>
+                                <strong>Invoice No:</strong>
+                                ${escapeHtml(invoiceNo)}
+                            </div>
+
+                            <div>
+                                <strong>Date:</strong>
+                                ${escapeHtml(invoiceDate)}
+                            </div>
+
+                            <div>
+                                <strong>Payment:</strong>
+                                ${escapeHtml(payment)}
+                            </div>
+
+                            <div>
+                                <strong>Reference:</strong>
+                                ${escapeHtml(referenceNo)}
+                            </div>
+                        </div>
+
+                    </div>
+
+
+                    <div
+                        style="
+                            border:1px solid #cbd5e1;
+                        "
+                    >
+
+                        <div
+                            style="
+                                background:#334e75;
+                                color:#ffffff;
+                                padding:8px;
+                                font-weight:700;
+                            "
+                        >
+                            TRANSPORT DETAILS
+                        </div>
+
+                        <div
+                            style="
+                                padding:10px;
+                                line-height:1.9;
+                            "
+                        >
+                            <div>
+                                <strong>Transport Mode:</strong>
+                                ${escapeHtml(transportMode)}
+                            </div>
+
+                            <div>
+                                <strong>Vehicle No:</strong>
+                                ${escapeHtml(vehicleNo)}
+                            </div>
+
+                            <div>
+                                <strong>Driver:</strong>
+                                ${escapeHtml(driverName)}
+                            </div>
+
+                            <div>
+                                <strong>Driver Mobile:</strong>
+                                ${escapeHtml(driverMobile)}
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- ITEMS -->
+
+                <table
+                    style="
+                        width:100%;
+                        border-collapse:collapse;
+                        margin-top:10px;
+                    "
+                >
+
+                    <thead>
+
+                        <tr
+                            style="
+                                background:#334e75;
+                                color:#ffffff;
+                            "
+                        >
+                            <th
+                                style="
+                                    padding:8px;
+                                    border:1px solid #cbd5e1;
+                                "
+                            >
+                                S.No.
+                            </th>
+
+                            <th
+                                style="
+                                    padding:8px;
+                                    border:1px solid #cbd5e1;
+                                "
+                            >
+                                Product / Description
+                            </th>
+
+                            <th
+                                style="
+                                    padding:8px;
+                                    border:1px solid #cbd5e1;
+                                "
+                            >
+                                HSN
+                            </th>
+
+                            <th
+                                style="
+                                    padding:8px;
+                                    border:1px solid #cbd5e1;
+                                "
+                            >
+                                Qty
+                            </th>
+
+                            <th
+                                style="
+                                    padding:8px;
+                                    border:1px solid #cbd5e1;
+                                "
+                            >
+                                Rate (₹)
+                            </th>
+
+                            <th
+                                style="
+                                    padding:8px;
+                                    border:1px solid #cbd5e1;
+                                "
+                            >
+                                Amount (₹)
+                            </th>
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+                        ${itemsHTML}
+
+                    </tbody>
+
+                </table>
+
+
+                <!-- TOTALS -->
+
+                <div
+                    style="
+                        display:flex;
+                        justify-content:flex-end;
+                        margin-top:14px;
+                    "
+                >
+
+                    <table
+                        style="
+                            width:360px;
+                            border-collapse:collapse;
+                        "
+                    >
+
+                        <tr>
+                            <td
+                                style="
+                                    border:1px solid #cbd5e1;
+                                    padding:8px;
+                                "
+                            >
+                                Sub Total
+                            </td>
+
+                            <td
+                                style="
+                                    border:1px solid #cbd5e1;
+                                    padding:8px;
+                                    text-align:right;
+                                "
+                            >
+                                ₹${subtotal.toFixed(2)}
+                            </td>
+                        </tr>
+
+
+                        <tr>
+                            <td
+                                style="
+                                    border:1px solid #cbd5e1;
+                                    padding:8px;
+                                "
+                            >
+                                Discount
+                            </td>
+
+                            <td
+                                style="
+                                    border:1px solid #cbd5e1;
+                                    padding:8px;
+                                    text-align:right;
+                                "
+                            >
+                                ₹${discount.toFixed(2)}
+                            </td>
+                        </tr>
+
+
+                        <tr>
+                            <td
+                                style="
+                                    border:1px solid #cbd5e1;
+                                    padding:8px;
+                                "
+                            >
+                                Tax
+                            </td>
+
+                            <td
+                                style="
+                                    border:1px solid #cbd5e1;
+                                    padding:8px;
+                                    text-align:right;
+                                "
+                            >
+                                ₹${tax.toFixed(2)}
+                            </td>
+                        </tr>
+
+
+                        <tr
+                            style="
+                                background:#334e75;
+                                color:#ffffff;
+                                font-weight:800;
+                            "
+                        >
+                            <td
+                                style="
+                                    padding:10px;
+                                "
+                            >
+                                GRAND TOTAL
+                            </td>
+
+                            <td
+                                style="
+                                    padding:10px;
+                                    text-align:right;
+                                "
+                            >
+                                ₹${total.toFixed(2)}
+                            </td>
+                        </tr>
+
+                    </table>
+
+                </div>
+
+
+                <!-- FOOTER -->
+
+                <div
+                    style="
+                        margin-top:25px;
+                        text-align:center;
+                        border-top:1px solid #cbd5e1;
+                        padding-top:12px;
+                        color:#64748b;
+                        font-size:10px;
+                    "
+                >
+                    <strong>
+                        MMV TRADERS
+                    </strong>
+                    &nbsp; | &nbsp;
+                    Contact: 9789388987
+                </div>
+
+            </div>
+
+        `;
+
+
+        modal.classList.add(
+            "show"
+        );
+
+    } catch (error) {
+
+        console.error(
+            "Error opening invoice view:",
+            error
+        );
+
+        alert(
+            "Unable to open full invoice view."
+        );
+
+    }
+
+};
+
+
+/* =====================================================
+   VIEW BUTTON FIX
+===================================================== */
+
+window.viewInvoiceRecordById = function (
+    invoiceId
+) {
+
+    const invoice =
+        invoices.find(
+            item =>
+                String(item.id) ===
+                String(invoiceId)
+        );
+
+
+    if (!invoice) {
+
+        alert(
+            "Invoice not found."
+        );
+
+        return;
+
+    }
+
+
+    window.viewInvoiceRecord(
+        invoice
+    );
+
+};
+
+
+/* =====================================================
+   MODAL OUTSIDE CLICK
+===================================================== */
+
+(function () {
+
+    const modal =
+        document.getElementById(
+            "invoiceRecordModal"
+        );
+
+    if (!modal) {
+        return;
+    }
+
+
+    modal.addEventListener(
+        "click",
+        function (event) {
+
+            if (
+                event.target === modal
+            ) {
+
+                window.closeInvoiceRecordView();
+
+            }
+
+        }
+    );
+
+})();
 </script>
     
 </body>
