@@ -1,1 +1,46 @@
+/* =====================================================
+   LOGOUT BUTTON
+===================================================== */
 
+.top-user-section{
+    display:flex;
+    align-items:center;
+    gap:12px;
+}
+
+.logout-btn{
+    border:1px solid #dbe3ef;
+    background:#ffffff;
+    color:#334155;
+    height:36px;
+    padding:0 14px;
+    border-radius:9px;
+    font-size:12px;
+    font-weight:700;
+    cursor:pointer;
+    transition:all .2s ease;
+}
+
+.logout-btn:hover{
+    border-color:#cbd5e1;
+    background:#f8fafc;
+    color:#0f172a;
+}
+
+.logout-btn:active{
+    transform:scale(.98);
+}
+
+@media(max-width:760px){
+
+    .top-user-section{
+        gap:8px;
+    }
+
+    .logout-btn{
+        height:34px;
+        padding:0 10px;
+        font-size:11px;
+    }
+
+}
