@@ -40,7 +40,9 @@ const dashboardState = {
     purchases: [],
 
     salesItems: [],
-purchaseItems: [],
+
+    purchaseItems: [],
+
     customers: [],
 
     suppliers: [],
@@ -135,32 +137,11 @@ function dashboardDate(value) {
 
 function dashboardDateKey(value) {
 
-    if (!value) {
-
-        return "";
-
-    }
-
-    /*
-     * Firestore sale/purchase date
-     * already YYYY-MM-DD format la irundha
-     * direct-ah use pannalam.
-     */
-
-    if (
-        typeof value === "string" &&
-        /^\d{4}-\d{2}-\d{2}$/
-            .test(value)
-    ) {
-
-        return value;
-
-    }
-
     const date =
         dashboardDate(
             value
         );
+
 
     if (!date) {
 
@@ -168,8 +149,10 @@ function dashboardDateKey(value) {
 
     }
 
+
     const year =
         date.getFullYear();
+
 
     const month =
         String(
@@ -179,6 +162,7 @@ function dashboardDateKey(value) {
             "0"
         );
 
+
     const day =
         String(
             date.getDate()
@@ -187,9 +171,11 @@ function dashboardDateKey(value) {
             "0"
         );
 
+
     return `${year}-${month}-${day}`;
 
 }
+
 
 function dashboardToday() {
 
@@ -310,41 +296,125 @@ function escapeDashboardHTML(
 
 
 /* ============================================================
+   RECORD COMPATIBILITY HELPERS
+   ============================================================ */
+
+function dashboardRecordDate(record) {
+
+    if (!record) {
+        return "";
+    }
+
+    return (
+        record.invoiceDate ||
+        record.date ||
+        record.transactionDate ||
+        record.orderDate ||
+        record.paymentDate ||
+        record.createdAt ||
+        ""
+    );
+
+}
+
+
+function dashboardRecordAmount(record) {
+
+    if (!record) {
+        return 0;
+    }
+
+    return dashboardNumber(
+        record.totalAmount ??
+        record.grandTotal ??
+        record.netAmount ??
+        record.subtotal ??
+        record.total ??
+        record.amount ??
+        record.paidAmount ??
+        0
+    );
+
+}
+
+
+function dashboardQuantity(item) {
+
+    return dashboardNumber(
+        item?.quantity ??
+        item?.qty ??
+        item?.stock ??
+        item?.currentStock ??
+        item?.availableQty ??
+        0
+    );
+
+}
+
+
+function dashboardMinimumStock(item) {
+
+    return dashboardNumber(
+        item?.minimumStock ??
+        item?.minStock ??
+        item?.reorderLevel ??
+        item?.minimumQty ??
+        0
+    );
+
+}
+
+
+function dashboardPurchaseRate(item) {
+
+    return dashboardNumber(
+        item?.purchaseRate ??
+        item?.costRate ??
+        item?.purchasePrice ??
+        item?.buyingPrice ??
+        item?.cost ??
+        item?.rate ??
+        item?.price ??
+        0
+    );
+
+}
+
+
+/* ============================================================
    TODAY SALES
    ============================================================ */
 
 function calculateTodaySales() {
 
-    const today = dashboardToday();
+    const today =
+        dashboardToday();
+
 
     return dashboardState.sales
-        .filter((sale) => {
-
-            const saleDate =
-                sale.invoiceDate ||
-                sale.createdAt ||
-                sale.date ||
-                sale.saleDate ||
-                "";
-
-            return dashboardDateKey(saleDate) === today;
-
-        })
-        .reduce((total, sale) => {
-
-            const saleAmount =
-                sale.totalAmount ??
-                sale.grandTotal ??
-                sale.total ??
-                sale.netAmount ??
-                sale.subtotal ??
-                0;
-
-            return total + dashboardNumber(saleAmount);
-
-        }, 0);
+        .filter(
+            sale =>
+                dashboardDateKey(
+                    dashboardRecordDate(
+                        sale
+                    )
+                ) === today
+        )
+        .reduce(
+            (
+                total,
+                sale
+            ) =>
+                total +
+                dashboardRecordAmount(
+                    sale
+                ),
+            0
+        );
 
 }
+
+
 /* ============================================================
    TODAY PURCHASE
    ============================================================ */
@@ -354,73 +424,31 @@ function calculateTodayPurchase() {
     const today =
         dashboardToday();
 
-    console.log(
-        "Dashboard Today:",
-        today
-    );
 
-    const todayPurchase =
-        dashboardState.purchases
-            .filter(
-                purchase => {
-
-                    const purchaseDate =
-                        purchase.invoiceDate ||
-                        purchase.date ||
-                        purchase.billDate ||
-                        purchase.createdAt ||
-                        "";
-
-                    const purchaseDateKey =
-                        dashboardDateKey(
-                            purchaseDate
-                        );
-
-                    return (
-                        purchaseDateKey ===
-                        today
-                    );
-
-                }
-            )
-            .reduce(
-                (
-                    total,
+    return dashboardState.purchases
+        .filter(
+            purchase =>
+                dashboardDateKey(
+                    dashboardRecordDate(
+                        purchase
+                    )
+                ) === today
+        )
+        .reduce(
+            (
+                total,
+                purchase
+            ) =>
+                total +
+                dashboardRecordAmount(
                     purchase
-                ) => {
-
-                    const amount =
-                        purchase.totalAmount ??
-                        purchase.total ??
-                        purchase.grandTotal ??
-                        (
-                            dashboardNumber(
-                                purchase.subtotal
-                            ) +
-                            dashboardNumber(
-                                purchase.tax
-                            )
-                        );
-
-                    return (
-                        total +
-                        dashboardNumber(
-                            amount
-                        )
-                    );
-
-                },
-                0
-            );
-
-    console.log(
-        "Dashboard Today Purchase Total:",
-        todayPurchase
-    );
-
-    return todayPurchase;
+                ),
+            0
+        );
 
 }
+
+
 /* ============================================================
    TODAY PROFIT
    ============================================================ */
@@ -467,7 +495,12 @@ function calculateCustomerOutstanding() {
             ) =>
                 total +
                 dashboardNumber(
-                    customer.outstanding
+                    customer.outstanding ??
+                    customer.balance ??
+                    customer.dueAmount ??
+                    customer.due ??
+                    customer.receivable ??
+                    0
                 ),
             0
         );
@@ -490,7 +523,11 @@ function calculateSupplierOutstanding() {
                 total +
                 dashboardNumber(
                     supplier.outstanding ??
-                    supplier.payable
+                    supplier.payable ??
+                    supplier.balance ??
+                    supplier.dueAmount ??
+                    supplier.due ??
+                    0
                 ),
             0
         );
@@ -513,30 +550,29 @@ function calculateStockValue() {
 
                 const stockValue =
                     dashboardNumber(
-                        item.stockValue
+                        item.stockValue ??
+                        item.inventoryValue ??
+                        item.value ??
+                        0
                     );
-
 
                 if (
                     stockValue > 0
                 ) {
-
                     return (
                         total +
                         stockValue
                     );
-
                 }
-
 
                 return (
                     total +
                     (
-                        dashboardNumber(
-                            item.quantity
+                        dashboardQuantity(
+                            item
                         ) *
-                        dashboardNumber(
-                            item.purchaseRate
+                        dashboardPurchaseRate(
+                            item
                         )
                     )
                 );
@@ -559,18 +595,14 @@ function calculateLowStockCount() {
             item => {
 
                 const quantity =
-                    dashboardNumber(
-                        item.quantity
+                    dashboardQuantity(
+                        item
                     );
-
 
                 const minimum =
-                    dashboardNumber(
-                        item.minimumStock ??
-                        item.minStock ??
-                        0
+                    dashboardMinimumStock(
+                        item
                     );
-
 
                 return (
                     minimum > 0 &&
@@ -660,21 +692,19 @@ function calculateTodaySupplierPayments() {
 
 function calculateTodayInvoiceCount() {
 
-    const today = dashboardToday();
+    const today =
+        dashboardToday();
+
 
     return dashboardState.sales
-        .filter((sale) => {
-
-            const saleDate =
-                sale.invoiceDate ||
-                sale.createdAt ||
-                sale.date ||
-                sale.saleDate ||
-                "";
-
-            return dashboardDateKey(saleDate) === today;
-
-        })
+        .filter(
+            sale =>
+                dashboardDateKey(
+                    dashboardRecordDate(
+                        sale
+                    )
+                ) === today
+        )
         .length;
 
 }
@@ -694,8 +724,9 @@ function calculateTodayPurchaseCount() {
         .filter(
             purchase =>
                 dashboardDateKey(
-                    purchase.invoiceDate ||
-                    purchase.createdAt
+                    dashboardRecordDate(
+                        purchase
+                    )
                 ) === today
         )
         .length;
@@ -717,8 +748,9 @@ function calculateMonthlySales() {
         .filter(
             sale =>
                 dashboardMonthKey(
-                    sale.invoiceDate ||
-                    sale.createdAt
+                    dashboardRecordDate(
+                        sale
+                    )
                 ) === month
         )
         .reduce(
@@ -727,8 +759,8 @@ function calculateMonthlySales() {
                 sale
             ) =>
                 total +
-                dashboardNumber(
-                    sale.totalAmount
+                dashboardRecordAmount(
+                    sale
                 ),
             0
         );
@@ -750,8 +782,9 @@ function calculateMonthlyPurchase() {
         .filter(
             purchase =>
                 dashboardMonthKey(
-                    purchase.invoiceDate ||
-                    purchase.createdAt
+                    dashboardRecordDate(
+                        purchase
+                    )
                 ) === month
         )
         .reduce(
@@ -760,8 +793,8 @@ function calculateMonthlyPurchase() {
                 purchase
             ) =>
                 total +
-                dashboardNumber(
-                    purchase.totalAmount
+                dashboardRecordAmount(
+                    purchase
                 ),
             0
         );
@@ -902,7 +935,8 @@ function renderDashboardCards() {
     setDashboardText(
         [
             "customerOutstanding",
-            "dashboardCustomerOutstanding"
+            "dashboardCustomerOutstanding",
+            "totalReceivables"
         ],
         "₹" +
         dashboardAmount(
@@ -1132,7 +1166,9 @@ function renderRecentSales() {
 
                         <strong>
                             ₹${dashboardAmount(
-                                sale.totalAmount
+                                dashboardRecordAmount(
+                                    sale
+                                )
                             )}
                         </strong>
 
@@ -1253,7 +1289,9 @@ function renderRecentPurchases() {
 
                         <strong>
                             ₹${dashboardAmount(
-                                purchase.totalAmount
+                                dashboardRecordAmount(
+                                    purchase
+                                )
                             )}
                         </strong>
 
@@ -1291,16 +1329,14 @@ function renderLowStock() {
                 item => {
 
                     const quantity =
-                        dashboardNumber(
-                            item.quantity
+                        dashboardQuantity(
+                            item
                         );
 
 
                     const minimum =
-                        dashboardNumber(
-                            item.minimumStock ??
-                            item.minStock ??
-                            0
+                        dashboardMinimumStock(
+                            item
                         );
 
 
@@ -1316,11 +1352,11 @@ function renderLowStock() {
                     a,
                     b
                 ) =>
-                    dashboardNumber(
-                        a.quantity
+                    dashboardQuantity(
+                        a
                     ) -
-                    dashboardNumber(
-                        b.quantity
+                    dashboardQuantity(
+                        b
                     )
             )
             .slice(
@@ -1377,8 +1413,9 @@ function renderLowStock() {
                             <small>
                                 Min:
                                 ${dashboardAmount(
-                                    item.minimumStock ??
-                                    item.minStock
+                                    dashboardMinimumStock(
+                                        item
+                                    )
                                 )}
                             </small>
 
@@ -1386,7 +1423,9 @@ function renderLowStock() {
 
                         <strong>
                             ${dashboardAmount(
-                                item.quantity
+                                dashboardQuantity(
+                                    item
+                                )
                             )}
                         </strong>
 
@@ -1395,6 +1434,200 @@ function renderLowStock() {
                 `
             )
             .join("");
+
+}
+
+
+/* ============================================================
+   RECENT ACTIVITY
+   ============================================================ */
+
+function renderRecentActivity() {
+
+    const container =
+        dashboardEl(
+            "recentActivity"
+        );
+
+    if (!container) {
+        return;
+    }
+
+    const activities =
+        [
+            ...dashboardState.sales.map(
+                sale => ({
+                    type: "Sale",
+                    number:
+                        sale.invoiceNumber ||
+                        sale.number ||
+                        sale.invoiceNo ||
+                        sale.id ||
+                        "Sale",
+                    party:
+                        sale.customerName ||
+                        sale.customer ||
+                        sale.customerId ||
+                        "Walk-in Customer",
+                    amount:
+                        dashboardRecordAmount(
+                            sale
+                        ),
+                    date:
+                        dashboardRecordDate(
+                            sale
+                        )
+                })
+            ),
+
+            ...dashboardState.purchases.map(
+                purchase => ({
+                    type: "Purchase",
+                    number:
+                        purchase.invoiceNumber ||
+                        purchase.number ||
+                        purchase.purchaseNo ||
+                        purchase.id ||
+                        "Purchase",
+                    party:
+                        purchase.supplierName ||
+                        purchase.supplier ||
+                        purchase.supplierId ||
+                        "-",
+                    amount:
+                        dashboardRecordAmount(
+                            purchase
+                        ),
+                    date:
+                        dashboardRecordDate(
+                            purchase
+                        )
+                })
+            )
+        ]
+        .sort(
+            (
+                a,
+                b
+            ) => {
+
+                const dateA =
+                    dashboardDate(
+                        a.date
+                    )?.getTime() ||
+                    0;
+
+                const dateB =
+                    dashboardDate(
+                        b.date
+                    )?.getTime() ||
+                    0;
+
+                return dateB -
+                    dateA;
+
+            }
+        )
+        .slice(
+            0,
+            8
+        );
+
+    if (
+        activities.length ===
+        0
+    ) {
+
+        container.innerHTML = `
+            <div class="empty-state">
+                No recent activity available.
+            </div>
+        `;
+
+        return;
+
+    }
+
+    container.innerHTML =
+        activities
+            .map(
+                activity => `
+
+                    <div class="dashboard-activity-row">
+
+                        <div>
+
+                            <strong>
+                                ${escapeDashboardHTML(
+                                    activity.type
+                                )} · ${escapeDashboardHTML(
+                                    activity.number
+                                )}
+                            </strong>
+
+                            <small>
+                                ${escapeDashboardHTML(
+                                    activity.party
+                                )}
+                            </small>
+
+                        </div>
+
+                        <strong>
+                            ₹${dashboardAmount(
+                                activity.amount
+                            )}
+                        </strong>
+
+                    </div>
+
+                `
+            )
+            .join("");
+
+}
+
+
+/* ============================================================
+   BUSINESS ALERTS
+   ============================================================ */
+
+function renderDashboardAlerts() {
+
+    const container =
+        dashboardEl(
+            "dashboardAlerts"
+        );
+
+    if (!container) {
+        return;
+    }
+
+    const lowStock =
+        calculateLowStockCount();
+
+    if (
+        lowStock > 0
+    ) {
+
+        container.innerHTML = `
+            <div class="dashboard-alert-row">
+                <strong>Low Stock Alert</strong>
+                <span>
+                    ${lowStock} item${lowStock === 1 ? "" : "s"} need attention.
+                </span>
+            </div>
+        `;
+
+        return;
+
+    }
+
+    container.innerHTML = `
+        <div class="empty-state">
+            No critical alerts.
+        </div>
+    `;
 
 }
 
@@ -1448,8 +1681,9 @@ function calculateMonthlyTrend() {
                 .filter(
                     sale =>
                         dashboardMonthKey(
-                            sale.invoiceDate ||
-                            sale.createdAt
+                            dashboardRecordDate(
+                                sale
+                            )
                         ) === key
                 )
                 .reduce(
@@ -1458,8 +1692,8 @@ function calculateMonthlyTrend() {
                         sale
                     ) =>
                         total +
-                        dashboardNumber(
-                            sale.totalAmount
+                        dashboardRecordAmount(
+                            sale
                         ),
                     0
                 );
@@ -1470,8 +1704,9 @@ function calculateMonthlyTrend() {
                 .filter(
                     purchase =>
                         dashboardMonthKey(
-                            purchase.invoiceDate ||
-                            purchase.createdAt
+                            dashboardRecordDate(
+                                purchase
+                            )
                         ) === key
                 )
                 .reduce(
@@ -1480,8 +1715,8 @@ function calculateMonthlyTrend() {
                         purchase
                     ) =>
                         total +
-                        dashboardNumber(
-                            purchase.totalAmount
+                        dashboardRecordAmount(
+                            purchase
                         ),
                     0
                 );
@@ -1694,6 +1929,10 @@ function renderDashboard() {
 
     renderLowStock();
 
+    renderRecentActivity();
+
+    renderDashboardAlerts();
+
     renderMonthlyTrend();
 
 
@@ -1721,224 +1960,115 @@ function renderDashboard() {
 
 }
 
-/*
- * ========================================================
- * LOAD FROM MMV REPORTS SERVICE
- * ========================================================
- */
 
-if (
-    window.MMVReports &&
-    typeof window.MMVReports.loadReportData === "function"
-) {
+/* ============================================================
+   LOAD DASHBOARD DATA
+   ============================================================ */
+
+async function loadDashboardData() {
 
     try {
 
-        await window.MMVReports.loadReportData();
-
-        const snapshot =
-            window.MMVReports.getReportSnapshot();
-
-        if (snapshot) {
-
-            if (Array.isArray(snapshot.sales)) {
-                dashboardState.sales =
-                    snapshot.sales;
-            }
-
-            if (Array.isArray(snapshot.salesItems)) {
-                dashboardState.salesItems =
-                    snapshot.salesItems;
-            }
-
-            if (Array.isArray(snapshot.purchases)) {
-                dashboardState.purchases =
-                    snapshot.purchases;
-            }
-
-            if (Array.isArray(snapshot.purchaseItems)) {
-                dashboardState.purchaseItems =
-                    snapshot.purchaseItems;
-            }
-
-            if (Array.isArray(snapshot.customers)) {
-                dashboardState.customers =
-                    snapshot.customers;
-            }
-
-            if (Array.isArray(snapshot.suppliers)) {
-                dashboardState.suppliers =
-                    snapshot.suppliers;
-            }
-
-            if (Array.isArray(snapshot.payments)) {
-                dashboardState.payments =
-                    snapshot.payments;
-            }
-
-            if (Array.isArray(snapshot.inventory)) {
-                dashboardState.inventory =
-                    snapshot.inventory;
-            }
-
-            loaded = true;
-        }
-
-    }
-    catch (reportError) {
-
-        console.warn(
-            "MMV Reports snapshot load warning:",
-            reportError
-        );
-
-    }
-
-}
-
-
         /*
-         * ========================================================
-         * FALLBACK
-         * ========================================================
-         *
-         * Some versions of reports.js may expose
-         * loadReportData globally.
+         * Use existing reports service
+         * when available.
          */
 
         if (
-            !loaded &&
-            typeof window.loadReportData === "function"
+            window.MMVReports &&
+            typeof
+            window.MMVReports
+                .loadReportData ===
+            "function"
         ) {
 
-            try {
+            const data =
+                await window.MMVReports
+                    .loadReportData();
 
-                const data =
-                    await window.loadReportData();
 
-                if (data) {
+            dashboardState.sales =
+                data.sales || [];
 
-                    if (Array.isArray(data.sales)) {
-                        dashboardState.sales =
-                            data.sales;
-                    }
 
-                    if (Array.isArray(data.salesItems)) {
-                        dashboardState.salesItems =
-                            data.salesItems;
-                    }
+            dashboardState.salesItems =
+                data.salesItems || [];
 
-                    if (Array.isArray(data.purchases)) {
-                        dashboardState.purchases =
-                            data.purchases;
-                    }
 
-                    if (Array.isArray(data.purchaseItems)) {
-                        dashboardState.purchaseItems =
-                            data.purchaseItems;
-                    }
+            dashboardState.purchases =
+                data.purchases || [];
 
-                    if (Array.isArray(data.customers)) {
-                        dashboardState.customers =
-                            data.customers;
-                    }
 
-                    if (Array.isArray(data.suppliers)) {
-                        dashboardState.suppliers =
-                            data.suppliers;
-                    }
+            dashboardState.purchaseItems =
+                data.purchaseItems || [];
 
-                    if (Array.isArray(data.payments)) {
-                        dashboardState.payments =
-                            data.payments;
-                    }
 
-                    if (Array.isArray(data.inventory)) {
-                        dashboardState.inventory =
-                            data.inventory;
-                    }
+            dashboardState.customers =
+                data.customers || [];
 
-                }
 
-            }
-            catch (fallbackError) {
+            dashboardState.suppliers =
+                data.suppliers || [];
 
-                console.warn(
-                    "Dashboard report fallback warning:",
-                    fallbackError
-                );
+
+            dashboardState.payments =
+                data.payments || [];
+
+
+            dashboardState.inventory =
+                data.inventory || [];
+
+
+            renderDashboard();
+
+
+            return dashboardState;
+
+        }
+
+
+        /*
+         * If reports.js is not loaded,
+         * use direct module APIs if available.
+         */
+
+        if (
+            window.MMVReports
+        ) {
+
+            const snapshot =
+                window.MMVReports
+                    .getReportSnapshot?.();
+
+
+            if (snapshot) {
+
+                renderDashboard();
+
+                return dashboardState;
 
             }
 
         }
 
 
-        /*
-         * ========================================================
-         * RENDER DASHBOARD
-         * ========================================================
-         */
+        console.warn(
+            "MMVReports not available. Load reports.js before dashboard.js."
+        );
+
 
         renderDashboard();
-
-
-        dashboardState.lastUpdated =
-            new Date();
-
-
-        /*
-         * ========================================================
-         * DEBUG INFORMATION
-         * ========================================================
-         */
-
-        console.info(
-            "MMV Dashboard loaded:",
-            {
-                sales:
-                    dashboardState.sales.length,
-
-                salesItems:
-                    dashboardState.salesItems.length,
-
-                purchases:
-                    dashboardState.purchases.length,
-
-                purchaseItems:
-                    dashboardState.purchaseItems.length,
-
-                customers:
-                    dashboardState.customers.length,
-
-                suppliers:
-                    dashboardState.suppliers.length,
-
-                payments:
-                    dashboardState.payments.length,
-
-                inventory:
-                    dashboardState.inventory.length
-            }
-        );
 
 
         return dashboardState;
 
     }
-    catch (error) {
+    catch(error) {
 
         console.error(
             "Dashboard loading error:",
             error
         );
-
-
-        /*
-         * Don't destroy existing data
-         * when refresh fails.
-         */
-
-        renderDashboard();
 
 
         showDashboardMessage(
@@ -1953,6 +2083,8 @@ if (
     }
 
 }
+
+
 /* ============================================================
    REFRESH
    ============================================================ */
@@ -2201,24 +2333,22 @@ document.addEventListener(
     async () => {
 
         /*
-         * Give Reports service a moment to initialize.
-         * Reports service is the single source of truth
-         * for dashboard data.
+         * Initial load.
          */
-        await new Promise(
-            resolve =>
-                setTimeout(
-                    resolve,
-                    100
-                )
-        );
-
 
         await loadDashboardData();
 
 
+        /*
+         * Manual refresh.
+         */
+
         bindDashboardRefresh();
 
+
+        /*
+         * Automatic refresh.
+         */
 
         startDashboardAutoRefresh();
 
@@ -2237,6 +2367,10 @@ window.MMVDashboard = {
     refreshDashboard,
 
     renderDashboard,
+
+    renderRecentActivity,
+
+    renderDashboardAlerts,
 
     getDashboardSnapshot,
 
