@@ -135,11 +135,32 @@ function dashboardDate(value) {
 
 function dashboardDateKey(value) {
 
+    if (!value) {
+
+        return "";
+
+    }
+
+    /*
+     * Firestore sale/purchase date
+     * already YYYY-MM-DD format la irundha
+     * direct-ah use pannalam.
+     */
+
+    if (
+        typeof value === "string" &&
+        /^\d{4}-\d{2}-\d{2}$/
+            .test(value)
+    ) {
+
+        return value;
+
+    }
+
     const date =
         dashboardDate(
             value
         );
-
 
     if (!date) {
 
@@ -147,10 +168,8 @@ function dashboardDateKey(value) {
 
     }
 
-
     const year =
         date.getFullYear();
-
 
     const month =
         String(
@@ -160,7 +179,6 @@ function dashboardDateKey(value) {
             "0"
         );
 
-
     const day =
         String(
             date.getDate()
@@ -169,11 +187,9 @@ function dashboardDateKey(value) {
             "0"
         );
 
-
     return `${year}-${month}-${day}`;
 
 }
-
 
 function dashboardToday() {
 
@@ -302,26 +318,96 @@ function calculateTodaySales() {
     const today =
         dashboardToday();
 
+    console.log(
+        "Dashboard Today:",
+        today
+    );
 
-    return dashboardState.sales
-        .filter(
-            sale =>
-                dashboardDateKey(
-                    sale.invoiceDate ||
-                    sale.createdAt
-                ) === today
-        )
-        .reduce(
-            (
-                total,
-                sale
-            ) =>
-                total +
-                dashboardNumber(
-                    sale.totalAmount
-                ),
-            0
-        );
+    const todaySales =
+        dashboardState.sales
+            .filter(
+                sale => {
+
+                    const saleDate =
+                        sale.invoiceDate ||
+                        sale.date ||
+                        sale.billDate ||
+                        sale.createdAt ||
+                        "";
+
+                    const saleDateKey =
+                        dashboardDateKey(
+                            saleDate
+                        );
+
+                    console.log(
+                        "Checking Sale:",
+                        {
+                            id:
+                                sale.id,
+
+                            invoiceNumber:
+                                sale.invoiceNumber ||
+                                sale.number,
+
+                            saleDate,
+
+                            saleDateKey,
+
+                            today,
+
+                            total:
+                                sale.totalAmount ??
+                                sale.total ??
+                                sale.grandTotal ??
+                                sale.subtotal ??
+                                0
+                        }
+                    );
+
+                    return (
+                        saleDateKey ===
+                        today
+                    );
+
+                }
+            )
+            .reduce(
+                (
+                    total,
+                    sale
+                ) => {
+
+                    const amount =
+                        sale.totalAmount ??
+                        sale.total ??
+                        sale.grandTotal ??
+                        (
+                            dashboardNumber(
+                                sale.subtotal
+                            ) +
+                            dashboardNumber(
+                                sale.tax
+                            )
+                        );
+
+                    return (
+                        total +
+                        dashboardNumber(
+                            amount
+                        )
+                    );
+
+                },
+                0
+            );
+
+    console.log(
+        "Dashboard Today Sales Total:",
+        todaySales
+    );
+
+    return todaySales;
 
 }
 
@@ -335,30 +421,73 @@ function calculateTodayPurchase() {
     const today =
         dashboardToday();
 
+    console.log(
+        "Dashboard Today:",
+        today
+    );
 
-    return dashboardState.purchases
-        .filter(
-            purchase =>
-                dashboardDateKey(
-                    purchase.invoiceDate ||
-                    purchase.createdAt
-                ) === today
-        )
-        .reduce(
-            (
-                total,
-                purchase
-            ) =>
-                total +
-                dashboardNumber(
-                    purchase.totalAmount
-                ),
-            0
-        );
+    const todayPurchase =
+        dashboardState.purchases
+            .filter(
+                purchase => {
+
+                    const purchaseDate =
+                        purchase.invoiceDate ||
+                        purchase.date ||
+                        purchase.billDate ||
+                        purchase.createdAt ||
+                        "";
+
+                    const purchaseDateKey =
+                        dashboardDateKey(
+                            purchaseDate
+                        );
+
+                    return (
+                        purchaseDateKey ===
+                        today
+                    );
+
+                }
+            )
+            .reduce(
+                (
+                    total,
+                    purchase
+                ) => {
+
+                    const amount =
+                        purchase.totalAmount ??
+                        purchase.total ??
+                        purchase.grandTotal ??
+                        (
+                            dashboardNumber(
+                                purchase.subtotal
+                            ) +
+                            dashboardNumber(
+                                purchase.tax
+                            )
+                        );
+
+                    return (
+                        total +
+                        dashboardNumber(
+                            amount
+                        )
+                    );
+
+                },
+                0
+            );
+
+    console.log(
+        "Dashboard Today Purchase Total:",
+        todayPurchase
+    );
+
+    return todayPurchase;
 
 }
-
-
 /* ============================================================
    TODAY PROFIT
    ============================================================ */
