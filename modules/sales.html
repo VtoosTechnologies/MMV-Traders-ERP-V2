@@ -6597,6 +6597,1165 @@ window.addEventListener("focus", async function(){
 <!-- =========================================================
      END MMV PREMIUM A4 SALES INVOICE UPGRADE
 ========================================================= -->
+    <!-- =========================================================
+     MMV SALES INVOICE
+     BILL TO + SHIP TO / RECEIVER UPGRADE
+========================================================= -->
+
+<style>
+
+/* =========================================================
+   TWO PARTY BILLING SECTION
+========================================================= */
+
+.mmv-party-section{
+    grid-column:1 / -1;
+    margin-top:8px;
+    padding:16px;
+    border:1px solid #e2e8f0;
+    border-radius:16px;
+    background:#ffffff;
+}
+
+.mmv-party-heading{
+    display:flex;
+    align-items:center;
+    gap:9px;
+    margin-bottom:15px;
+    font-size:14px;
+    font-weight:800;
+    color:#0b3b82;
+}
+
+.mmv-party-heading-icon{
+    width:32px;
+    height:32px;
+    display:grid;
+    place-items:center;
+    border-radius:9px;
+    background:#edf4ff;
+}
+
+.mmv-party-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:16px;
+}
+
+.mmv-party-card{
+    padding:15px;
+    border:1px solid #dbe4ef;
+    border-radius:13px;
+    background:#fbfdff;
+}
+
+.mmv-party-card-title{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:14px;
+    padding-bottom:10px;
+    border-bottom:1px solid #e7edf4;
+    color:#173f78;
+    font-size:13px;
+    font-weight:800;
+}
+
+.mmv-party-card-title span{
+    font-size:11px;
+    font-weight:600;
+    color:#64748b;
+}
+
+.mmv-party-fields{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:11px;
+}
+
+.mmv-party-fields .full-width{
+    grid-column:1 / -1;
+}
+
+.mmv-party-fields .form-group{
+    margin:0;
+}
+
+.mmv-party-fields textarea{
+    min-height:72px;
+    resize:vertical;
+}
+
+.mmv-same-party{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    padding:9px 10px;
+    margin-bottom:12px;
+    border-radius:9px;
+    background:#edf7ff;
+    color:#173f78;
+    font-size:12px;
+    font-weight:700;
+    cursor:pointer;
+}
+
+.mmv-same-party input{
+    width:16px;
+    height:16px;
+    margin:0;
+    cursor:pointer;
+}
+
+@media(max-width:800px){
+
+    .mmv-party-grid{
+        grid-template-columns:1fr;
+        gap:12px;
+    }
+
+}
+
+@media(max-width:560px){
+
+    .mmv-party-section{
+        padding:12px;
+        border-radius:13px;
+    }
+
+    .mmv-party-card{
+        padding:12px;
+    }
+
+    .mmv-party-fields{
+        grid-template-columns:1fr 1fr;
+        gap:9px;
+    }
+
+    .mmv-party-card-title{
+        font-size:12px;
+    }
+
+}
+
+</style>
+
+
+<script>
+
+(() => {
+
+
+    /* =====================================================
+       ADD BILL TO + SHIP TO SECTION
+    ===================================================== */
+
+    function addMMVTwoPartySection(){
+
+        const formGrid =
+            document.querySelector(
+                ".sales-top .card .form-grid"
+            );
+
+        if(
+            !formGrid ||
+            document.getElementById("billToName")
+        ){
+            return;
+        }
+
+
+        formGrid.insertAdjacentHTML(
+            "afterbegin",
+            `
+
+            <div class="mmv-party-section">
+
+                <div class="mmv-party-heading">
+
+                    <div class="mmv-party-heading-icon">
+                        👥
+                    </div>
+
+                    Customer & Receiver Details
+
+                </div>
+
+
+                <div class="mmv-party-grid">
+
+
+                    <!-- ================================
+                         BILL TO / BUYER
+                    ================================= -->
+
+                    <div class="mmv-party-card">
+
+                        <div class="mmv-party-card-title">
+
+                            <div>
+                                BILL TO / BUYER
+                            </div>
+
+                            <span>
+                                Customer Details
+                            </span>
+
+                        </div>
+
+
+                        <div class="mmv-party-fields">
+
+
+                            <div
+                                class="
+                                    form-group
+                                    full-width
+                                "
+                            >
+
+                                <label>
+                                    Customer
+                                </label>
+
+                                <select
+                                    id="billToCustomer"
+                                >
+
+                                    <option value="">
+                                        Select Customer
+                                    </option>
+
+                                </select>
+
+                            </div>
+
+
+                            <div
+                                class="
+                                    form-group
+                                    full-width
+                                "
+                            >
+
+                                <label>
+                                    Customer Name
+                                </label>
+
+                                <input
+                                    id="billToName"
+                                    type="text"
+                                    placeholder="Customer Name"
+                                >
+
+                            </div>
+
+
+                            <div
+                                class="
+                                    form-group
+                                    full-width
+                                "
+                            >
+
+                                <label>
+                                    Address
+                                </label>
+
+                                <textarea
+                                    id="billToAddress"
+                                    placeholder="Customer Address"
+                                ></textarea>
+
+                            </div>
+
+
+                            <div class="form-group">
+
+                                <label>
+                                    GSTIN
+                                </label>
+
+                                <input
+                                    id="billToGSTIN"
+                                    type="text"
+                                    maxlength="15"
+                                    placeholder="GST Number"
+                                >
+
+                            </div>
+
+
+                            <div class="form-group">
+
+                                <label>
+                                    Mobile No.
+                                </label>
+
+                                <input
+                                    id="billToMobile"
+                                    type="tel"
+                                    inputmode="numeric"
+                                    placeholder="Mobile Number"
+                                >
+
+                            </div>
+
+
+                        </div>
+
+                    </div>
+
+
+
+                    <!-- ================================
+                         SHIP TO / RECEIVER
+                    ================================= -->
+
+                    <div class="mmv-party-card">
+
+                        <div class="mmv-party-card-title">
+
+                            <div>
+                                SHIP TO / RECEIVER
+                            </div>
+
+                            <span>
+                                Delivery Details
+                            </span>
+
+                        </div>
+
+
+                        <label class="mmv-same-party">
+
+                            <input
+                                id="sameAsBillTo"
+                                type="checkbox"
+                                checked
+                            >
+
+                            Same as Bill To / Buyer
+
+                        </label>
+
+
+                        <div class="mmv-party-fields">
+
+
+                            <div
+                                class="
+                                    form-group
+                                    full-width
+                                "
+                            >
+
+                                <label>
+                                    Receiver / Consignee
+                                </label>
+
+                                <select
+                                    id="shipToCustomer"
+                                >
+
+                                    <option value="">
+                                        Select Receiver
+                                    </option>
+
+                                </select>
+
+                            </div>
+
+
+                            <div
+                                class="
+                                    form-group
+                                    full-width
+                                "
+                            >
+
+                                <label>
+                                    Receiver Name
+                                </label>
+
+                                <input
+                                    id="shipToName"
+                                    type="text"
+                                    placeholder="Receiver Name"
+                                >
+
+                            </div>
+
+
+                            <div
+                                class="
+                                    form-group
+                                    full-width
+                                "
+                            >
+
+                                <label>
+                                    Delivery Address
+                                </label>
+
+                                <textarea
+                                    id="shipToAddress"
+                                    placeholder="Delivery Address"
+                                ></textarea>
+
+                            </div>
+
+
+                            <div class="form-group">
+
+                                <label>
+                                    GSTIN
+                                </label>
+
+                                <input
+                                    id="shipToGSTIN"
+                                    type="text"
+                                    maxlength="15"
+                                    placeholder="GST Number"
+                                >
+
+                            </div>
+
+
+                            <div class="form-group">
+
+                                <label>
+                                    Mobile No.
+                                </label>
+
+                                <input
+                                    id="shipToMobile"
+                                    type="tel"
+                                    inputmode="numeric"
+                                    placeholder="Mobile Number"
+                                >
+
+                            </div>
+
+
+                        </div>
+
+                    </div>
+
+
+                </div>
+
+            </div>
+
+            `
+        );
+
+
+        populateMMVPartyCustomers();
+
+        bindMMVPartyEvents();
+
+    }
+
+
+
+    /* =====================================================
+       GET CUSTOMER LIST
+    ===================================================== */
+
+    function getMMVCustomers(){
+
+        return (
+            window.customers ||
+            []
+        );
+
+    }
+
+
+
+    /* =====================================================
+       GET CUSTOMER CODE
+    ===================================================== */
+
+    function getMMVCustomerCode(customer){
+
+        return (
+            customer.code ||
+            customer.customerCode ||
+            customer.id ||
+            ""
+        );
+
+    }
+
+
+
+    /* =====================================================
+       GET CUSTOMER NAME
+    ===================================================== */
+
+    function getMMVCustomerName(customer){
+
+        return (
+            customer.name ||
+            customer.customerName ||
+            customer.companyName ||
+            "Customer"
+        );
+
+    }
+
+
+
+    /* =====================================================
+       POPULATE BOTH CUSTOMER DROPDOWNS
+    ===================================================== */
+
+    function populateMMVPartyCustomers(){
+
+        const billSelect =
+            document.getElementById(
+                "billToCustomer"
+            );
+
+        const shipSelect =
+            document.getElementById(
+                "shipToCustomer"
+            );
+
+
+        if(
+            !billSelect ||
+            !shipSelect
+        ){
+            return;
+        }
+
+
+        const currentBill =
+            billSelect.value;
+
+
+        const currentShip =
+            shipSelect.value;
+
+
+        const customers =
+            getMMVCustomers();
+
+
+        const options =
+            customers.map(
+                customer => {
+
+                    const code =
+                        getMMVCustomerCode(
+                            customer
+                        );
+
+
+                    const name =
+                        getMMVCustomerName(
+                            customer
+                        );
+
+
+                    return `
+
+                        <option
+                            value="${code}"
+                        >
+                            ${name}
+                        </option>
+
+                    `;
+
+                }
+            )
+            .join("");
+
+
+        billSelect.innerHTML =
+
+            `
+            <option value="">
+                Select Customer
+            </option>
+            `
+
+            +
+
+            options;
+
+
+        shipSelect.innerHTML =
+
+            `
+            <option value="">
+                Select Receiver
+            </option>
+            `
+
+            +
+
+            options;
+
+
+        billSelect.value =
+            currentBill;
+
+
+        shipSelect.value =
+            currentShip;
+
+    }
+
+
+
+    /* =====================================================
+       NORMALIZE CUSTOMER DETAILS
+    ===================================================== */
+
+    function getMMVPartyCustomerDetails(
+        customerCode
+    ){
+
+        const customer =
+            getMMVCustomers()
+            .find(
+                item =>
+
+                    getMMVCustomerCode(
+                        item
+                    ) === customerCode
+            );
+
+
+        if(!customer){
+
+            return null;
+
+        }
+
+
+        return {
+
+            name:
+                getMMVCustomerName(
+                    customer
+                ),
+
+            address:
+                customer.address ||
+                customer.fullAddress ||
+                [
+                    customer.address1,
+                    customer.address2,
+                    customer.city,
+                    customer.district,
+                    customer.state,
+                    customer.pincode
+                ]
+                .filter(Boolean)
+                .join(", "),
+
+            gstin:
+                customer.gstin ||
+                customer.gst ||
+                customer.gstNo ||
+                "",
+
+            mobile:
+                customer.mobile ||
+                customer.phone ||
+                customer.mobileNo ||
+                ""
+
+        };
+
+    }
+
+
+
+    /* =====================================================
+       FILL BILL TO
+    ===================================================== */
+
+    function fillMMVBillTo(
+        customerCode
+    ){
+
+        const customer =
+            getMMVPartyCustomerDetails(
+                customerCode
+            );
+
+
+        if(!customer){
+            return;
+        }
+
+
+        document.getElementById(
+            "billToName"
+        ).value =
+            customer.name;
+
+
+        document.getElementById(
+            "billToAddress"
+        ).value =
+            customer.address;
+
+
+        document.getElementById(
+            "billToGSTIN"
+        ).value =
+            customer.gstin;
+
+
+        document.getElementById(
+            "billToMobile"
+        ).value =
+            customer.mobile;
+
+
+        if(
+            document.getElementById(
+                "sameAsBillTo"
+            ).checked
+        ){
+
+            copyBillToShipTo();
+
+        }
+
+    }
+
+
+
+    /* =====================================================
+       FILL SHIP TO
+    ===================================================== */
+
+    function fillMMVShipTo(
+        customerCode
+    ){
+
+        const customer =
+            getMMVPartyCustomerDetails(
+                customerCode
+            );
+
+
+        if(!customer){
+            return;
+        }
+
+
+        document.getElementById(
+            "shipToName"
+        ).value =
+            customer.name;
+
+
+        document.getElementById(
+            "shipToAddress"
+        ).value =
+            customer.address;
+
+
+        document.getElementById(
+            "shipToGSTIN"
+        ).value =
+            customer.gstin;
+
+
+        document.getElementById(
+            "shipToMobile"
+        ).value =
+            customer.mobile;
+
+    }
+
+
+
+    /* =====================================================
+       COPY BILL TO → SHIP TO
+    ===================================================== */
+
+    function copyBillToShipTo(){
+
+        document.getElementById(
+            "shipToCustomer"
+        ).value =
+            document.getElementById(
+                "billToCustomer"
+            ).value;
+
+
+        document.getElementById(
+            "shipToName"
+        ).value =
+            document.getElementById(
+                "billToName"
+            ).value;
+
+
+        document.getElementById(
+            "shipToAddress"
+        ).value =
+            document.getElementById(
+                "billToAddress"
+            ).value;
+
+
+        document.getElementById(
+            "shipToGSTIN"
+        ).value =
+            document.getElementById(
+                "billToGSTIN"
+            ).value;
+
+
+        document.getElementById(
+            "shipToMobile"
+        ).value =
+            document.getElementById(
+                "billToMobile"
+            ).value;
+
+    }
+
+
+
+    /* =====================================================
+       ENABLE / DISABLE SHIP TO FIELDS
+    ===================================================== */
+
+    function toggleMMVShipToFields(){
+
+        const same =
+            document.getElementById(
+                "sameAsBillTo"
+            ).checked;
+
+
+        [
+            "shipToCustomer",
+            "shipToName",
+            "shipToAddress",
+            "shipToGSTIN",
+            "shipToMobile"
+        ]
+        .forEach(
+            id => {
+
+                const element =
+                    document.getElementById(
+                        id
+                    );
+
+
+                if(element){
+
+                    element.disabled =
+                        same;
+
+                }
+
+            }
+        );
+
+
+        if(same){
+
+            copyBillToShipTo();
+
+        }
+
+    }
+
+
+
+    /* =====================================================
+       BIND EVENTS
+    ===================================================== */
+
+    function bindMMVPartyEvents(){
+
+        const billSelect =
+            document.getElementById(
+                "billToCustomer"
+            );
+
+
+        const shipSelect =
+            document.getElementById(
+                "shipToCustomer"
+            );
+
+
+        const sameCheckbox =
+            document.getElementById(
+                "sameAsBillTo"
+            );
+
+
+        billSelect.addEventListener(
+            "change",
+            function(){
+
+                fillMMVBillTo(
+                    this.value
+                );
+
+            }
+        );
+
+
+        shipSelect.addEventListener(
+            "change",
+            function(){
+
+                fillMMVShipTo(
+                    this.value
+                );
+
+            }
+        );
+
+
+        sameCheckbox.addEventListener(
+            "change",
+            function(){
+
+                toggleMMVShipToFields();
+
+            }
+        );
+
+
+        [
+            "billToName",
+            "billToAddress",
+            "billToGSTIN",
+            "billToMobile"
+        ]
+        .forEach(
+            id => {
+
+                document
+                .getElementById(id)
+                .addEventListener(
+                    "input",
+                    function(){
+
+                        if(
+                            sameCheckbox.checked
+                        ){
+
+                            copyBillToShipTo();
+
+                        }
+
+                    }
+                );
+
+            }
+        );
+
+
+        toggleMMVShipToFields();
+
+    }
+
+
+
+    /* =====================================================
+       GET TWO PARTY DATA
+    ===================================================== */
+
+    window.getMMVTwoPartyData =
+        function(){
+
+            return {
+
+                billTo:{
+
+                    customerCode:
+                        document.getElementById(
+                            "billToCustomer"
+                        ).value,
+
+                    name:
+                        document.getElementById(
+                            "billToName"
+                        ).value
+                        .trim(),
+
+                    address:
+                        document.getElementById(
+                            "billToAddress"
+                        ).value
+                        .trim(),
+
+                    gstin:
+                        document.getElementById(
+                            "billToGSTIN"
+                        ).value
+                        .trim(),
+
+                    mobile:
+                        document.getElementById(
+                            "billToMobile"
+                        ).value
+                        .trim()
+
+                },
+
+
+                shipTo:{
+
+                    sameAsBillTo:
+                        document.getElementById(
+                            "sameAsBillTo"
+                        ).checked,
+
+                    customerCode:
+                        document.getElementById(
+                            "shipToCustomer"
+                        ).value,
+
+                    name:
+                        document.getElementById(
+                            "shipToName"
+                        ).value
+                        .trim(),
+
+                    address:
+                        document.getElementById(
+                            "shipToAddress"
+                        ).value
+                        .trim(),
+
+                    gstin:
+                        document.getElementById(
+                            "shipToGSTIN"
+                        ).value
+                        .trim(),
+
+                    mobile:
+                        document.getElementById(
+                            "shipToMobile"
+                        ).value
+                        .trim()
+
+                }
+
+            };
+
+        };
+
+
+
+    /* =====================================================
+       CLEAR PARTY DETAILS
+    ===================================================== */
+
+    window.clearMMVTwoPartyData =
+        function(){
+
+            [
+                "billToCustomer",
+                "billToName",
+                "billToAddress",
+                "billToGSTIN",
+                "billToMobile",
+                "shipToCustomer",
+                "shipToName",
+                "shipToAddress",
+                "shipToGSTIN",
+                "shipToMobile"
+            ]
+            .forEach(
+                id => {
+
+                    const element =
+                        document.getElementById(
+                            id
+                        );
+
+                    if(!element){
+                        return;
+                    }
+
+                    if(
+                        element.tagName ===
+                        "SELECT"
+                    ){
+
+                        element.value = "";
+
+                    }else{
+
+                        element.value = "";
+
+                    }
+
+                }
+            );
+
+
+            document.getElementById(
+                "sameAsBillTo"
+            ).checked =
+                true;
+
+
+            toggleMMVShipToFields();
+
+        };
+
+
+
+    /* =====================================================
+       START
+    ===================================================== */
+
+    addMMVTwoPartySection();
+
+
+    /* Retry after customer data loads */
+
+    setTimeout(
+        () => {
+
+            populateMMVPartyCustomers();
+
+        },
+        1000
+    );
+
+
+    setTimeout(
+        () => {
+
+            populateMMVPartyCustomers();
+
+        },
+        2500
+    );
+
+
+    console.log(
+        "MMV Bill To + Ship To Upgrade Loaded"
+    );
+
+})();
+
+</script>
 </body>
 
 </html>
