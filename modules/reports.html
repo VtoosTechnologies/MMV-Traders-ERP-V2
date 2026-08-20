@@ -2648,7 +2648,69 @@ onAuthStateChanged(
     }
 );
 </script>
+document.addEventListener("DOMContentLoaded", () => {
 
+    const applyReportBtn = document.getElementById("applyReportBtn");
+
+    if (!applyReportBtn) {
+        console.error("Reports: Apply Report button not found.");
+        return;
+    }
+
+    console.log("Reports: Apply Report button ready.");
+
+    applyReportBtn.addEventListener("click", async (event) => {
+
+        event.preventDefault();
+
+        console.log("Reports: Apply Report clicked.");
+
+        try {
+
+            const fromDate =
+                document.getElementById("fromDate")?.value || "";
+
+            const toDate =
+                document.getElementById("toDate")?.value || "";
+
+            const reportType =
+                document.getElementById("reportType")?.value ||
+                "business-summary";
+
+            console.log("Reports: Applying report", {
+                fromDate,
+                toDate,
+                reportType
+            });
+
+            if (typeof loadReportData === "function") {
+
+                await loadReportData({
+                    fromDate,
+                    toDate,
+                    reportType
+                });
+
+            } else {
+
+                console.error(
+                    "Reports: loadReportData function is not available."
+                );
+
+            }
+
+        } catch (error) {
+
+            console.error(
+                "Reports: Apply Report error:",
+                error
+            );
+
+        }
+
+    });
+
+});
 </body>
 
 </html>
