@@ -315,45 +315,34 @@ function escapeDashboardHTML(
 
 function calculateTodaySales() {
 
-    const today =
-        dashboardToday();
-
+    const today = dashboardToday();
 
     return dashboardState.sales
-        .filter(
-            sale =>
-                dashboardDateKey(
-                    sale.invoiceDate ||
-                    sale.createdAt ||
-                    sale.date ||
-                    sale.saleDate
-                ) === today
-        )
-        .reduce(
-            (
-                total,
-                sale
-            ) => {
+        .filter((sale) => {
 
-                const saleAmount =
-                    sale.totalAmount ??
-                    sale.grandTotal ??
-                    sale.total ??
-                    sale.netAmount ??
-                    sale.subtotal ??
-                    0;
+            const saleDate =
+                sale.invoiceDate ||
+                sale.createdAt ||
+                sale.date ||
+                sale.saleDate ||
+                "";
 
+            return dashboardDateKey(saleDate) === today;
 
-                return (
-                    total +
-                    dashboardNumber(
-                        saleAmount
-                    )
-                );
+        })
+        .reduce((total, sale) => {
 
-            },
-            0
-        );
+            const saleAmount =
+                sale.totalAmount ??
+                sale.grandTotal ??
+                sale.total ??
+                sale.netAmount ??
+                sale.subtotal ??
+                0;
+
+            return total + dashboardNumber(saleAmount);
+
+        }, 0);
 
 }
 /* ============================================================
@@ -671,20 +660,21 @@ function calculateTodaySupplierPayments() {
 
 function calculateTodayInvoiceCount() {
 
-    const today =
-        dashboardToday();
-
+    const today = dashboardToday();
 
     return dashboardState.sales
-        .filter(
-            sale =>
-                dashboardDateKey(
-                    sale.invoiceDate ||
-                    sale.createdAt ||
-                    sale.date ||
-                    sale.saleDate
-                ) === today
-        )
+        .filter((sale) => {
+
+            const saleDate =
+                sale.invoiceDate ||
+                sale.createdAt ||
+                sale.date ||
+                sale.saleDate ||
+                "";
+
+            return dashboardDateKey(saleDate) === today;
+
+        })
         .length;
 
 }
