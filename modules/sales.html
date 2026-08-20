@@ -1028,7 +1028,57 @@ select:focus{
 .record-modal-card{width:min(900px,96vw);max-height:90vh;overflow:auto;background:#fff;border-radius:14px;box-shadow:0 24px 80px rgba(15,23,42,.25);padding:22px}.record-modal-head{display:flex;justify-content:space-between;gap:15px;align-items:center;border-bottom:1px solid #e5e7eb;padding-bottom:12px}.record-modal-head h3{margin:0;color:#173b6c}.record-close{border:0;background:#eef2f7;border-radius:8px;padding:7px 11px;cursor:pointer;font-weight:700}.record-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:18px 0}.record-summary div{border:1px solid #e5e7eb;border-radius:9px;padding:10px}.record-summary span{display:block;color:#64748b;font-size:10px;margin-bottom:4px}.record-summary strong{font-size:13px}.record-modal-table{width:100%;border-collapse:collapse}.record-modal-table th,.record-modal-table td{border-bottom:1px solid #e5e7eb;padding:8px;text-align:left;font-size:11px}
  .print-purchase{display:none}
 @media print{.app,.sidebar,.topbar,.content,.record-modal{display:none!important} .print-purchase{display:block!important;width:100%;color:#111;font-family:Arial,sans-serif} .print-purchase .print-header{display:flex;align-items:center;justify-content:space-between;gap:20px;padding-bottom:12px;border-bottom:2px solid #0b3b82} .print-purchase .print-brand{display:flex;align-items:center;gap:12px} .print-purchase .print-brand img{width:65px;height:65px;object-fit:contain} .print-purchase .print-brand h1{margin:0;font-size:22px;color:#0b3b82} .print-purchase .print-brand p{margin:4px 0 0;font-size:9px;color:#555} .print-purchase .print-title{text-align:right} .print-purchase .print-title h2{margin:0;font-size:20px} .print-purchase .print-title span{display:block;margin-top:4px;font-size:9px} .print-purchase .print-details{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin:18px 0} .print-purchase .print-box{padding:10px;border:1px solid #ddd} .print-purchase .print-box h3{margin:0 0 7px;font-size:10px;color:#0b3b82} .print-purchase .print-box p{margin:3px 0;font-size:9px} .print-purchase .print-items{width:100%;border-collapse:collapse} .print-purchase .print-items th{padding:7px;border:1px solid #ccc;background:#f1f5f9;text-align:left;font-size:8px} .print-purchase .print-items td{padding:7px;border:1px solid #ccc;font-size:8px} .print-purchase .print-bottom{display:flex;justify-content:flex-end;margin-top:15px} .print-purchase .print-summary{width:270px} .print-purchase .print-summary div{display:flex;justify-content:space-between;padding:5px 0;font-size:9px} .print-purchase .print-summary .grand{padding-top:8px;margin-top:4px;border-top:2px solid #0b3b82;font-size:12px;font-weight:bold} .print-purchase .print-footer{position:fixed;bottom:0;left:0;right:0;padding-top:8px;border-top:1px solid #ddd;display:flex;justify-content:space-between;font-size:7px;color:#666}}
+/* =====================================================
+   RECENT INVOICE ACTION BUTTONS
+===================================================== */
 
+.invoice-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    min-width: 250px;
+}
+
+.invoice-action-btn {
+    border: 1px solid #dbe3ec;
+    background: #ffffff;
+    color: #334155;
+    padding: 7px 10px;
+    border-radius: 7px;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all .2s ease;
+}
+
+.invoice-action-btn:hover {
+    transform: translateY(-1px);
+}
+
+.invoice-action-btn.view {
+    color: #2563eb;
+    border-color: #bfdbfe;
+    background: #eff6ff;
+}
+
+.invoice-action-btn.edit {
+    color: #7c3aed;
+    border-color: #ddd6fe;
+    background: #f5f3ff;
+}
+
+.invoice-action-btn.print {
+    color: #047857;
+    border-color: #a7f3d0;
+    background: #ecfdf5;
+}
+
+.invoice-action-btn.delete {
+    color: #dc2626;
+    border-color: #fecaca;
+    background: #fef2f2;
+}
 </style>
 
 </head>
@@ -4016,12 +4066,401 @@ async function saveInvoice(){
    RECENT INVOICES
 ===================================================== */
 
-function renderRecentInvoices(){
-    const tbody=document.getElementById("recentInvoices");tbody.innerHTML="";
-    if(!invoices.length){tbody.innerHTML='<tr><td colspan="8"><div style="padding:25px;text-align:center;color:#64748b;font-size:10px;">No sales invoices yet.</div></td></tr>';return;}
-    invoices.slice(0,10).forEach(invoice=>{const row=document.createElement("tr");const customerName=invoice.customer==="walkin"?"Walk-in Customer":invoice.customer;const count=Array.isArray(invoice.itemDetails)?invoice.itemDetails.length:Number(invoice.items||0);row.innerHTML=`<td><strong>${escapeHtml(invoice.number||"")}</strong></td><td>${escapeHtml(invoice.date||"")}</td><td>${escapeHtml(customerName||"")}</td><td>${count||"-"}</td><td><strong>${money(invoice.total||0)}</strong></td><td>${paymentName(invoice.payment)}</td><td><span class="status ${invoice.payment==="credit"?"credit":"paid"}">${escapeHtml(invoice.status||(invoice.payment==="credit"?"Credit":"Paid"))}</span></td><td><div class="record-actions"><button type="button" class="record-btn view">View</button><button type="button" class="record-btn edit">Edit</button><button type="button" class="record-btn print">Print</button></div></td>`;const [v,e,p]=row.querySelectorAll(".record-btn");v.addEventListener("click",()=>viewInvoiceRecord(invoice));e.addEventListener("click",()=>editInvoiceRecord(invoice));p.addEventListener("click",()=>printInvoiceRecord(invoice));tbody.appendChild(row);});
+function renderRecentInvoices() {
+
+    const tbody =
+        document.getElementById(
+            "recentInvoices"
+        );
+
+    if (!tbody) {
+        return;
+    }
+
+    tbody.innerHTML = "";
+
+    if (!invoices.length) {
+
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="8">
+                    <div style="
+                        padding:25px;
+                        text-align:center;
+                        color:#64748b;
+                        font-size:10px;
+                    ">
+                        No sales invoices yet.
+                    </div>
+                </td>
+            </tr>
+        `;
+
+        return;
+    }
+
+    invoices
+        .slice(0, 10)
+        .forEach(
+            invoice => {
+
+                const row =
+                    document.createElement(
+                        "tr"
+                    );
+
+                const customerName =
+                    invoice.customer ===
+                    "walkin"
+                        ? "Walk-in Customer"
+                        : invoice.customer;
+
+                const count =
+                    Array.isArray(
+                        invoice.itemDetails
+                    )
+                        ? invoice.itemDetails.length
+                        : Number(
+                            invoice.items || 0
+                        );
+
+                const invoiceId =
+                    String(
+                        invoice.id || ""
+                    );
+
+                row.innerHTML = `
+
+                    <td>
+                        <strong>
+                            ${escapeHtml(
+                                invoice.number || ""
+                            )}
+                        </strong>
+                    </td>
+
+                    <td>
+                        ${escapeHtml(
+                            invoice.date || ""
+                        )}
+                    </td>
+
+                    <td>
+                        ${escapeHtml(
+                            customerName || ""
+                        )}
+                    </td>
+
+                    <td>
+                        ${count || "-"}
+                    </td>
+
+                    <td>
+                        <strong>
+                            ${money(
+                                invoice.total || 0
+                            )}
+                        </strong>
+                    </td>
+
+                    <td>
+                        ${paymentName(
+                            invoice.payment
+                        )}
+                    </td>
+
+                    <td>
+                        <span class="
+                            status
+                            ${
+                                invoice.payment ===
+                                "credit"
+                                    ? "credit"
+                                    : "paid"
+                            }
+                        ">
+                            ${escapeHtml(
+                                invoice.status ||
+                                (
+                                    invoice.payment ===
+                                    "credit"
+                                        ? "Credit"
+                                        : "Paid"
+                                )
+                            )}
+                        </span>
+                    </td>
+
+                    <td>
+                        <div class="invoice-actions">
+
+                            <button
+                                type="button"
+                                class="invoice-action-btn view"
+                                onclick="viewInvoiceRecordById('${invoiceId}')"
+                            >
+                                View
+                            </button>
+
+                            <button
+                                type="button"
+                                class="invoice-action-btn edit"
+                                onclick="editInvoiceRecordById('${invoiceId}')"
+                            >
+                                Edit
+                            </button>
+
+                            <button
+                                type="button"
+                                class="invoice-action-btn print"
+                                onclick="printInvoiceRecordById('${invoiceId}')"
+                            >
+                                Print
+                            </button>
+
+                            <button
+                                type="button"
+                                class="invoice-action-btn delete"
+                                onclick="deleteInvoiceRecordById('${invoiceId}')"
+                            >
+                                Delete
+                            </button>
+
+                        </div>
+                    </td>
+
+                `;
+
+                tbody.appendChild(
+                    row
+                );
+
+            }
+        );
+
 }
 
+
+/* =====================================================
+   ACTION BUTTON HELPERS
+===================================================== */
+
+function getInvoiceRecordById(invoiceId) {
+
+    return invoices.find(
+        invoice =>
+            String(invoice.id) ===
+            String(invoiceId)
+    );
+
+}
+
+
+/* =====================================================
+   VIEW
+===================================================== */
+
+function viewInvoiceRecordById(invoiceId) {
+
+    const invoice =
+        getInvoiceRecordById(
+            invoiceId
+        );
+
+    if (!invoice) {
+
+        alert(
+            "Invoice not found."
+        );
+
+        return;
+
+    }
+
+    if (
+        typeof viewInvoiceRecord ===
+        "function"
+    ) {
+
+        viewInvoiceRecord(
+            invoice
+        );
+
+    } else {
+
+        console.error(
+            "viewInvoiceRecord() function not found."
+        );
+
+        alert(
+            "Invoice view function is not available."
+        );
+
+    }
+
+}
+
+
+/* =====================================================
+   EDIT
+===================================================== */
+
+function editInvoiceRecordById(invoiceId) {
+
+    const invoice =
+        getInvoiceRecordById(
+            invoiceId
+        );
+
+    if (!invoice) {
+
+        alert(
+            "Invoice not found."
+        );
+
+        return;
+
+    }
+
+    if (
+        typeof editInvoiceRecord ===
+        "function"
+    ) {
+
+        editInvoiceRecord(
+            invoice
+        );
+
+    } else {
+
+        alert(
+            "Edit function is not available."
+        );
+
+    }
+
+}
+
+
+/* =====================================================
+   PRINT
+===================================================== */
+
+function printInvoiceRecordById(invoiceId) {
+
+    const invoice =
+        getInvoiceRecordById(
+            invoiceId
+        );
+
+    if (!invoice) {
+
+        alert(
+            "Invoice not found."
+        );
+
+        return;
+
+    }
+
+    if (
+        typeof printInvoiceRecord ===
+        "function"
+    ) {
+
+        printInvoiceRecord(
+            invoice
+        );
+
+    } else {
+
+        alert(
+            "Print function is not available."
+        );
+
+    }
+
+}
+
+
+/* =====================================================
+   DELETE
+===================================================== */
+
+async function deleteInvoiceRecordById(invoiceId) {
+
+    const invoice =
+        getInvoiceRecordById(
+            invoiceId
+        );
+
+    if (!invoice) {
+
+        alert(
+            "Invoice not found."
+        );
+
+        return;
+
+    }
+
+    const confirmed =
+        window.confirm(
+            `Delete Invoice ${invoice.number || ""}?\n\n` +
+            `This invoice will be permanently deleted.`
+        );
+
+    if (!confirmed) {
+        return;
+    }
+
+    try {
+
+        if (
+            typeof deleteSalesInvoiceFromFirebase ===
+            "function"
+        ) {
+
+            await deleteSalesInvoiceFromFirebase(
+                invoiceId
+            );
+
+        } else {
+
+            console.warn(
+                "Firebase delete function not found."
+            );
+
+        }
+
+        invoices =
+            invoices.filter(
+                item =>
+                    String(item.id) !==
+                    String(invoiceId)
+            );
+
+        renderRecentInvoices();
+
+        alert(
+            "Invoice deleted successfully."
+        );
+
+    } catch (error) {
+
+        console.error(
+            "Delete invoice error:",
+            error
+        );
+
+        alert(
+            "Unable to delete invoice.\n\n" +
+            error.message
+        );
+
+    }
+
+}
 
 /* =====================================================
    SAVED INVOICE VIEW / EDIT / PRINT
