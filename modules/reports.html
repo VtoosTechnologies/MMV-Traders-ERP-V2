@@ -2156,7 +2156,11 @@ function exportCurrentReportCSV() {
      Existing 2,056-line report UI preserved
 ===================================================== -->
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
+import {
+    initializeApp,
+    getApps,
+    getApp
+} from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
 import {
     getFirestore,
     collection,
@@ -2177,11 +2181,26 @@ const MMV_REPORT_FIREBASE_CONFIG = {
     measurementId: "G-ZDYBZZ6BQS"
 };
 
-const reportApp =
-    initializeApp(MMV_REPORT_FIREBASE_CONFIG, "MMV_REPORTS_APP");
+/* =====================================================
+   USE THE SAME FIREBASE APP AS LOGIN / OTHER MODULES
+   ===================================================== */
 
-const reportDb = getFirestore(reportApp);
-const reportAuth = getAuth(reportApp);
+const reportApp =
+    getApps().length
+        ? getApp()
+        : initializeApp(
+            MMV_REPORT_FIREBASE_CONFIG
+        );
+
+const reportDb =
+    getFirestore(
+        reportApp
+    );
+
+const reportAuth =
+    getAuth(
+        reportApp
+    );
 
 let reportFirebaseUser = null;
 let reportFirebaseReady = false;
@@ -2583,6 +2602,9 @@ document
             }
         }
     );
+/* =====================================================
+   FIREBASE AUTH - WAIT FOR EXISTING LOGIN SESSION
+   ===================================================== */
 
 onAuthStateChanged(
     reportAuth,
@@ -2595,9 +2617,12 @@ onAuthStateChanged(
             !!user;
 
         if (!user) {
+
             console.warn(
-                "Reports: Firebase user is not authenticated."
+                "Reports: Firebase user is not authenticated. " +
+                "Waiting for the existing application login session."
             );
+
             return;
         }
 
@@ -2606,7 +2631,20 @@ onAuthStateChanged(
             user.uid
         );
 
-        await loadFirebaseReports();
+        try {
+
+            await loadFirebaseReports();
+
+        }
+        catch (error) {
+
+            console.error(
+                "Reports Firebase initialization failed:",
+                error
+            );
+
+        }
+
     }
 );
 </script>
