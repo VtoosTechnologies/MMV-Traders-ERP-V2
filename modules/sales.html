@@ -5521,382 +5521,624 @@ function buildFullInvoiceHTML(invoice, forPrint = false) {
    FULL INVOICE VIEW
 ===================================================== */
 
-function viewInvoiceRecord(invoice) {
+function preparePrintInvoiceFromRecord(invoice) {
 
-    try {
+    // =====================================================
+    // MMV TRADERS BRAND DETAILS
+    // =====================================================
 
-        const modal =
-            document.getElementById(
-                "invoiceRecordModal"
+    const COMPANY_NAME = "MMV TRADERS";
+    const COMPANY_MOBILE = "9789388987";
+
+
+    // =====================================================
+    // BUYER / BILL TO DETAILS
+    // =====================================================
+
+    const customerValue =
+        invoice.customer ||
+        invoice.customerCode ||
+        "walkin";
+
+    let buyerName =
+        invoice.customerName ||
+        "";
+
+    let buyerAddress =
+        invoice.customerAddress ||
+        invoice.address ||
+        "";
+
+    let buyerGSTIN =
+        invoice.customerGSTIN ||
+        invoice.gstin ||
+        "";
+
+    let buyerMobile =
+        invoice.customerMobile ||
+        invoice.mobile ||
+        "";
+
+
+    // Find customer from loaded customer master
+    if (
+        typeof customers !== "undefined" &&
+        Array.isArray(customers)
+    ) {
+
+        const customer =
+            customers.find(c =>
+                c.code === customerValue ||
+                c.id === customerValue
             );
 
-        if (!modal) {
+        if (customer) {
 
-            alert(
-                "Invoice view window is not available. Please refresh and try again."
-            );
+            buyerName =
+                buyerName ||
+                customer.name ||
+                customer.customerName ||
+                "";
 
-            console.error(
-                "invoiceRecordModal not found in HTML"
-            );
+            buyerAddress =
+                buyerAddress ||
+                customer.address ||
+                customer.customerAddress ||
+                customer.city ||
+                "";
 
-            return;
+            buyerGSTIN =
+                buyerGSTIN ||
+                customer.gstin ||
+                customer.gstNo ||
+                "";
 
+            buyerMobile =
+                buyerMobile ||
+                customer.mobile ||
+                customer.phone ||
+                customer.mobileNo ||
+                "";
         }
+    }
 
-        const title =
-            document.getElementById(
-                "invoiceRecordTitle"
-            );
 
-        const body =
-            document.getElementById(
-                "invoiceRecordBody"
-            );
+    // Walk-in customer fallback
+    if (customerValue === "walkin") {
 
-        if (title) {
-
-            title.textContent =
-                "Full Invoice Preview - " +
-                getInvoiceNumberValue(invoice);
-
-        }
-
-        if (body) {
-
-            body.innerHTML = `
-                <style>
-
-                    #invoiceRecordBody {
-                        padding: 0 !important;
-                        background: #eef2f7;
-                    }
-
-                    .full-invoice-sheet {
-                        width: 100%;
-                        max-width: 980px;
-                        margin: 0 auto;
-                        padding: 28px;
-                        background: #ffffff;
-                        color: #243447;
-                        font-family:
-                            Arial,
-                            Helvetica,
-                            sans-serif;
-                        font-size: 12px;
-                        box-sizing: border-box;
-                    }
-
-                    .invoice-top {
-                        display: flex;
-                        justify-content: space-between;
-                        align-items: flex-start;
-                        gap: 20px;
-                        padding-bottom: 14px;
-                        border-bottom:
-                            2px solid #1f477d;
-                    }
-
-                    .invoice-brand {
-                        display: flex;
-                        align-items: center;
-                        gap: 14px;
-                    }
-
-                    .brand-logo-box {
-                        width: 58px;
-                        height: 58px;
-                        border: 1px solid #d9e1ea;
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                    }
-
-                    .brand-logo-text {
-                        font-size: 17px;
-                        font-weight: 800;
-                        color: #1f477d;
-                    }
-
-                    .company-name {
-                        font-size: 22px;
-                        font-weight: 800;
-                        letter-spacing: 1px;
-                        color: #1f477d;
-                    }
-
-                    .company-address {
-                        max-width: 420px;
-                        margin-top: 5px;
-                        font-size: 10px;
-                        line-height: 1.5;
-                    }
-
-                    .company-meta {
-                        text-align: right;
-                        font-size: 10px;
-                        line-height: 1.8;
-                    }
-
-                    .invoice-title {
-                        width: 58%;
-                        margin: 14px auto;
-                        padding: 9px 15px;
-                        text-align: center;
-                        color: #ffffff;
-                        background: #1f477d;
-                        font-size: 15px;
-                        font-weight: 800;
-                        letter-spacing: .5px;
-                    }
-
-                    .invoice-party-grid,
-                    .invoice-details-grid,
-                    .invoice-bottom-grid,
-                    .signature-box {
-                        display: grid;
-                        grid-template-columns: 1fr 1fr;
-                        gap: 12px;
-                    }
-
-                    .invoice-party-grid {
-                        margin-bottom: 12px;
-                    }
-
-                    .party-box,
-                    .detail-box,
-                    .amount-words-box,
-                    .bank-box,
-                    .totals-box {
-                        border: 1px solid #cbd5e1;
-                    }
-
-                    .box-heading {
-                        padding: 8px 10px;
-                        background: #1f477d;
-                        color: #ffffff;
-                        font-size: 11px;
-                        font-weight: 800;
-                        letter-spacing: .4px;
-                    }
-
-                    .party-row,
-                    .detail-row,
-                    .total-row {
-                        display: grid;
-                        grid-template-columns: 120px 1fr;
-                        gap: 10px;
-                        padding: 7px 10px;
-                        border-bottom:
-                            1px solid #e3e8ef;
-                    }
-
-                    .party-row:last-child,
-                    .detail-row:last-child {
-                        border-bottom: 0;
-                    }
-
-                    .party-row span,
-                    .detail-row span {
-                        word-break: break-word;
-                    }
-
-                    .invoice-details-grid {
-                        margin-bottom: 12px;
-                    }
-
-                    .invoice-items-table {
-                        width: 100%;
-                        border-collapse: collapse;
-                        margin-bottom: 12px;
-                    }
-
-                    .invoice-items-table th,
-                    .invoice-items-table td {
-                        border: 1px solid #cbd5e1;
-                        padding: 8px 7px;
-                    }
-
-                    .invoice-items-table th {
-                        background: #1f477d;
-                        color: #ffffff;
-                        text-align: center;
-                        font-size: 10px;
-                    }
-
-                    .text-right {
-                        text-align: right;
-                    }
-
-                    .product-cell {
-                        min-width: 180px;
-                    }
-
-                    .empty-row {
-                        text-align: center;
-                        padding: 30px !important;
-                    }
-
-                    .invoice-bottom-grid {
-                        align-items: stretch;
-                    }
-
-                    .invoice-left-bottom {
-                        display: flex;
-                        flex-direction: column;
-                        gap: 12px;
-                    }
-
-                    .amount-words {
-                        padding: 14px 10px;
-                        min-height: 34px;
-                    }
-
-                    .bank-content {
-                        padding: 10px;
-                        line-height: 1.8;
-                    }
-
-                    .totals-box {
-                        display: flex;
-                        flex-direction: column;
-                        height: fit-content;
-                    }
-
-                    .total-row {
-                        grid-template-columns: 1fr auto;
-                    }
-
-                    .grand-total-row {
-                        display: flex;
-                        justify-content: space-between;
-                        gap: 15px;
-                        padding: 11px 10px;
-                        color: #ffffff;
-                        background: #1f477d;
-                        font-size: 13px;
-                        font-weight: 800;
-                    }
-
-                    .signature-box {
-                        grid-template-columns: 1fr 1fr 1fr;
-                        margin-top: 14px;
-                        border: 1px solid #cbd5e1;
-                    }
-
-                    .signature-cell {
-                        min-height: 115px;
-                        padding: 10px;
-                        border-right:
-                            1px solid #cbd5e1;
-                        display: flex;
-                        flex-direction: column;
-                        align-items: center;
-                        justify-content: flex-end;
-                        text-align: center;
-                        font-size: 10px;
-                    }
-
-                    .signature-cell:last-child {
-                        border-right: 0;
-                    }
-
-                    .company-sign {
-                        justify-content: flex-start;
-                        padding-top: 20px;
-                    }
-
-                    .signature-space {
-                        flex: 1;
-                    }
-
-                    .signature-line {
-                        width: 75%;
-                        border-top:
-                            1px solid #64748b;
-                        margin-bottom: 6px;
-                    }
-
-                    .invoice-footer {
-                        display: flex;
-                        flex-direction: column;
-                        align-items: center;
-                        gap: 3px;
-                        margin-top: 25px;
-                        padding-top: 12px;
-                        border-top:
-                            1px solid #cbd5e1;
-                        color: #64748b;
-                        font-size: 9px;
-                    }
-
-                    @media (max-width: 700px) {
-
-                        .full-invoice-sheet {
-                            padding: 12px;
-                            font-size: 10px;
-                        }
-
-                        .invoice-top,
-                        .invoice-party-grid,
-                        .invoice-details-grid,
-                        .invoice-bottom-grid {
-                            display: block;
-                        }
-
-                        .party-box,
-                        .detail-box,
-                        .amount-words-box,
-                        .bank-box,
-                        .totals-box {
-                            margin-bottom: 10px;
-                        }
-
-                        .company-name {
-                            font-size: 17px;
-                        }
-
-                        .company-meta {
-                            margin-top: 12px;
-                            text-align: left;
-                        }
-
-                        .invoice-items-table {
-                            display: block;
-                            overflow-x: auto;
-                        }
-
-                    }
-
-                </style>
-
-                ${buildFullInvoiceHTML(
-                    invoice,
-                    false
-                )}
-            `;
-
-        }
-
-        modal.classList.add(
-            "show"
-        );
-
-    } catch (error) {
-
-        console.error(
-            "Error opening full invoice record:",
-            error
-        );
-
-        alert(
-            "Unable to open full invoice details."
-        );
+        buyerName =
+            buyerName ||
+            "Walk-in Customer";
 
     }
 
-}
 
+    // Final fallback
+    buyerName =
+        buyerName || "-";
+
+    buyerAddress =
+        buyerAddress || "-";
+
+    buyerGSTIN =
+        buyerGSTIN || "-";
+
+    buyerMobile =
+        buyerMobile || "-";
+
+
+    // =====================================================
+    // SHIP TO / RECEIVER DETAILS
+    // Separate receiver available na use pannum
+    // Illaina Buyer details automatic-ah copy aagum
+    // =====================================================
+
+    let receiverName =
+        invoice.receiverName ||
+        invoice.consigneeName ||
+        invoice.shipToName ||
+        "";
+
+    let receiverAddress =
+        invoice.receiverAddress ||
+        invoice.deliveryAddress ||
+        invoice.shipToAddress ||
+        "";
+
+    let receiverGSTIN =
+        invoice.receiverGSTIN ||
+        invoice.consigneeGSTIN ||
+        invoice.shipToGSTIN ||
+        "";
+
+    let receiverMobile =
+        invoice.receiverMobile ||
+        invoice.consigneeMobile ||
+        invoice.shipToMobile ||
+        "";
+
+
+    // Receiver master lookup
+    const receiverValue =
+        invoice.receiver ||
+        invoice.receiverId ||
+        invoice.consignee ||
+        "";
+
+    if (
+        receiverValue &&
+        typeof customers !== "undefined" &&
+        Array.isArray(customers)
+    ) {
+
+        const receiver =
+            customers.find(c =>
+                c.code === receiverValue ||
+                c.id === receiverValue
+            );
+
+        if (receiver) {
+
+            receiverName =
+                receiverName ||
+                receiver.name ||
+                receiver.customerName ||
+                "";
+
+            receiverAddress =
+                receiverAddress ||
+                receiver.address ||
+                receiver.customerAddress ||
+                receiver.city ||
+                "";
+
+            receiverGSTIN =
+                receiverGSTIN ||
+                receiver.gstin ||
+                receiver.gstNo ||
+                "";
+
+            receiverMobile =
+                receiverMobile ||
+                receiver.mobile ||
+                receiver.phone ||
+                receiver.mobileNo ||
+                "";
+        }
+    }
+
+
+    // IMPORTANT:
+    // Same as Bill To / Buyer checkbox selected
+    // OR receiver details empty
+    // Buyer details automatic-ah Ship To-la varum
+
+    if (
+        invoice.sameAsBuyer === true ||
+        invoice.sameAsBillTo === true ||
+        !receiverName
+    ) {
+
+        receiverName =
+            buyerName;
+
+        receiverAddress =
+            buyerAddress;
+
+        receiverGSTIN =
+            buyerGSTIN;
+
+        receiverMobile =
+            buyerMobile;
+    }
+
+
+    // Final receiver fallback
+    receiverName =
+        receiverName ||
+        buyerName;
+
+    receiverAddress =
+        receiverAddress ||
+        buyerAddress;
+
+    receiverGSTIN =
+        receiverGSTIN ||
+        buyerGSTIN;
+
+    receiverMobile =
+        receiverMobile ||
+        buyerMobile;
+
+
+    // =====================================================
+    // COMPANY / BRAND DETAILS
+    // =====================================================
+
+    const setText = (id, value) => {
+
+        const element =
+            document.getElementById(id);
+
+        if (element) {
+
+            element.textContent =
+                value || "-";
+        }
+    };
+
+
+    // Brand name
+    setText(
+        "printCompanyName",
+        COMPANY_NAME
+    );
+
+    // Company mobile
+    setText(
+        "printCompanyMobile",
+        COMPANY_MOBILE
+    );
+
+    // Alternative IDs support
+    setText(
+        "printBrandName",
+        COMPANY_NAME
+    );
+
+    setText(
+        "printMobile",
+        COMPANY_MOBILE
+    );
+
+
+    // =====================================================
+    // BILL TO / BUYER
+    // =====================================================
+
+    setText(
+        "printBuyerName",
+        buyerName
+    );
+
+    setText(
+        "printBuyerAddress",
+        buyerAddress
+    );
+
+    setText(
+        "printBuyerGSTIN",
+        buyerGSTIN
+    );
+
+    setText(
+        "printBuyerMobile",
+        buyerMobile
+    );
+
+
+    // Old IDs support
+    setText(
+        "printCustomer",
+        buyerName
+    );
+
+    setText(
+        "printCustomerInfo",
+        [
+            buyerAddress,
+            buyerGSTIN !== "-"
+                ? "GSTIN: " + buyerGSTIN
+                : "",
+            buyerMobile !== "-"
+                ? "Mobile: " + buyerMobile
+                : ""
+        ]
+            .filter(Boolean)
+            .join(" | ")
+    );
+
+
+    // =====================================================
+    // SHIP TO / RECEIVER
+    // =====================================================
+
+    setText(
+        "printReceiverName",
+        receiverName
+    );
+
+    setText(
+        "printReceiverAddress",
+        receiverAddress
+    );
+
+    setText(
+        "printReceiverGSTIN",
+        receiverGSTIN
+    );
+
+    setText(
+        "printReceiverMobile",
+        receiverMobile
+    );
+
+
+    // Alternative IDs support
+    setText(
+        "printShipToName",
+        receiverName
+    );
+
+    setText(
+        "printShipToAddress",
+        receiverAddress
+    );
+
+    setText(
+        "printShipToGSTIN",
+        receiverGSTIN
+    );
+
+    setText(
+        "printShipToMobile",
+        receiverMobile
+    );
+
+
+    // =====================================================
+    // INVOICE DETAILS
+    // =====================================================
+
+    setText(
+        "printInvoiceNo",
+        invoice.number ||
+        invoice.invoiceNo ||
+        invoice.id ||
+        "-"
+    );
+
+    setText(
+        "printInvoiceDate",
+        invoice.date ||
+        invoice.invoiceDate ||
+        "-"
+    );
+
+    setText(
+        "printDueDate",
+        invoice.dueDate ||
+        "-"
+    );
+
+    setText(
+        "printReferenceNo",
+        invoice.referenceNo ||
+        invoice.reference ||
+        "-"
+    );
+
+    setText(
+        "printPayment",
+        invoice.payment ||
+        invoice.paymentMode ||
+        "-"
+    );
+
+
+    // =====================================================
+    // TRANSPORT DETAILS
+    // =====================================================
+
+    setText(
+        "printTransportMode",
+        invoice.transportMode ||
+        invoice.transport ||
+        "-"
+    );
+
+    setText(
+        "printVehicleNo",
+        invoice.vehicleNo ||
+        invoice.vehicleNumber ||
+        "-"
+    );
+
+    setText(
+        "printDriverName",
+        invoice.driverName ||
+        invoice.driver ||
+        "-"
+    );
+
+    setText(
+        "printDriverMobile",
+        invoice.driverMobile ||
+        invoice.driverPhone ||
+        invoice.driverMobileNo ||
+        "-"
+    );
+
+
+    // =====================================================
+    // ITEMS
+    // =====================================================
+
+    const tbody =
+        document.getElementById(
+            "printItemBody"
+        );
+
+    if (tbody) {
+
+        tbody.innerHTML = "";
+
+        (
+            invoice.itemDetails || []
+        ).forEach(
+            (item, index) => {
+
+                const tr =
+                    document.createElement("tr");
+
+                tr.innerHTML = `
+
+                    <td>${index + 1}</td>
+
+                    <td>
+                        ${escapeHtml(
+                            invoiceProductName(item)
+                        )}
+                    </td>
+
+                    <td>
+                        ${item.hsn ||
+                            item.hsnCode ||
+                            "-"}
+                    </td>
+
+                    <td>
+                        ${Number(
+                            item.qty || 0
+                        )}
+                    </td>
+
+                    <td>
+                        ${money(
+                            item.rate || 0
+                        )}
+                    </td>
+
+                    <td>
+                        ${money(
+                            item.amount || 0
+                        )}
+                    </td>
+
+                `;
+
+                tbody.appendChild(tr);
+
+            }
+        );
+    }
+
+
+    // =====================================================
+    // TOTALS
+    // =====================================================
+
+    setText(
+        "printSubtotal",
+        money(
+            invoice.subtotal || 0
+        )
+    );
+
+    setText(
+        "printDiscount",
+        money(
+            invoice.discount || 0
+        )
+    );
+
+    setText(
+        "printTax",
+        money(
+            invoice.tax || 0
+        )
+    );
+
+    setText(
+        "printCGST",
+        money(
+            invoice.cgst || 0
+        )
+    );
+
+    setText(
+        "printSGST",
+        money(
+            invoice.sgst || 0
+        )
+    );
+
+    setText(
+        "printIGST",
+        money(
+            invoice.igst || 0
+        )
+    );
+
+    setText(
+        "printTotal",
+        money(
+            invoice.total ||
+            invoice.grandTotal ||
+            0
+        )
+    );
+
+
+    // =====================================================
+    // AMOUNT IN WORDS
+    // =====================================================
+
+    const totalAmount =
+        Number(
+            invoice.total ||
+            invoice.grandTotal ||
+            0
+        );
+
+    if (
+        typeof numberToWords ===
+        "function"
+    ) {
+
+        setText(
+            "printAmountWords",
+            numberToWords(totalAmount)
+        );
+
+    } else {
+
+        setText(
+            "printAmountWords",
+            "Rupees " +
+            totalAmount.toFixed(2) +
+            " Only"
+        );
+    }
+
+
+    // =====================================================
+    // PRINT FOOTER BRANDING
+    // =====================================================
+
+    setText(
+        "printFooterBrand",
+        "Designed & Powered by VTOOS Software Solutions"
+    );
+
+    setText(
+        "printFooterCompany",
+        COMPANY_NAME +
+        " | Mobile: " +
+        COMPANY_MOBILE
+    );
+
+
+    console.log(
+        "MMV invoice print data prepared:",
+        {
+            buyerName,
+            receiverName,
+            COMPANY_NAME,
+            COMPANY_MOBILE
+        }
+    );
+}
 
 /* =====================================================
    PREPARE EXISTING PRINT
