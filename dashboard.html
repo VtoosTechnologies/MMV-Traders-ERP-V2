@@ -821,7 +821,32 @@
 
         }
 
+.logout-button {
+    height: 34px;
+    padding: 0 14px;
 
+    border: 1px solid #d7dee8;
+    border-radius: 9px;
+
+    background: #ffffff;
+    color: #b42318;
+
+    font-size: 11px;
+    font-weight: 800;
+
+    cursor: pointer;
+
+    transition:
+        background .2s ease,
+        border-color .2s ease,
+        transform .2s ease;
+}
+
+.logout-button:hover {
+    background: #fff1f0;
+    border-color: #f0aaa5;
+    transform: translateY(-1px);
+}
         /* ====================================================
            CONTENT
            ==================================================== */
@@ -2543,50 +2568,52 @@
 
             <div class="topbar-actions">
 
+    <button
+        class="icon-button"
+        type="button"
+        data-notification-toggle
+        aria-label="Notifications"
+    >
+        ♢
 
-                <button
-                    class="icon-button"
-                    type="button"
-                    data-notification-toggle
-                    aria-label="Notifications"
-                >
-
-                    ♢
-
-                    <span
-                        class="notification-badge"
-                        id="notificationBadge"
-                        style="display:none"
-                    >
-                        0
-                    </span>
-
-                </button>
+        <span
+            class="notification-badge"
+            id="notificationBadge"
+            style="display:none"
+        >
+            0
+        </span>
+    </button>
 
 
-                <div class="top-user">
+    <div class="top-user">
+
+        <div
+            class="top-user-avatar"
+            id="topAvatar"
+        >
+            U
+        </div>
+
+        <div
+            class="top-user-name"
+            data-user-name
+        >
+            User
+        </div>
+
+    </div>
 
 
-                    <div
-                        class="top-user-avatar"
-                        id="topAvatar"
-                    >
-                        U
-                    </div>
+    <button
+        class="logout-button"
+        type="button"
+        onclick="window.logout()"
+    >
+        Logout
+    </button>
 
-
-                    <div
-                        class="top-user-name"
-                        data-user-name
-                    >
-                        User
-                    </div>
-
-
-                </div>
-
-            </div>
-
+</div>
         </header>
 
 
