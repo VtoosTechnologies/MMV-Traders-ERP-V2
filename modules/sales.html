@@ -3569,7 +3569,52 @@ function renderRecentInvoices(){
 ===================================================== */
 function closeInvoiceRecordView(){document.getElementById("invoiceRecordModal").classList.remove("show");}
 function invoiceProductName(item){return item?.productName||item?.name||products.find(p=>(p.code||p.productCode||p.itemCode||p.id)===(item?.product||""))?.name||item?.product||"Product";}
-function viewInvoiceRecord(invoice){document.getElementById("invoiceRecordTitle").textContent=`Invoice Details - ${invoice.number||""}`;document.getElementById("invoiceRecordSummary").innerHTML=`<div><span>Customer</span><strong>${escapeHtml(invoice.customer==="walkin"?"Walk-in Customer":invoice.customer||"")}</strong></div><div><span>Invoice Date</span><strong>${escapeHtml(invoice.date||"")}</strong></div><div><span>Total</span><strong>${money(invoice.total||0)}</strong></div>`;const tbody=document.getElementById("invoiceRecordItems");tbody.innerHTML="";const items=Array.isArray(invoice.itemDetails)?invoice.itemDetails:[];if(!items.length){tbody.innerHTML='<tr><td colspan="7" style="text-align:center;color:#64748b;padding:20px">Item details are not available for this older invoice.</td></tr>';}else items.forEach((item,index)=>{const tr=document.createElement("tr");tr.innerHTML=`<td>${index+1}</td><td>${escapeHtml(invoiceProductName(item))}</td><td>${Number(item.qty||0)}</td><td>${money(item.rate||0)}</td><td>${money(item.discountAmount||0)}</td><td>${money(item.taxAmount||0)}</td><td><strong>${money(item.amount||0)}</strong></td>`;tbody.appendChild(tr);});document.getElementById("invoiceRecordModal").classList.add("show");}
+function viewInvoiceRecord(invoice) {
+    try {
+        const modal = document.getElementById("invoiceRecordModal");
+
+        if (!modal) {
+            alert("Invoice view window is not available. Please refresh and try again.");
+            console.error("invoiceRecordModal not found in HTML");
+            return;
+        }
+
+        const title = document.getElementById("invoiceRecordTitle");
+        const body = document.getElementById("invoiceRecordBody");
+
+        if (title) {
+            title.textContent = "Invoice Details - " + (invoice.invoiceNo || invoice.id || "");
+        }
+
+        if (body) {
+            const customerName =
+                invoice.customer === "walkin"
+                    ? "Walk-in Customer"
+                    : (invoice.customerName || invoice.customer || "-");
+
+            const invoiceDate = invoice.invoiceDate || invoice.date || "-";
+            const paymentMode = invoice.paymentMode || invoice.payment || "-";
+            const totalAmount =
+                Number(invoice.grandTotal || invoice.total || 0).toFixed(2);
+
+            body.innerHTML = `
+                <div style="padding:20px;line-height:1.8">
+                    <div><strong>Invoice No:</strong> ${invoice.invoiceNo || invoice.id || "-"}</div>
+                    <div><strong>Date:</strong> ${invoiceDate}</div>
+                    <div><strong>Customer:</strong> ${customerName}</div>
+                    <div><strong>Payment:</strong> ${paymentMode}</div>
+                    <div><strong>Grand Total:</strong> ₹${totalAmount}</div>
+                </div>
+            `;
+        }
+
+        modal.classList.add("show");
+
+    } catch (error) {
+        console.error("Error opening invoice record:", error);
+        alert("Unable to open invoice details.");
+    }
+}
 function editInvoiceRecord(invoice){if(!Array.isArray(invoice.itemDetails)||!invoice.itemDetails.length){alert("This older invoice does not contain item-level details, so it cannot be safely edited.");return;}editingInvoiceId=invoice.id||null;document.getElementById("invoiceNumber").textContent=invoice.number||"";document.getElementById("invoiceDate").value=invoice.date||"";document.getElementById("dueDate").value=invoice.dueDate||"";document.getElementById("referenceNo").value=invoice.referenceNo||"";document.getElementById("salesType").value=invoice.salesType||"retail";document.getElementById("taxType").value=invoice.taxType||"exclusive";document.getElementById("customerSelect").value=invoice.customer||"";document.getElementById("invoiceNotes").value=invoice.notes||"";selectedPayment=invoice.payment||"cash";document.querySelectorAll(".payment-btn").forEach(b=>b.classList.toggle("active",b.dataset.payment===selectedPayment));const body=document.getElementById("itemBody");body.innerHTML="";invoice.itemDetails.forEach(item=>{addItem();const row=body.lastElementChild;const sel=row.querySelector(".item-product");if([...sel.options].some(o=>o.value===item.product))sel.value=item.product;row.querySelector(".item-qty").value=Number(item.qty||0);row.querySelector(".item-rate").value=Number(item.rate||0);row.querySelector(".item-discount").value=Number(item.discountPercent||0);row.querySelector(".item-tax").value=Number(item.taxPercent||0);});calculate();const btn=document.getElementById("saveInvoice");if(btn)btn.textContent="Update Invoice";window.scrollTo({top:0,behavior:"smooth"});}
 function preparePrintInvoiceFromRecord(invoice){const customerValue=invoice.customer||"walkin";let customerName=customerValue==="walkin"?"Walk-in Customer":customerValue,customerInfo="Customer details";const customer=customers.find(c=>c.code===customerValue);if(customer){customerName=customer.name||customerName;customerInfo=[customer.mobile,customer.city,customer.gstin].filter(Boolean).join(" · ")||customerInfo;}document.getElementById("printCustomer").textContent=customerName;document.getElementById("printCustomerInfo").textContent=customerInfo;document.getElementById("printInvoiceNo").textContent=invoice.number||"-";document.getElementById("printInvoiceDate").textContent=invoice.date||"-";document.getElementById("printDueDate").textContent=invoice.dueDate||"-";const tbody=document.getElementById("printItemBody");tbody.innerHTML="";(invoice.itemDetails||[]).forEach((item,index)=>{const tr=document.createElement("tr");tr.innerHTML=`<td>${index+1}</td><td>${escapeHtml(invoiceProductName(item))}</td><td>${Number(item.qty||0)}</td><td>${money(item.rate||0)}</td><td>${money(item.discountAmount||0)}</td><td>${money(item.taxAmount||0)}</td><td>${money(item.amount||0)}</td>`;tbody.appendChild(tr);});document.getElementById("printSubtotal").textContent=money(invoice.subtotal||0);document.getElementById("printDiscount").textContent=money(invoice.discount||0);document.getElementById("printTax").textContent=money(invoice.tax||0);document.getElementById("printTotal").textContent=money(invoice.total||0);}
 function printInvoiceRecord(invoice){if(!Array.isArray(invoice.itemDetails)||!invoice.itemDetails.length){alert("This older invoice does not contain item-level details, so an exact invoice print is not available.");return;}preparePrintInvoiceFromRecord(invoice);window.print();}
