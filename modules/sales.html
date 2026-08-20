@@ -5521,625 +5521,2033 @@ function buildFullInvoiceHTML(invoice, forPrint = false) {
    FULL INVOICE VIEW
 ===================================================== */
 
-function preparePrintInvoiceFromRecord(invoice) {
+/* =====================================================
+   FULL INVOICE VIEW + A4 PRINT
+===================================================== */
 
-    // =====================================================
-    // MMV TRADERS BRAND DETAILS
-    // =====================================================
+function getInvoiceCustomerDetails(invoice) {
 
-    const COMPANY_NAME = "MMV TRADERS";
-    const COMPANY_MOBILE = "9789388987";
+    const customerCode = invoice.customer || invoice.customerCode || "";
 
+    let masterCustomer = null;
 
-    // =====================================================
-    // BUYER / BILL TO DETAILS
-    // =====================================================
-
-    const customerValue =
-        invoice.customer ||
-        invoice.customerCode ||
-        "walkin";
-
-    let buyerName =
-        invoice.customerName ||
-        "";
-
-    let buyerAddress =
-        invoice.customerAddress ||
-        invoice.address ||
-        "";
-
-    let buyerGSTIN =
-        invoice.customerGSTIN ||
-        invoice.gstin ||
-        "";
-
-    let buyerMobile =
-        invoice.customerMobile ||
-        invoice.mobile ||
-        "";
-
-
-    // Find customer from loaded customer master
     if (
         typeof customers !== "undefined" &&
-        Array.isArray(customers)
+        Array.isArray(customers) &&
+        customerCode &&
+        customerCode !== "walkin"
     ) {
 
-        const customer =
+        masterCustomer =
             customers.find(c =>
-                c.code === customerValue ||
-                c.id === customerValue
-            );
-
-        if (customer) {
-
-            buyerName =
-                buyerName ||
-                customer.name ||
-                customer.customerName ||
-                "";
-
-            buyerAddress =
-                buyerAddress ||
-                customer.address ||
-                customer.customerAddress ||
-                customer.city ||
-                "";
-
-            buyerGSTIN =
-                buyerGSTIN ||
-                customer.gstin ||
-                customer.gstNo ||
-                "";
-
-            buyerMobile =
-                buyerMobile ||
-                customer.mobile ||
-                customer.phone ||
-                customer.mobileNo ||
-                "";
-        }
-    }
-
-
-    // Walk-in customer fallback
-    if (customerValue === "walkin") {
-
-        buyerName =
-            buyerName ||
-            "Walk-in Customer";
+                c.code === customerCode ||
+                c.id === customerCode
+            ) || null;
 
     }
 
+    const isWalkin =
+        customerCode === "walkin" ||
+        invoice.customerType === "walkin";
 
-    // Final fallback
-    buyerName =
-        buyerName || "-";
+    return {
 
-    buyerAddress =
-        buyerAddress || "-";
+        name:
+            invoice.customerName ||
+            invoice.billToName ||
+            (masterCustomer
+                ? (
+                    masterCustomer.name ||
+                    masterCustomer.customerName ||
+                    masterCustomer.code
+                )
+                : null
+            ) ||
+            (isWalkin
+                ? "Walk-in Customer"
+                : customerCode || "-"
+            ),
 
-    buyerGSTIN =
-        buyerGSTIN || "-";
+        address:
+            invoice.customerAddress ||
+            invoice.billToAddress ||
+            (masterCustomer
+                ? (
+                    masterCustomer.address ||
+                    masterCustomer.customerAddress ||
+                    ""
+                )
+                : ""
+            ) ||
+            "",
 
-    buyerMobile =
-        buyerMobile || "-";
+        gstin:
+            invoice.customerGSTIN ||
+            invoice.customerGstin ||
+            invoice.billToGSTIN ||
+            invoice.billToGstin ||
+            (masterCustomer
+                ? (
+                    masterCustomer.gstin ||
+                    masterCustomer.GSTIN ||
+                    masterCustomer.gstNo ||
+                    ""
+                )
+                : ""
+            ) ||
+            "",
+
+        mobile:
+            invoice.customerMobile ||
+            invoice.customerPhone ||
+            invoice.billToMobile ||
+            (masterCustomer
+                ? (
+                    masterCustomer.mobile ||
+                    masterCustomer.phone ||
+                    masterCustomer.mobileNo ||
+                    ""
+                )
+                : ""
+            ) ||
+            ""
+
+    };
+
+}
 
 
-    // =====================================================
-    // SHIP TO / RECEIVER DETAILS
-    // Separate receiver available na use pannum
-    // Illaina Buyer details automatic-ah copy aagum
-    // =====================================================
+function getInvoiceReceiverDetails(invoice, customerDetails) {
 
-    let receiverName =
-        invoice.receiverName ||
-        invoice.consigneeName ||
-        invoice.shipToName ||
-        "";
-
-    let receiverAddress =
-        invoice.receiverAddress ||
-        invoice.deliveryAddress ||
-        invoice.shipToAddress ||
-        "";
-
-    let receiverGSTIN =
-        invoice.receiverGSTIN ||
-        invoice.consigneeGSTIN ||
-        invoice.shipToGSTIN ||
-        "";
-
-    let receiverMobile =
-        invoice.receiverMobile ||
-        invoice.consigneeMobile ||
-        invoice.shipToMobile ||
-        "";
-
-
-    // Receiver master lookup
-    const receiverValue =
+    const receiverCode =
         invoice.receiver ||
-        invoice.receiverId ||
+        invoice.receiverCode ||
         invoice.consignee ||
         "";
 
+    let masterReceiver = null;
+
     if (
-        receiverValue &&
         typeof customers !== "undefined" &&
-        Array.isArray(customers)
+        Array.isArray(customers) &&
+        receiverCode
     ) {
 
-        const receiver =
+        masterReceiver =
             customers.find(c =>
-                c.code === receiverValue ||
-                c.id === receiverValue
-            );
+                c.code === receiverCode ||
+                c.id === receiverCode
+            ) || null;
 
-        if (receiver) {
-
-            receiverName =
-                receiverName ||
-                receiver.name ||
-                receiver.customerName ||
-                "";
-
-            receiverAddress =
-                receiverAddress ||
-                receiver.address ||
-                receiver.customerAddress ||
-                receiver.city ||
-                "";
-
-            receiverGSTIN =
-                receiverGSTIN ||
-                receiver.gstin ||
-                receiver.gstNo ||
-                "";
-
-            receiverMobile =
-                receiverMobile ||
-                receiver.mobile ||
-                receiver.phone ||
-                receiver.mobileNo ||
-                "";
-        }
     }
 
-
-    // IMPORTANT:
-    // Same as Bill To / Buyer checkbox selected
-    // OR receiver details empty
-    // Buyer details automatic-ah Ship To-la varum
-
-    if (
-        invoice.sameAsBuyer === true ||
+    const sameAsCustomer =
         invoice.sameAsBillTo === true ||
-        !receiverName
-    ) {
+        invoice.sameAsBuyer === true ||
+        invoice.sameAsCustomer === true ||
+        !receiverCode;
 
-        receiverName =
-            buyerName;
+    if (sameAsCustomer) {
 
-        receiverAddress =
-            buyerAddress;
+        return {
+            name: customerDetails.name || "-",
+            address: customerDetails.address || "",
+            gstin: customerDetails.gstin || "",
+            mobile: customerDetails.mobile || ""
+        };
 
-        receiverGSTIN =
-            buyerGSTIN;
-
-        receiverMobile =
-            buyerMobile;
     }
 
+    return {
 
-    // Final receiver fallback
-    receiverName =
-        receiverName ||
-        buyerName;
+        name:
+            invoice.receiverName ||
+            invoice.consigneeName ||
+            invoice.shipToName ||
+            (masterReceiver
+                ? (
+                    masterReceiver.name ||
+                    masterReceiver.customerName ||
+                    masterReceiver.code
+                )
+                : ""
+            ) ||
+            receiverCode ||
+            "-",
 
-    receiverAddress =
-        receiverAddress ||
-        buyerAddress;
+        address:
+            invoice.receiverAddress ||
+            invoice.consigneeAddress ||
+            invoice.shipToAddress ||
+            (masterReceiver
+                ? (
+                    masterReceiver.address ||
+                    masterReceiver.customerAddress ||
+                    ""
+                )
+                : ""
+            ) ||
+            "",
 
-    receiverGSTIN =
-        receiverGSTIN ||
-        buyerGSTIN;
+        gstin:
+            invoice.receiverGSTIN ||
+            invoice.receiverGstin ||
+            invoice.consigneeGSTIN ||
+            invoice.shipToGSTIN ||
+            (masterReceiver
+                ? (
+                    masterReceiver.gstin ||
+                    masterReceiver.GSTIN ||
+                    masterReceiver.gstNo ||
+                    ""
+                )
+                : ""
+            ) ||
+            "",
 
-    receiverMobile =
-        receiverMobile ||
-        buyerMobile;
+        mobile:
+            invoice.receiverMobile ||
+            invoice.consigneeMobile ||
+            invoice.shipToMobile ||
+            (masterReceiver
+                ? (
+                    masterReceiver.mobile ||
+                    masterReceiver.phone ||
+                    masterReceiver.mobileNo ||
+                    ""
+                )
+                : ""
+            ) ||
+            ""
 
-
-    // =====================================================
-    // COMPANY / BRAND DETAILS
-    // =====================================================
-
-    const setText = (id, value) => {
-
-        const element =
-            document.getElementById(id);
-
-        if (element) {
-
-            element.textContent =
-                value || "-";
-        }
     };
 
-
-    // Brand name
-    setText(
-        "printCompanyName",
-        COMPANY_NAME
-    );
-
-    // Company mobile
-    setText(
-        "printCompanyMobile",
-        COMPANY_MOBILE
-    );
-
-    // Alternative IDs support
-    setText(
-        "printBrandName",
-        COMPANY_NAME
-    );
-
-    setText(
-        "printMobile",
-        COMPANY_MOBILE
-    );
+}
 
 
-    // =====================================================
-    // BILL TO / BUYER
-    // =====================================================
+function getInvoiceTransportDetails(invoice) {
 
-    setText(
-        "printBuyerName",
-        buyerName
-    );
+    return {
 
-    setText(
-        "printBuyerAddress",
-        buyerAddress
-    );
+        transportMode:
+            invoice.transportMode ||
+            invoice.transport ||
+            invoice.dispatchMode ||
+            "-",
 
-    setText(
-        "printBuyerGSTIN",
-        buyerGSTIN
-    );
+        vehicleNo:
+            invoice.vehicleNo ||
+            invoice.vehicleNumber ||
+            invoice.vehicle ||
+            "-",
 
-    setText(
-        "printBuyerMobile",
-        buyerMobile
-    );
+        driverName:
+            invoice.driverName ||
+            invoice.driver ||
+            "-",
 
+        driverMobile:
+            invoice.driverMobile ||
+            invoice.driverPhone ||
+            invoice.driverContact ||
+            "-"
 
-    // Old IDs support
-    setText(
-        "printCustomer",
-        buyerName
-    );
+    };
 
-    setText(
-        "printCustomerInfo",
-        [
-            buyerAddress,
-            buyerGSTIN !== "-"
-                ? "GSTIN: " + buyerGSTIN
-                : "",
-            buyerMobile !== "-"
-                ? "Mobile: " + buyerMobile
-                : ""
-        ]
-            .filter(Boolean)
-            .join(" | ")
-    );
+}
 
 
-    // =====================================================
-    // SHIP TO / RECEIVER
-    // =====================================================
+function getInvoiceNumberValue(invoice) {
 
-    setText(
-        "printReceiverName",
-        receiverName
-    );
-
-    setText(
-        "printReceiverAddress",
-        receiverAddress
-    );
-
-    setText(
-        "printReceiverGSTIN",
-        receiverGSTIN
-    );
-
-    setText(
-        "printReceiverMobile",
-        receiverMobile
-    );
-
-
-    // Alternative IDs support
-    setText(
-        "printShipToName",
-        receiverName
-    );
-
-    setText(
-        "printShipToAddress",
-        receiverAddress
-    );
-
-    setText(
-        "printShipToGSTIN",
-        receiverGSTIN
-    );
-
-    setText(
-        "printShipToMobile",
-        receiverMobile
-    );
-
-
-    // =====================================================
-    // INVOICE DETAILS
-    // =====================================================
-
-    setText(
-        "printInvoiceNo",
-        invoice.number ||
+    return (
         invoice.invoiceNo ||
+        invoice.number ||
+        invoice.invoiceNumber ||
         invoice.id ||
         "-"
     );
 
-    setText(
-        "printInvoiceDate",
-        invoice.date ||
-        invoice.invoiceDate ||
-        "-"
-    );
-
-    setText(
-        "printDueDate",
-        invoice.dueDate ||
-        "-"
-    );
-
-    setText(
-        "printReferenceNo",
-        invoice.referenceNo ||
-        invoice.reference ||
-        "-"
-    );
-
-    setText(
-        "printPayment",
-        invoice.payment ||
-        invoice.paymentMode ||
-        "-"
-    );
-
-
-    // =====================================================
-    // TRANSPORT DETAILS
-    // =====================================================
-
-    setText(
-        "printTransportMode",
-        invoice.transportMode ||
-        invoice.transport ||
-        "-"
-    );
-
-    setText(
-        "printVehicleNo",
-        invoice.vehicleNo ||
-        invoice.vehicleNumber ||
-        "-"
-    );
-
-    setText(
-        "printDriverName",
-        invoice.driverName ||
-        invoice.driver ||
-        "-"
-    );
-
-    setText(
-        "printDriverMobile",
-        invoice.driverMobile ||
-        invoice.driverPhone ||
-        invoice.driverMobileNo ||
-        "-"
-    );
-
-
-    // =====================================================
-    // ITEMS
-    // =====================================================
-
-    const tbody =
-        document.getElementById(
-            "printItemBody"
-        );
-
-    if (tbody) {
-
-        tbody.innerHTML = "";
-
-        (
-            invoice.itemDetails || []
-        ).forEach(
-            (item, index) => {
-
-                const tr =
-                    document.createElement("tr");
-
-                tr.innerHTML = `
-
-                    <td>${index + 1}</td>
-
-                    <td>
-                        ${escapeHtml(
-                            invoiceProductName(item)
-                        )}
-                    </td>
-
-                    <td>
-                        ${item.hsn ||
-                            item.hsnCode ||
-                            "-"}
-                    </td>
-
-                    <td>
-                        ${Number(
-                            item.qty || 0
-                        )}
-                    </td>
-
-                    <td>
-                        ${money(
-                            item.rate || 0
-                        )}
-                    </td>
-
-                    <td>
-                        ${money(
-                            item.amount || 0
-                        )}
-                    </td>
-
-                `;
-
-                tbody.appendChild(tr);
-
-            }
-        );
-    }
-
-
-    // =====================================================
-    // TOTALS
-    // =====================================================
-
-    setText(
-        "printSubtotal",
-        money(
-            invoice.subtotal || 0
-        )
-    );
-
-    setText(
-        "printDiscount",
-        money(
-            invoice.discount || 0
-        )
-    );
-
-    setText(
-        "printTax",
-        money(
-            invoice.tax || 0
-        )
-    );
-
-    setText(
-        "printCGST",
-        money(
-            invoice.cgst || 0
-        )
-    );
-
-    setText(
-        "printSGST",
-        money(
-            invoice.sgst || 0
-        )
-    );
-
-    setText(
-        "printIGST",
-        money(
-            invoice.igst || 0
-        )
-    );
-
-    setText(
-        "printTotal",
-        money(
-            invoice.total ||
-            invoice.grandTotal ||
-            0
-        )
-    );
-
-
-    // =====================================================
-    // AMOUNT IN WORDS
-    // =====================================================
-
-    const totalAmount =
-        Number(
-            invoice.total ||
-            invoice.grandTotal ||
-            0
-        );
-
-    if (
-        typeof numberToWords ===
-        "function"
-    ) {
-
-        setText(
-            "printAmountWords",
-            numberToWords(totalAmount)
-        );
-
-    } else {
-
-        setText(
-            "printAmountWords",
-            "Rupees " +
-            totalAmount.toFixed(2) +
-            " Only"
-        );
-    }
-
-
-    // =====================================================
-    // PRINT FOOTER BRANDING
-    // =====================================================
-
-    setText(
-        "printFooterBrand",
-        "Designed & Powered by VTOOS Software Solutions"
-    );
-
-    setText(
-        "printFooterCompany",
-        COMPANY_NAME +
-        " | Mobile: " +
-        COMPANY_MOBILE
-    );
-
-
-    console.log(
-        "MMV invoice print data prepared:",
-        {
-            buyerName,
-            receiverName,
-            COMPANY_NAME,
-            COMPANY_MOBILE
-        }
-    );
 }
 
+
+function getInvoiceDateValue(invoice) {
+
+    return (
+        invoice.invoiceDate ||
+        invoice.date ||
+        "-"
+    );
+
+}
+
+
+function getInvoicePaymentValue(invoice) {
+
+    return (
+        invoice.paymentMode ||
+        invoice.payment ||
+        "-"
+    );
+
+}
+
+
+function getInvoiceItems(invoice) {
+
+    if (
+        Array.isArray(invoice.itemDetails) &&
+        invoice.itemDetails.length
+    ) {
+
+        return invoice.itemDetails;
+
+    }
+
+    if (
+        Array.isArray(invoice.items) &&
+        invoice.items.length
+    ) {
+
+        return invoice.items;
+
+    }
+
+    return [];
+
+}
+
+
+function getInvoiceProductNameSafe(item) {
+
+    try {
+
+        if (
+            typeof invoiceProductName === "function"
+        ) {
+
+            return invoiceProductName(item);
+
+        }
+
+    } catch (error) {
+
+        console.warn(
+            "invoiceProductName error:",
+            error
+        );
+
+    }
+
+    if (item.productName) {
+        return item.productName;
+    }
+
+    if (item.name) {
+        return item.name;
+    }
+
+    if (item.product) {
+        return item.product;
+    }
+
+    return "Product";
+
+}
+
+
+function invoiceEscapeHtml(value) {
+
+    const text =
+        String(
+            value === undefined ||
+            value === null
+                ? ""
+                : value
+        );
+
+    return text
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+
+}
+
+
+function invoiceMoney(value) {
+
+    const amount =
+        Number(value || 0);
+
+    return (
+        "₹" +
+        amount.toLocaleString(
+            "en-IN",
+            {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }
+        )
+    );
+
+}
+
+
+function invoiceAmountInWords(amount) {
+
+    const number =
+        Math.round(
+            Number(amount || 0)
+        );
+
+    if (number === 0) {
+        return "Rupees Zero Only";
+    }
+
+    const ones = [
+        "",
+        "One",
+        "Two",
+        "Three",
+        "Four",
+        "Five",
+        "Six",
+        "Seven",
+        "Eight",
+        "Nine",
+        "Ten",
+        "Eleven",
+        "Twelve",
+        "Thirteen",
+        "Fourteen",
+        "Fifteen",
+        "Sixteen",
+        "Seventeen",
+        "Eighteen",
+        "Nineteen"
+    ];
+
+    const tens = [
+        "",
+        "",
+        "Twenty",
+        "Thirty",
+        "Forty",
+        "Fifty",
+        "Sixty",
+        "Seventy",
+        "Eighty",
+        "Ninety"
+    ];
+
+    function twoDigits(n) {
+
+        if (n < 20) {
+            return ones[n];
+        }
+
+        return (
+            tens[Math.floor(n / 10)] +
+            (
+                n % 10
+                    ? " " + ones[n % 10]
+                    : ""
+            )
+        );
+
+    }
+
+    function threeDigits(n) {
+
+        let result = "";
+
+        if (n >= 100) {
+
+            result =
+                ones[Math.floor(n / 100)] +
+                " Hundred";
+
+            n = n % 100;
+
+            if (n) {
+                result += " ";
+            }
+
+        }
+
+        if (n) {
+            result += twoDigits(n);
+        }
+
+        return result.trim();
+
+    }
+
+    let result = "";
+
+    let crore =
+        Math.floor(number / 10000000);
+
+    let remaining =
+        number % 10000000;
+
+    let lakh =
+        Math.floor(remaining / 100000);
+
+    remaining =
+        remaining % 100000;
+
+    let thousand =
+        Math.floor(remaining / 1000);
+
+    remaining =
+        remaining % 1000;
+
+    if (crore) {
+        result +=
+            twoDigits(crore) +
+            " Crore ";
+    }
+
+    if (lakh) {
+        result +=
+            twoDigits(lakh) +
+            " Lakh ";
+    }
+
+    if (thousand) {
+        result +=
+            twoDigits(thousand) +
+            " Thousand ";
+    }
+
+    if (remaining) {
+        result +=
+            threeDigits(remaining);
+    }
+
+    return (
+        "Rupees " +
+        result.trim() +
+        " Only"
+    );
+
+}
+
+
+function buildFullInvoiceHTML(invoice, forPrint = false) {
+
+    const customer =
+        getInvoiceCustomerDetails(invoice);
+
+    const receiver =
+        getInvoiceReceiverDetails(
+            invoice,
+            customer
+        );
+
+    const transport =
+        getInvoiceTransportDetails(invoice);
+
+    const items =
+        getInvoiceItems(invoice);
+
+    const invoiceNo =
+        getInvoiceNumberValue(invoice);
+
+    const invoiceDate =
+        getInvoiceDateValue(invoice);
+
+    const payment =
+        getInvoicePaymentValue(invoice);
+
+    const subtotal =
+        Number(
+            invoice.subtotal ||
+            invoice.subTotal ||
+            0
+        );
+
+    const discount =
+        Number(
+            invoice.discount ||
+            invoice.totalDiscount ||
+            0
+        );
+
+    const tax =
+        Number(
+            invoice.tax ||
+            invoice.taxAmount ||
+            invoice.totalTax ||
+            0
+        );
+
+    const grandTotal =
+        Number(
+            invoice.grandTotal ||
+            invoice.total ||
+            0
+        );
+
+    const cgst =
+        Number(
+            invoice.cgst ||
+            invoice.CGST ||
+            (
+                invoice.taxType === "igst"
+                    ? 0
+                    : tax / 2
+            )
+        );
+
+    const sgst =
+        Number(
+            invoice.sgst ||
+            invoice.SGST ||
+            (
+                invoice.taxType === "igst"
+                    ? 0
+                    : tax / 2
+            )
+        );
+
+    const igst =
+        Number(
+            invoice.igst ||
+            invoice.IGST ||
+            (
+                invoice.taxType === "igst"
+                    ? tax
+                    : 0
+            )
+        );
+
+    let itemRows = "";
+
+    items.forEach(
+        (item, index) => {
+
+            const qty =
+                Number(
+                    item.qty ||
+                    item.quantity ||
+                    0
+                );
+
+            const rate =
+                Number(
+                    item.rate ||
+                    item.price ||
+                    0
+                );
+
+            const itemAmount =
+                Number(
+                    item.amount ||
+                    item.total ||
+                    (
+                        qty * rate
+                    ) ||
+                    0
+                );
+
+            const hsn =
+                item.hsn ||
+                item.hsnCode ||
+                "-";
+
+            itemRows += `
+                <tr>
+                    <td>${index + 1}</td>
+                    <td class="product-cell">
+                        ${invoiceEscapeHtml(
+                            getInvoiceProductNameSafe(item)
+                        )}
+                    </td>
+                    <td>${invoiceEscapeHtml(hsn)}</td>
+                    <td class="text-right">${qty}</td>
+                    <td class="text-right">${invoiceMoney(rate)}</td>
+                    <td class="text-right">${invoiceMoney(itemAmount)}</td>
+                </tr>
+            `;
+
+        }
+    );
+
+    if (!itemRows) {
+
+        itemRows = `
+            <tr>
+                <td colspan="6" class="empty-row">
+                    No item details available
+                </td>
+            </tr>
+        `;
+
+    }
+
+    return `
+        <div class="full-invoice-sheet">
+
+            <div class="invoice-top">
+
+                <div class="invoice-brand">
+
+                    <div class="brand-logo-box">
+                        <div class="brand-logo-text">
+                            MMV
+                        </div>
+                    </div>
+
+                    <div class="brand-main">
+
+                        <div class="company-name">
+                            MMV TRADERS
+                        </div>
+
+                        <div class="company-address">
+                            1/134, Pallapatti Village,
+                            O.G.Halli Post,
+                            Pennagaram Tk,
+                            Dharmapuri - 636809
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="company-meta">
+
+                    <div>
+                        <strong>GSTIN:</strong>
+                        ${invoiceEscapeHtml(
+                            invoice.companyGSTIN ||
+                            invoice.sellerGSTIN ||
+                            "-"
+                        )}
+                    </div>
+
+                    <div>
+                        <strong>State:</strong>
+                        Tamil Nadu - 33
+                    </div>
+
+                    <div>
+                        <strong>Cell:</strong>
+                        9443910500 / 9003888800
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="invoice-title">
+                GST INVOICE / BILL OF SUPPLY
+            </div>
+
+            <div class="invoice-party-grid">
+
+                <div class="party-box">
+
+                    <div class="box-heading">
+                        BILL TO / BUYER
+                    </div>
+
+                    <div class="party-row">
+                        <strong>Name</strong>
+                        <span>
+                            ${invoiceEscapeHtml(customer.name)}
+                        </span>
+                    </div>
+
+                    <div class="party-row">
+                        <strong>Address</strong>
+                        <span>
+                            ${invoiceEscapeHtml(customer.address || "-")}
+                        </span>
+                    </div>
+
+                    <div class="party-row">
+                        <strong>GSTIN</strong>
+                        <span>
+                            ${invoiceEscapeHtml(customer.gstin || "-")}
+                        </span>
+                    </div>
+
+                    <div class="party-row">
+                        <strong>Mobile</strong>
+                        <span>
+                            ${invoiceEscapeHtml(customer.mobile || "-")}
+                        </span>
+                    </div>
+
+                </div>
+
+                <div class="party-box">
+
+                    <div class="box-heading">
+                        SHIP TO / RECEIVER
+                    </div>
+
+                    <div class="party-row">
+                        <strong>Name</strong>
+                        <span>
+                            ${invoiceEscapeHtml(receiver.name)}
+                        </span>
+                    </div>
+
+                    <div class="party-row">
+                        <strong>Address</strong>
+                        <span>
+                            ${invoiceEscapeHtml(receiver.address || "-")}
+                        </span>
+                    </div>
+
+                    <div class="party-row">
+                        <strong>GSTIN</strong>
+                        <span>
+                            ${invoiceEscapeHtml(receiver.gstin || "-")}
+                        </span>
+                    </div>
+
+                    <div class="party-row">
+                        <strong>Mobile</strong>
+                        <span>
+                            ${invoiceEscapeHtml(receiver.mobile || "-")}
+                        </span>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="invoice-details-grid">
+
+                <div class="detail-box">
+
+                    <div class="box-heading">
+                        INVOICE DETAILS
+                    </div>
+
+                    <div class="detail-row">
+                        <strong>Invoice No.</strong>
+                        <span>
+                            ${invoiceEscapeHtml(invoiceNo)}
+                        </span>
+                    </div>
+
+                    <div class="detail-row">
+                        <strong>Date</strong>
+                        <span>
+                            ${invoiceEscapeHtml(invoiceDate)}
+                        </span>
+                    </div>
+
+                    <div class="detail-row">
+                        <strong>Payment</strong>
+                        <span>
+                            ${invoiceEscapeHtml(payment)}
+                        </span>
+                    </div>
+
+                    <div class="detail-row">
+                        <strong>Reference</strong>
+                        <span>
+                            ${invoiceEscapeHtml(
+                                invoice.referenceNo || "-"
+                            )}
+                        </span>
+                    </div>
+
+                </div>
+
+                <div class="detail-box">
+
+                    <div class="box-heading">
+                        TRANSPORT DETAILS
+                    </div>
+
+                    <div class="detail-row">
+                        <strong>Transport Mode</strong>
+                        <span>
+                            ${invoiceEscapeHtml(
+                                transport.transportMode
+                            )}
+                        </span>
+                    </div>
+
+                    <div class="detail-row">
+                        <strong>Vehicle No.</strong>
+                        <span>
+                            ${invoiceEscapeHtml(
+                                transport.vehicleNo
+                            )}
+                        </span>
+                    </div>
+
+                    <div class="detail-row">
+                        <strong>Driver</strong>
+                        <span>
+                            ${invoiceEscapeHtml(
+                                transport.driverName
+                            )}
+                        </span>
+                    </div>
+
+                    <div class="detail-row">
+                        <strong>Driver Mobile</strong>
+                        <span>
+                            ${invoiceEscapeHtml(
+                                transport.driverMobile
+                            )}
+                        </span>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <table class="invoice-items-table">
+
+                <thead>
+                    <tr>
+                        <th>S.No.</th>
+                        <th>Product / Description</th>
+                        <th>HSN</th>
+                        <th>Qty</th>
+                        <th>Rate (₹)</th>
+                        <th>Amount (₹)</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    ${itemRows}
+                </tbody>
+
+            </table>
+
+            <div class="invoice-bottom-grid">
+
+                <div class="invoice-left-bottom">
+
+                    <div class="amount-words-box">
+
+                        <div class="box-heading">
+                            TOTAL INVOICE AMOUNT IN WORDS
+                        </div>
+
+                        <div class="amount-words">
+                            ${invoiceEscapeHtml(
+                                invoiceAmountInWords(
+                                    grandTotal
+                                )
+                            )}
+                        </div>
+
+                    </div>
+
+                    <div class="bank-box">
+
+                        <div class="box-heading">
+                            BANK DETAILS
+                        </div>
+
+                        <div class="bank-content">
+
+                            <div>
+                                <strong>Account Name:</strong>
+                                MMV Traders
+                            </div>
+
+                            <div>
+                                <strong>Bank:</strong>
+                                Indian Bank / Fairlands, Salem
+                            </div>
+
+                            <div>
+                                <strong>IFSC Code:</strong>
+                                IDIB000F003
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="totals-box">
+
+                    <div class="total-row">
+                        <span>Sub Total</span>
+                        <strong>
+                            ${invoiceMoney(subtotal)}
+                        </strong>
+                    </div>
+
+                    <div class="total-row">
+                        <span>CGST</span>
+                        <strong>
+                            ${invoiceMoney(cgst)}
+                        </strong>
+                    </div>
+
+                    <div class="total-row">
+                        <span>SGST</span>
+                        <strong>
+                            ${invoiceMoney(sgst)}
+                        </strong>
+                    </div>
+
+                    <div class="total-row">
+                        <span>IGST</span>
+                        <strong>
+                            ${invoiceMoney(igst)}
+                        </strong>
+                    </div>
+
+                    <div class="total-row">
+                        <span>Discount</span>
+                        <strong>
+                            ${invoiceMoney(discount)}
+                        </strong>
+                    </div>
+
+                    <div class="grand-total-row">
+                        <span>GRAND TOTAL</span>
+                        <strong>
+                            ${invoiceMoney(grandTotal)}
+                        </strong>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="signature-box">
+
+                <div class="signature-cell">
+                    <div class="signature-space"></div>
+                    <div class="signature-line"></div>
+                    <strong>Receiver's Signature</strong>
+                </div>
+
+                <div class="signature-cell company-sign">
+
+                    <strong>
+                        For MMV TRADERS
+                    </strong>
+
+                </div>
+
+                <div class="signature-cell">
+                    <div class="signature-space"></div>
+                    <div class="signature-line"></div>
+                    <strong>Authorized Signatory</strong>
+                </div>
+
+            </div>
+
+            <div class="invoice-footer">
+
+                <strong>
+                    MMV TRADERS
+                </strong>
+
+                <span>
+                    Business Management ERP
+                </span>
+
+                <span>
+                    Developed & Powered by VTOOS Software Solutions
+                </span>
+
+            </div>
+
+        </div>
+    `;
+
+}
+
+
+/* =====================================================
+   FULL INVOICE VIEW
+===================================================== */
+
+function viewInvoiceRecord(invoice) {
+
+    try {
+
+        const modal =
+            document.getElementById(
+                "invoiceRecordModal"
+            );
+
+        if (!modal) {
+
+            alert(
+                "Invoice view window is not available. Please refresh and try again."
+            );
+
+            console.error(
+                "invoiceRecordModal not found in HTML"
+            );
+
+            return;
+
+        }
+
+        const title =
+            document.getElementById(
+                "invoiceRecordTitle"
+            );
+
+        const body =
+            document.getElementById(
+                "invoiceRecordBody"
+            );
+
+        if (title) {
+
+            title.textContent =
+                "Full Invoice Preview - " +
+                getInvoiceNumberValue(invoice);
+
+        }
+
+        if (body) {
+
+            body.innerHTML = `
+                <style>
+
+                    #invoiceRecordBody {
+                        padding: 0 !important;
+                        background: #eef2f7;
+                    }
+
+                    .full-invoice-sheet {
+                        width: 100%;
+                        max-width: 980px;
+                        margin: 0 auto;
+                        padding: 28px;
+                        background: #ffffff;
+                        color: #243447;
+                        font-family:
+                            Arial,
+                            Helvetica,
+                            sans-serif;
+                        font-size: 12px;
+                        box-sizing: border-box;
+                    }
+
+                    .invoice-top {
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: flex-start;
+                        gap: 20px;
+                        padding-bottom: 14px;
+                        border-bottom:
+                            2px solid #1f477d;
+                    }
+
+                    .invoice-brand {
+                        display: flex;
+                        align-items: center;
+                        gap: 14px;
+                    }
+
+                    .brand-logo-box {
+                        width: 58px;
+                        height: 58px;
+                        border: 1px solid #d9e1ea;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                    }
+
+                    .brand-logo-text {
+                        font-size: 17px;
+                        font-weight: 800;
+                        color: #1f477d;
+                    }
+
+                    .company-name {
+                        font-size: 22px;
+                        font-weight: 800;
+                        letter-spacing: 1px;
+                        color: #1f477d;
+                    }
+
+                    .company-address {
+                        max-width: 420px;
+                        margin-top: 5px;
+                        font-size: 10px;
+                        line-height: 1.5;
+                    }
+
+                    .company-meta {
+                        text-align: right;
+                        font-size: 10px;
+                        line-height: 1.8;
+                    }
+
+                    .invoice-title {
+                        width: 58%;
+                        margin: 14px auto;
+                        padding: 9px 15px;
+                        text-align: center;
+                        color: #ffffff;
+                        background: #1f477d;
+                        font-size: 15px;
+                        font-weight: 800;
+                        letter-spacing: .5px;
+                    }
+
+                    .invoice-party-grid,
+                    .invoice-details-grid,
+                    .invoice-bottom-grid,
+                    .signature-box {
+                        display: grid;
+                        grid-template-columns: 1fr 1fr;
+                        gap: 12px;
+                    }
+
+                    .invoice-party-grid {
+                        margin-bottom: 12px;
+                    }
+
+                    .party-box,
+                    .detail-box,
+                    .amount-words-box,
+                    .bank-box,
+                    .totals-box {
+                        border: 1px solid #cbd5e1;
+                    }
+
+                    .box-heading {
+                        padding: 8px 10px;
+                        background: #1f477d;
+                        color: #ffffff;
+                        font-size: 11px;
+                        font-weight: 800;
+                        letter-spacing: .4px;
+                    }
+
+                    .party-row,
+                    .detail-row,
+                    .total-row {
+                        display: grid;
+                        grid-template-columns: 120px 1fr;
+                        gap: 10px;
+                        padding: 7px 10px;
+                        border-bottom:
+                            1px solid #e3e8ef;
+                    }
+
+                    .party-row:last-child,
+                    .detail-row:last-child {
+                        border-bottom: 0;
+                    }
+
+                    .party-row span,
+                    .detail-row span {
+                        word-break: break-word;
+                    }
+
+                    .invoice-details-grid {
+                        margin-bottom: 12px;
+                    }
+
+                    .invoice-items-table {
+                        width: 100%;
+                        border-collapse: collapse;
+                        margin-bottom: 12px;
+                    }
+
+                    .invoice-items-table th,
+                    .invoice-items-table td {
+                        border: 1px solid #cbd5e1;
+                        padding: 8px 7px;
+                    }
+
+                    .invoice-items-table th {
+                        background: #1f477d;
+                        color: #ffffff;
+                        text-align: center;
+                        font-size: 10px;
+                    }
+
+                    .text-right {
+                        text-align: right;
+                    }
+
+                    .product-cell {
+                        min-width: 180px;
+                    }
+
+                    .empty-row {
+                        text-align: center;
+                        padding: 30px !important;
+                    }
+
+                    .invoice-bottom-grid {
+                        align-items: stretch;
+                    }
+
+                    .invoice-left-bottom {
+                        display: flex;
+                        flex-direction: column;
+                        gap: 12px;
+                    }
+
+                    .amount-words {
+                        padding: 14px 10px;
+                        min-height: 34px;
+                    }
+
+                    .bank-content {
+                        padding: 10px;
+                        line-height: 1.8;
+                    }
+
+                    .totals-box {
+                        display: flex;
+                        flex-direction: column;
+                        height: fit-content;
+                    }
+
+                    .total-row {
+                        grid-template-columns: 1fr auto;
+                    }
+
+                    .grand-total-row {
+                        display: flex;
+                        justify-content: space-between;
+                        gap: 15px;
+                        padding: 11px 10px;
+                        color: #ffffff;
+                        background: #1f477d;
+                        font-size: 13px;
+                        font-weight: 800;
+                    }
+
+                    .signature-box {
+                        grid-template-columns: 1fr 1fr 1fr;
+                        margin-top: 14px;
+                        border: 1px solid #cbd5e1;
+                    }
+
+                    .signature-cell {
+                        min-height: 115px;
+                        padding: 10px;
+                        border-right:
+                            1px solid #cbd5e1;
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                        justify-content: flex-end;
+                        text-align: center;
+                        font-size: 10px;
+                    }
+
+                    .signature-cell:last-child {
+                        border-right: 0;
+                    }
+
+                    .company-sign {
+                        justify-content: flex-start;
+                        padding-top: 20px;
+                    }
+
+                    .signature-space {
+                        flex: 1;
+                    }
+
+                    .signature-line {
+                        width: 75%;
+                        border-top:
+                            1px solid #64748b;
+                        margin-bottom: 6px;
+                    }
+
+                    .invoice-footer {
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                        gap: 3px;
+                        margin-top: 25px;
+                        padding-top: 12px;
+                        border-top:
+                            1px solid #cbd5e1;
+                        color: #64748b;
+                        font-size: 9px;
+                    }
+
+                    @media (max-width: 700px) {
+
+                        .full-invoice-sheet {
+                            padding: 12px;
+                            font-size: 10px;
+                        }
+
+                        .invoice-top,
+                        .invoice-party-grid,
+                        .invoice-details-grid,
+                        .invoice-bottom-grid {
+                            display: block;
+                        }
+
+                        .party-box,
+                        .detail-box,
+                        .amount-words-box,
+                        .bank-box,
+                        .totals-box {
+                            margin-bottom: 10px;
+                        }
+
+                        .company-name {
+                            font-size: 17px;
+                        }
+
+                        .company-meta {
+                            margin-top: 12px;
+                            text-align: left;
+                        }
+
+                        .invoice-items-table {
+                            display: block;
+                            overflow-x: auto;
+                        }
+
+                    }
+
+                </style>
+
+                ${buildFullInvoiceHTML(
+                    invoice,
+                    false
+                )}
+            `;
+
+        }
+
+        modal.classList.add(
+            "show"
+        );
+
+    } catch (error) {
+
+        console.error(
+            "Error opening full invoice record:",
+            error
+        );
+
+        alert(
+            "Unable to open full invoice details."
+        );
+
+    }
+
+}
+
+
+/* =====================================================
+   PREPARE EXISTING PRINT
+===================================================== */
+
+function preparePrintInvoiceFromRecord(invoice) {
+
+    try {
+
+        const customer =
+            getInvoiceCustomerDetails(invoice);
+
+        const receiver =
+            getInvoiceReceiverDetails(
+                invoice,
+                customer
+            );
+
+        const transport =
+            getInvoiceTransportDetails(invoice);
+
+        const customerNameElement =
+            document.getElementById(
+                "printCustomer"
+            );
+
+        const customerInfoElement =
+            document.getElementById(
+                "printCustomerInfo"
+            );
+
+        if (customerNameElement) {
+
+            customerNameElement.textContent =
+                customer.name || "-";
+
+        }
+
+        if (customerInfoElement) {
+
+            customerInfoElement.textContent =
+                [
+                    customer.address,
+                    customer.gstin,
+                    customer.mobile
+                ]
+                    .filter(Boolean)
+                    .join(" | ") || "-";
+
+        }
+
+        const invoiceNoElement =
+            document.getElementById(
+                "printInvoiceNo"
+            );
+
+        if (invoiceNoElement) {
+
+            invoiceNoElement.textContent =
+                getInvoiceNumberValue(invoice);
+
+        }
+
+        const invoiceDateElement =
+            document.getElementById(
+                "printInvoiceDate"
+            );
+
+        if (invoiceDateElement) {
+
+            invoiceDateElement.textContent =
+                getInvoiceDateValue(invoice);
+
+        }
+
+        const dueDateElement =
+            document.getElementById(
+                "printDueDate"
+            );
+
+        if (dueDateElement) {
+
+            dueDateElement.textContent =
+                invoice.dueDate || "-";
+
+        }
+
+        const itemBody =
+            document.getElementById(
+                "printItemBody"
+            );
+
+        if (itemBody) {
+
+            itemBody.innerHTML = "";
+
+            getInvoiceItems(invoice).forEach(
+                (item, index) => {
+
+                    const tr =
+                        document.createElement("tr");
+
+                    tr.innerHTML = `
+                        <td>${index + 1}</td>
+                        <td>
+                            ${invoiceEscapeHtml(
+                                getInvoiceProductNameSafe(item)
+                            )}
+                        </td>
+                        <td>
+                            ${Number(item.qty || 0)}
+                        </td>
+                        <td>
+                            ${invoiceMoney(
+                                item.rate || 0
+                            )}
+                        </td>
+                        <td>
+                            ${invoiceMoney(
+                                item.discountAmount || 0
+                            )}
+                        </td>
+                        <td>
+                            ${invoiceMoney(
+                                item.taxAmount || 0
+                            )}
+                        </td>
+                        <td>
+                            ${invoiceMoney(
+                                item.amount || 0
+                            )}
+                        </td>
+                    `;
+
+                    itemBody.appendChild(tr);
+
+                }
+            );
+
+        }
+
+        const subtotalElement =
+            document.getElementById(
+                "printSubtotal"
+            );
+
+        if (subtotalElement) {
+
+            subtotalElement.textContent =
+                invoiceMoney(
+                    invoice.subtotal || 0
+                );
+
+        }
+
+        const discountElement =
+            document.getElementById(
+                "printDiscount"
+            );
+
+        if (discountElement) {
+
+            discountElement.textContent =
+                invoiceMoney(
+                    invoice.discount || 0
+                );
+
+        }
+
+        const taxElement =
+            document.getElementById(
+                "printTax"
+            );
+
+        if (taxElement) {
+
+            taxElement.textContent =
+                invoiceMoney(
+                    invoice.tax || 0
+                );
+
+        }
+
+        const totalElement =
+            document.getElementById(
+                "printTotal"
+            );
+
+        if (totalElement) {
+
+            totalElement.textContent =
+                invoiceMoney(
+                    invoice.grandTotal ||
+                    invoice.total ||
+                    0
+                );
+
+        }
+
+        console.log(
+            "Print invoice data prepared:",
+            {
+                customer,
+                receiver,
+                transport
+            }
+        );
+
+    } catch (error) {
+
+        console.error(
+            "Error preparing invoice print:",
+            error
+        );
+
+    }
+
+}
+
+
+/* =====================================================
+   A4 PROFESSIONAL PRINT
+===================================================== */
+
+function printInvoiceRecord(invoice) {
+
+    try {
+
+        const items =
+            getInvoiceItems(invoice);
+
+        if (!items.length) {
+
+            alert(
+                "This invoice does not contain item-level details, so an exact invoice print is not available."
+            );
+
+            return;
+
+        }
+
+        const printWindow =
+            window.open(
+                "",
+                "_blank",
+                "width=1000,height=900"
+            );
+
+        if (!printWindow) {
+
+            alert(
+                "Print window was blocked. Please allow pop-ups and try again."
+            );
+
+            return;
+
+        }
+
+        const invoiceHTML =
+            buildFullInvoiceHTML(
+                invoice,
+                true
+            );
+
+        printWindow.document.open();
+
+        printWindow.document.write(`
+            <!DOCTYPE html>
+
+            <html>
+
+                <head>
+
+                    <title>
+                        ${invoiceEscapeHtml(
+                            getInvoiceNumberValue(invoice)
+                        )}
+                    </title>
+
+                    <meta
+                        name="viewport"
+                        content="width=device-width, initial-scale=1.0"
+                    >
+
+                    <style>
+
+                        @page {
+                            size: A4 portrait;
+                            margin: 8mm;
+                        }
+
+                        * {
+                            box-sizing: border-box;
+                        }
+
+                        html,
+                        body {
+                            margin: 0;
+                            padding: 0;
+                            background: #ffffff;
+                            font-family:
+                                Arial,
+                                Helvetica,
+                                sans-serif;
+                            color: #243447;
+                        }
+
+                        body {
+                            width: 210mm;
+                        }
+
+                        .full-invoice-sheet {
+                            width: 194mm;
+                            min-height: 279mm;
+                            margin: 0 auto;
+                            padding: 0;
+                            background: #ffffff;
+                            font-size: 9px;
+                        }
+
+                        .invoice-top {
+                            display: flex;
+                            justify-content: space-between;
+                            align-items: flex-start;
+                            gap: 10px;
+                            padding-bottom: 8px;
+                            border-bottom:
+                                1.5px solid #1f477d;
+                        }
+
+                        .invoice-brand {
+                            display: flex;
+                            align-items: center;
+                            gap: 10px;
+                        }
+
+                        .brand-logo-box {
+                            width: 18mm;
+                            height: 18mm;
+                            border: 1px solid #d9e1ea;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                        }
+
+                        .brand-logo-text {
+                            font-size: 13px;
+                            font-weight: 800;
+                            color: #1f477d;
+                        }
+
+                        .company-name {
+                            font-size: 18px;
+                            font-weight: 800;
+                            letter-spacing: 1px;
+                            color: #1f477d;
+                        }
+
+                        .company-address {
+                            max-width: 95mm;
+                            margin-top: 2px;
+                            font-size: 7px;
+                            line-height: 1.4;
+                        }
+
+                        .company-meta {
+                            text-align: right;
+                            font-size: 7px;
+                            line-height: 1.6;
+                        }
+
+                        .invoice-title {
+                            width: 65%;
+                            margin: 7px auto;
+                            padding: 5px 10px;
+                            text-align: center;
+                            color: #ffffff;
+                            background: #1f477d;
+                            font-size: 10px;
+                            font-weight: 800;
+                        }
+
+                        .invoice-party-grid,
+                        .invoice-details-grid,
+                        .invoice-bottom-grid {
+                            display: grid;
+                            grid-template-columns: 1fr 1fr;
+                            gap: 6px;
+                        }
+
+                        .invoice-party-grid {
+                            margin-bottom: 6px;
+                        }
+
+                        .party-box,
+                        .detail-box,
+                        .amount-words-box,
+                        .bank-box,
+                        .totals-box {
+                            border: 1px solid #cbd5e1;
+                        }
+
+                        .box-heading {
+                            padding: 5px 7px;
+                            background: #1f477d;
+                            color: #ffffff;
+                            font-size: 8px;
+                            font-weight: 800;
+                        }
+
+                        .party-row,
+                        .detail-row,
+                        .total-row {
+                            display: grid;
+                            grid-template-columns: 34mm 1fr;
+                            gap: 5px;
+                            padding: 4px 7px;
+                            border-bottom:
+                                1px solid #e3e8ef;
+                            min-height: 7mm;
+                        }
+
+                        .party-row:last-child,
+                        .detail-row:last-child {
+                            border-bottom: 0;
+                        }
+
+                        .invoice-details-grid {
+                            margin-bottom: 6px;
+                        }
+
+                        .invoice-items-table {
+                            width: 100%;
+                            border-collapse: collapse;
+                            margin-bottom: 6px;
+                        }
+
+                        .invoice-items-table th,
+                        .invoice-items-table td {
+                            border: 1px solid #cbd5e1;
+                            padding: 4px 4px;
+                        }
+
+                        .invoice-items-table th {
+                            background: #1f477d;
+                            color: #ffffff;
+                            text-align: center;
+                            font-size: 7px;
+                        }
+
+                        .text-right {
+                            text-align: right;
+                        }
+
+                        .product-cell {
+                            min-width: 55mm;
+                        }
+
+                        .empty-row {
+                            text-align: center;
+                            padding: 15px !important;
+                        }
+
+                        .invoice-left-bottom {
+                            display: flex;
+                            flex-direction: column;
+                            gap: 6px;
+                        }
+
+                        .amount-words {
+                            padding: 7px;
+                            min-height: 15mm;
+                        }
+
+                        .bank-content {
+                            padding: 7px;
+                            line-height: 1.6;
+                        }
+
+                        .total-row {
+                            grid-template-columns: 1fr auto;
+                        }
+
+                        .grand-total-row {
+                            display: flex;
+                            justify-content: space-between;
+                            gap: 10px;
+                            padding: 7px;
+                            color: #ffffff;
+                            background: #1f477d;
+                            font-size: 9px;
+                            font-weight: 800;
+                        }
+
+                        .signature-box {
+                            display: grid;
+                            grid-template-columns:
+                                1fr 1fr 1fr;
+                            margin-top: 7px;
+                            border: 1px solid #cbd5e1;
+                        }
+
+                        .signature-cell {
+                            min-height: 28mm;
+                            padding: 6px;
+                            border-right:
+                                1px solid #cbd5e1;
+                            display: flex;
+                            flex-direction: column;
+                            align-items: center;
+                            justify-content: flex-end;
+                            text-align: center;
+                            font-size: 7px;
+                        }
+
+                        .signature-cell:last-child {
+                            border-right: 0;
+                        }
+
+                        .company-sign {
+                            justify-content: flex-start;
+                            padding-top: 8px;
+                        }
+
+                        .signature-space {
+                            flex: 1;
+                        }
+
+                        .signature-line {
+                            width: 70%;
+                            border-top:
+                                1px solid #64748b;
+                            margin-bottom: 4px;
+                        }
+
+                        .invoice-footer {
+                            display: flex;
+                            flex-direction: column;
+                            align-items: center;
+                            gap: 2px;
+                            margin-top: 10px;
+                            padding-top: 6px;
+                            border-top:
+                                1px solid #cbd5e1;
+                            color: #64748b;
+                            font-size: 6px;
+                        }
+
+                    </style>
+
+                </head>
+
+                <body>
+
+                    ${invoiceHTML}
+
+                    <script>
+
+                        window.onload = function () {
+
+                            setTimeout(
+                                function () {
+                                    window.print();
+                                },
+                                400
+                            );
+
+                        };
+
+                        window.onafterprint =
+                            function () {
+                                window.close();
+                            };
+
+                    <\/script>
+
+                </body>
+
+            </html>
+        `);
+
+        printWindow.document.close();
+
+    } catch (error) {
+
+        console.error(
+            "Error printing invoice:",
+            error
+        );
+
+        alert(
+            "Unable to print invoice. Please try again."
+        );
+
+    }
+
+}
 /* =====================================================
    PREPARE EXISTING PRINT
 ===================================================== */
