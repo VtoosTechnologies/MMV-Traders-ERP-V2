@@ -318,100 +318,44 @@ function calculateTodaySales() {
     const today =
         dashboardToday();
 
-    console.log(
-        "Dashboard Today:",
-        today
-    );
 
-    const todaySales =
-        dashboardState.sales
-            .filter(
-                sale => {
+    return dashboardState.sales
+        .filter(
+            sale =>
+                dashboardDateKey(
+                    sale.invoiceDate ||
+                    sale.createdAt ||
+                    sale.date ||
+                    sale.saleDate
+                ) === today
+        )
+        .reduce(
+            (
+                total,
+                sale
+            ) => {
 
-                    const saleDate =
-                        sale.invoiceDate ||
-                        sale.date ||
-                        sale.billDate ||
-                        sale.createdAt ||
-                        "";
+                const saleAmount =
+                    sale.totalAmount ??
+                    sale.grandTotal ??
+                    sale.total ??
+                    sale.netAmount ??
+                    sale.subtotal ??
+                    0;
 
-                    const saleDateKey =
-                        dashboardDateKey(
-                            saleDate
-                        );
 
-                    console.log(
-                        "Checking Sale:",
-                        {
-                            id:
-                                sale.id,
+                return (
+                    total +
+                    dashboardNumber(
+                        saleAmount
+                    )
+                );
 
-                            invoiceNumber:
-                                sale.invoiceNumber ||
-                                sale.number,
-
-                            saleDate,
-
-                            saleDateKey,
-
-                            today,
-
-                            total:
-                                sale.totalAmount ??
-                                sale.total ??
-                                sale.grandTotal ??
-                                sale.subtotal ??
-                                0
-                        }
-                    );
-
-                    return (
-                        saleDateKey ===
-                        today
-                    );
-
-                }
-            )
-            .reduce(
-                (
-                    total,
-                    sale
-                ) => {
-
-                    const amount =
-                        sale.totalAmount ??
-                        sale.total ??
-                        sale.grandTotal ??
-                        (
-                            dashboardNumber(
-                                sale.subtotal
-                            ) +
-                            dashboardNumber(
-                                sale.tax
-                            )
-                        );
-
-                    return (
-                        total +
-                        dashboardNumber(
-                            amount
-                        )
-                    );
-
-                },
-                0
-            );
-
-    console.log(
-        "Dashboard Today Sales Total:",
-        todaySales
-    );
-
-    return todaySales;
+            },
+            0
+        );
 
 }
-
-
 /* ============================================================
    TODAY PURCHASE
    ============================================================ */
@@ -736,7 +680,9 @@ function calculateTodayInvoiceCount() {
             sale =>
                 dashboardDateKey(
                     sale.invoiceDate ||
-                    sale.createdAt
+                    sale.createdAt ||
+                    sale.date ||
+                    sale.saleDate
                 ) === today
         )
         .length;
