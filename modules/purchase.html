@@ -2026,18 +2026,35 @@ function addItem(){
         </td>
 
 
-        <td>
+        <!-- TOTAL KG - AUTOMATIC -->
+<td>
 
-            <input
-                class="item-qty-kg"
-                type="number"
-                min="0"
-                step="0.001"
-                value="0"
-                placeholder="Loose KG"
-            >
+    <input
+        class="item-total-kg"
+        type="number"
+        min="0"
+        step="0.001"
+        value="0"
+        placeholder="Total KG"
+        readonly
+    >
 
-        </td>
+</td>
+
+
+<!-- LOOSE KG - MANUAL -->
+<td>
+
+    <input
+        class="item-loose-kg"
+        type="number"
+        min="0"
+        step="0.001"
+        value="0"
+        placeholder="Loose KG"
+    >
+
+</td>
 
 
         <td>
@@ -2191,6 +2208,34 @@ function addItem(){
                         .dataset
                         .packWeight =
                         packWeight;
+                    const currentQty =
+    Number(
+        row
+        .querySelector(
+            ".item-qty"
+        )
+        .value || 0
+    );
+
+
+const totalKgInput =
+    row.querySelector(
+        ".item-total-kg"
+    );
+
+
+if (
+    totalKgInput &&
+    packWeight > 0
+) {
+
+    totalKgInput.value =
+        (
+            currentQty *
+            packWeight
+        ).toFixed(3);
+
+}
 
 
                     row
@@ -2246,6 +2291,7 @@ function addItem(){
             }
         );
 /*
+/*
 =====================================================
 QTY CHANGE
 
@@ -2255,7 +2301,7 @@ Example:
 Ellu Bundle Weight = 35 KG
 Qty = 2
 
-Qty KG automatically = 2 × 35 = 70 KG
+Total KG automatically = 2 × 35 = 70 KG
 =====================================================
 */
 
@@ -2283,22 +2329,18 @@ row
                 );
 
 
-            const qtyKgInput =
+            const totalKgInput =
                 row.querySelector(
-                    ".item-qty-kg"
+                    ".item-total-kg"
                 );
 
 
-            /*
-            Qty KG automatic calculation
-            */
-
             if (
-                qtyKgInput &&
+                totalKgInput &&
                 packWeight > 0
             ) {
 
-                qtyKgInput.value =
+                totalKgInput.value =
                     (
                         qty *
                         packWeight
@@ -2328,7 +2370,7 @@ Loose Amount = 5 × 114.29
 
 row
     .querySelector(
-        ".item-qty-kg"
+        ".item-loose-kg"
     )
     .addEventListener(
         "input",
@@ -2442,6 +2484,10 @@ row
    CALCULATE
 ===================================================== */
 
+/* =====================================================
+   CALCULATE
+===================================================== */
+
 function calculate(){
 
     const rows =
@@ -2457,6 +2503,12 @@ function calculate(){
     rows.forEach(
         row => {
 
+            /*
+            =============================================
+            BUNDLE / PACK QTY
+            =============================================
+            */
+
             const qty =
                 Number(
                     row.querySelector(
@@ -2464,12 +2516,42 @@ function calculate(){
                     )?.value || 0
                 );
 
-            const qtyKg =
+
+            /*
+            =============================================
+            TOTAL KG - DISPLAY ONLY
+            Automatically calculated from:
+            Qty × Bundle Weight
+            =============================================
+            */
+
+            const totalKg =
                 Number(
                     row.querySelector(
-                        ".item-qty-kg"
+                        ".item-total-kg"
                     )?.value || 0
                 );
+
+
+            /*
+            =============================================
+            LOOSE KG - MANUAL ENTRY
+            =============================================
+            */
+
+            const looseKg =
+                Number(
+                    row.querySelector(
+                        ".item-loose-kg"
+                    )?.value || 0
+                );
+
+
+            /*
+            =============================================
+            BUNDLE RATE
+            =============================================
+            */
 
             const rate =
                 Number(
@@ -2478,6 +2560,13 @@ function calculate(){
                     )?.value || 0
                 );
 
+
+            /*
+            =============================================
+            PER KG RATE
+            =============================================
+            */
+
             const perKg =
                 Number(
                     row.querySelector(
@@ -2485,12 +2574,14 @@ function calculate(){
                     )?.value || 0
                 );
 
+
             const discountPercent =
                 Number(
                     row.querySelector(
                         ".item-discount"
                     )?.value || 0
                 );
+
 
             const taxPercent =
                 Number(
@@ -2501,13 +2592,15 @@ function calculate(){
 
 
             /*
-            Full Bundle Amount
+            =============================================
+            FULL BUNDLE AMOUNT
 
             Example:
             Qty = 2
-            Rate = 4000
+            Rate = ₹4000
 
-            2 × 4000 = 8000
+            2 × 4000 = ₹8000
+            =============================================
             */
 
             const bundleAmount =
@@ -2515,48 +2608,25 @@ function calculate(){
 
 
             /*
-            IMPORTANT:
-
-            Qty KG automatically contains:
-            Qty × Bundle Weight
+            =============================================
+            LOOSE KG AMOUNT
 
             Example:
-            2 Bundle × 35 KG = 70 KG
+            Loose KG = 5
+            Per KG = ₹114.29
 
-            So that automatic Qty KG
-            should NOT be added again
-            to the total.
+            5 × 114.29 = ₹571.45
+            =============================================
             */
-
-            const packWeight =
-                Number(
-                    row.dataset.packWeight || 0
-                );
-
-            const automaticKg =
-                qty * packWeight;
-
-
-            /*
-            Loose KG Calculation
-
-            Only extra KG above automatic
-            bundle KG is charged separately.
-            */
-
-            const looseKg =
-                Math.max(
-                    0,
-                    qtyKg - automaticKg
-                );
-
 
             const looseKgAmount =
                 looseKg * perKg;
 
 
             /*
-            Gross Amount
+            =============================================
+            TOTAL BEFORE DISCOUNT
+            =============================================
             */
 
             const gross =
@@ -3532,13 +3602,20 @@ function mmvPurchaseItemRows() {
                 );
 
 
-            const qtyKg =
-                Number(
-                    row.querySelector(
-                        ".item-qty-kg"
-                    )?.value || 0
-                );
+          const totalKg =
+    Number(
+        row.querySelector(
+            ".item-total-kg"
+        )?.value || 0
+    );
 
+
+const looseKg =
+    Number(
+        row.querySelector(
+            ".item-loose-kg"
+        )?.value || 0
+    );
 
             const rate =
                 Number(
@@ -3572,12 +3649,12 @@ function mmvPurchaseItemRows() {
                 );
 
 
-            const bundleAmount =
-                qty * rate;
+           const bundleAmount =
+    qty * rate;
 
 
-            const looseKgAmount =
-                qtyKg * perKg;
+const looseKgAmount =
+    looseKg * perKg;
 
 
             const gross =
@@ -3614,7 +3691,9 @@ function mmvPurchaseItemRows() {
                 /*
                 Loose KG quantity
                 */
-                qtyKg,
+                totalKg,
+
+looseKg,
 
                 /*
                 Full bundle rate
@@ -3650,26 +3729,27 @@ function mmvPurchaseItemRows() {
     );
 
 }
-function mmvPurchaseSummary() {
+rows.forEach(item => {
 
-    const rows =
-        mmvPurchaseItemRows();
+    /*
+    Bundle Amount
+    +
+    Loose KG Amount
+    */
 
-    let subtotal = 0;
-    let discount = 0;
-    let tax = 0;
+    subtotal +=
+        Number(item.bundleAmount || 0) +
+        Number(item.looseKgAmount || 0);
 
-    rows.forEach(item => {
-        subtotal +=
-            Number(item.qty || 0) *
-            Number(item.rate || 0);
 
-        discount +=
-            Number(item.discountAmount || 0);
+    discount +=
+        Number(item.discountAmount || 0);
 
-        tax +=
-            Number(item.taxAmount || 0);
-    });
+
+    tax +=
+        Number(item.taxAmount || 0);
+
+});
 
     return {
         subtotal,
