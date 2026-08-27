@@ -2179,15 +2179,12 @@ function addItem(){
                     Pack Weight value automatically edukkum.
                     */
 
-                    const packWeight =
-                        Number(
-                            product.packWeight ??
-                            product.bundleWeight ??
-                            product.weightPerPack ??
-                            product.qtyKg ??
-                            product.kgPerPack ??
-                            0
-                        );
+                   const packWeight =
+    Number(
+        product.bundleWeight ||
+        product.quantityPerPack ||
+        0
+    );
 
 
                     row
@@ -2248,7 +2245,99 @@ function addItem(){
 
             }
         );
+/*
+=====================================================
+QTY CHANGE
 
+Qty = Number of Bundles / Packs
+
+Example:
+Ellu Bundle Weight = 35 KG
+Qty = 2
+
+Qty KG automatically = 2 × 35 = 70 KG
+=====================================================
+*/
+
+row
+    .querySelector(
+        ".item-qty"
+    )
+    .addEventListener(
+        "input",
+        () => {
+
+            const qty =
+                Number(
+                    row
+                    .querySelector(
+                        ".item-qty"
+                    )
+                    .value || 0
+                );
+
+
+            const packWeight =
+                Number(
+                    row.dataset.packWeight || 0
+                );
+
+
+            const qtyKgInput =
+                row.querySelector(
+                    ".item-qty-kg"
+                );
+
+
+            /*
+            Qty KG automatic calculation
+            */
+
+            if (
+                qtyKgInput &&
+                packWeight > 0
+            ) {
+
+                qtyKgInput.value =
+                    (
+                        qty *
+                        packWeight
+                    ).toFixed(3);
+
+            }
+
+
+            calculate();
+
+        }
+    );
+    /*
+=====================================================
+LOOSE KG CHANGE
+
+Owner manually Qty KG enter pannina,
+andha KG value Per KG rate-la calculate aagum.
+
+Example:
+Per KG = ₹114.29
+Qty KG = 5
+
+Loose Amount = 5 × 114.29
+=====================================================
+*/
+
+row
+    .querySelector(
+        ".item-qty-kg"
+    )
+    .addEventListener(
+        "input",
+        () => {
+
+            calculate();
+
+        }
+    );
 
     /*
     =====================================================
@@ -2349,6 +2438,10 @@ function addItem(){
    CALCULATE
 ===================================================== */
 
+/* =====================================================
+   CALCULATE
+===================================================== */
+
 function calculate(){
 
     const rows =
@@ -2356,23 +2449,13 @@ function calculate(){
             ".purchase-item"
         );
 
-
     let subtotal = 0;
-
     let discount = 0;
-
     let tax = 0;
 
 
     rows.forEach(
         row => {
-
-
-            /*
-            =============================================
-            FULL BUNDLE / PACK QTY
-            =============================================
-            */
 
             const qty =
                 Number(
@@ -2381,26 +2464,12 @@ function calculate(){
                     )?.value || 0
                 );
 
-
-            /*
-            =============================================
-            LOOSE KG QTY
-            =============================================
-            */
-
             const qtyKg =
                 Number(
                     row.querySelector(
                         ".item-qty-kg"
                     )?.value || 0
                 );
-
-
-            /*
-            =============================================
-            FULL BUNDLE RATE
-            =============================================
-            */
 
             const rate =
                 Number(
@@ -2409,13 +2478,6 @@ function calculate(){
                     )?.value || 0
                 );
 
-
-            /*
-            =============================================
-            PER KG RATE
-            =============================================
-            */
-
             const perKg =
                 Number(
                     row.querySelector(
@@ -2423,14 +2485,12 @@ function calculate(){
                     )?.value || 0
                 );
 
-
             const discountPercent =
                 Number(
                     row.querySelector(
                         ".item-discount"
                     )?.value || 0
                 );
-
 
             const taxPercent =
                 Number(
@@ -2441,12 +2501,13 @@ function calculate(){
 
 
             /*
-            =============================================
-            BUNDLE AMOUNT
+            Full Bundle Amount
 
             Example:
-            2 Bundle × ₹4000 = ₹8000
-            =============================================
+            Qty = 2
+            Rate = 4000
+
+            2 × 4000 = 8000
             */
 
             const bundleAmount =
@@ -2454,22 +2515,48 @@ function calculate(){
 
 
             /*
-            =============================================
-            LOOSE KG AMOUNT
+            IMPORTANT:
+
+            Qty KG automatically contains:
+            Qty × Bundle Weight
 
             Example:
-            5 KG × ₹114.29 = ₹571.45
-            =============================================
+            2 Bundle × 35 KG = 70 KG
+
+            So that automatic Qty KG
+            should NOT be added again
+            to the total.
             */
 
-            const looseKgAmount =
-                qtyKg * perKg;
+            const packWeight =
+                Number(
+                    row.dataset.packWeight || 0
+                );
+
+            const automaticKg =
+                qty * packWeight;
 
 
             /*
-            =============================================
-            TOTAL GROSS
-            =============================================
+            Loose KG Calculation
+
+            Only extra KG above automatic
+            bundle KG is charged separately.
+            */
+
+            const looseKg =
+                Math.max(
+                    0,
+                    qtyKg - automaticKg
+                );
+
+
+            const looseKgAmount =
+                looseKg * perKg;
+
+
+            /*
+            Gross Amount
             */
 
             const gross =
@@ -2501,16 +2588,9 @@ function calculate(){
                 taxAmount;
 
 
-            subtotal +=
-                gross;
-
-
-            discount +=
-                discountAmount;
-
-
-            tax +=
-                taxAmount;
+            subtotal += gross;
+            discount += discountAmount;
+            tax += taxAmount;
 
 
             row.querySelector(
