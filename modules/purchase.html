@@ -3729,39 +3729,80 @@ looseKg,
     );
 
 }
-rows.forEach(item => {
+/* =====================================================
+   PURCHASE SUMMARY
+===================================================== */
 
-    /*
-    Bundle Amount
-    +
-    Loose KG Amount
-    */
+function mmvPurchaseSummary() {
 
-    subtotal +=
-        Number(item.bundleAmount || 0) +
-        Number(item.looseKgAmount || 0);
+    const rows =
+        mmvPurchaseItemRows();
 
 
-    discount +=
-        Number(item.discountAmount || 0);
+    let subtotal = 0;
+    let discount = 0;
+    let tax = 0;
 
 
-    tax +=
-        Number(item.taxAmount || 0);
+    rows.forEach(item => {
 
-});
+        /*
+        =============================================
+        SUBTOTAL
+
+        Bundle Amount
+        +
+        Loose KG Amount
+        =============================================
+        */
+
+        subtotal +=
+            Number(
+                item.bundleAmount || 0
+            ) +
+            Number(
+                item.looseKgAmount || 0
+            );
+
+
+        /*
+        Discount Amount
+        */
+
+        discount +=
+            Number(
+                item.discountAmount || 0
+            );
+
+
+        /*
+        Tax Amount
+        */
+
+        tax +=
+            Number(
+                item.taxAmount || 0
+            );
+
+    });
+
 
     return {
+
         subtotal,
+
         discount,
+
         tax,
+
         total:
             subtotal -
             discount +
             tax
-    };
-}
 
+    };
+
+}
 /* -----------------------------------------------------
    Load suppliers and products from Firestore
    ----------------------------------------------------- */
