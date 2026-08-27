@@ -1829,6 +1829,22 @@ label{
                 </select>
 
             </div>
+            <div class="form-group">
+
+    <label>
+        Bundle / Pack Weight (KG)
+    </label>
+
+    <input
+        id="bundleWeight"
+        type="number"
+        min="0"
+        step="0.001"
+        value="0"
+        placeholder="Example: 35"
+    >
+
+</div>
 <div class="form-group">
 
     <label>
@@ -3050,6 +3066,14 @@ document
                             "productUnit"
                         )
                         .value,
+                bundleWeight:
+    Number(
+        document
+            .getElementById(
+                "bundleWeight"
+            )
+            .value || 0
+    ),
 packUnit:
     document
         .getElementById(
@@ -3358,6 +3382,12 @@ function editProduct(code){
         )
         .value =
         product.unit;
+    document
+    .getElementById(
+        "bundleWeight"
+    )
+    .value =
+    product.bundleWeight || 0;
 document
     .getElementById(
         "packUnit"
