@@ -3488,7 +3488,33 @@ function preparePurchasePrint(purchase){
     document.getElementById("printPurchaseTotal").textContent=money(purchase.amount||purchase.total||0);
 }
 function printPurchaseRecord(purchase){preparePurchasePrint(purchase);window.print();}
-document.getElementById("purchaseRecordModal").addEventListener("click",e=>{if(e.target.id==="purchaseRecordModal")closePurchaseRecordView();});
+const purchaseRecordModal =
+    document.getElementById(
+        "purchaseRecordModal"
+    );
+
+
+if (purchaseRecordModal) {
+
+    purchaseRecordModal
+        .addEventListener(
+            "click",
+            function (event) {
+
+                if (
+                    event.target ===
+                    purchaseRecordModal
+                ) {
+
+                    purchaseRecordModal.style.display =
+                        "none";
+
+                }
+
+            }
+        );
+
+}
 
 </script>
 
