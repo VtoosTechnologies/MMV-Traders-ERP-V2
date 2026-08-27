@@ -1472,30 +1472,40 @@ select:focus{
 
                 <tr>
 
-                    <th style="width:28%;">
-                        Product
-                    </th>
+                   <th style="width:22%;">
+    Product
+</th>
 
-                    <th style="width:13%;">
-                        Qty
-                    </th>
+<th style="width:9%;">
+    Qty
+</th>
 
-                    <th style="width:13%;">
-                        Rate
-                    </th>
+<th style="width:11%;">
+    Qty Kg
+</th>
 
-                    <th style="width:12%;">
-                        Discount %
-                    </th>
+<th style="width:11%;">
+    Rate
+</th>
 
-                    <th style="width:12%;">
-                        Tax %
-                    </th>
+<th style="width:11%;">
+    Per Kg
+</th>
 
-                    <th style="width:15%;">
-                        Amount
-                    </th>
+<th style="width:10%;">
+    Discount %
+</th>
 
+<th style="width:9%;">
+    Tax %
+</th>
+
+<th style="width:12%;">
+    Amount
+</th>
+
+<th style="width:5%;">
+</th>
                     <th style="width:5%;">
                     </th>
 
@@ -1972,16 +1982,13 @@ function addItem(){
             "itemBody"
         );
 
-
     const row =
         document.createElement(
             "tr"
         );
 
-
     row.className =
         "purchase-item";
-
 
     row.innerHTML = `
 
@@ -2002,6 +2009,8 @@ function addItem(){
         </td>
 
 
+        <!-- FULL BUNDLE / BAG QTY -->
+
         <td>
 
             <input
@@ -2009,12 +2018,30 @@ function addItem(){
                 type="number"
                 min="0"
                 step="0.001"
-                value="1"
-                placeholder="Qty"
+                value="0"
+                placeholder="Bundle Qty"
             >
 
         </td>
 
+
+        <!-- LOOSE KG QTY -->
+
+        <td>
+
+            <input
+                class="item-loose-qty"
+                type="number"
+                min="0"
+                step="0.001"
+                value="0"
+                placeholder="Loose Kg"
+            >
+
+        </td>
+
+
+        <!-- RATE PER BUNDLE / BAG -->
 
         <td>
 
@@ -2024,7 +2051,24 @@ function addItem(){
                 min="0"
                 step="0.01"
                 value="0"
-                placeholder="Rate"
+                placeholder="Bundle Rate"
+            >
+
+        </td>
+
+
+        <!-- AUTO CALCULATED PER KG -->
+
+        <td>
+
+            <input
+                class="item-per-kg"
+                type="number"
+                min="0"
+                step="0.001"
+                value="0"
+                readonly
+                placeholder="Per Kg"
             >
 
         </td>
@@ -2089,6 +2133,7 @@ function addItem(){
         row
     );
 
+
     row
         .querySelector(
             ".item-product"
@@ -2099,10 +2144,11 @@ function addItem(){
 
                 const productId =
                     row
-                        .querySelector(
-                            ".item-product"
-                        )
-                        .value || "";
+                    .querySelector(
+                        ".item-product"
+                    )
+                    .value || "";
+
 
                 const product =
                     products.find(
@@ -2112,8 +2158,11 @@ function addItem(){
                                 item.productId ||
                                 ""
                             ) ===
-                            String(productId)
+                            String(
+                                productId
+                            )
                     );
+
 
                 if(product){
 
@@ -2125,6 +2174,7 @@ function addItem(){
                         product.rate ??
                         0;
 
+
                     row
                         .querySelector(
                             ".item-rate"
@@ -2134,11 +2184,51 @@ function addItem(){
                             purchaseRate || 0
                         );
 
+
+                    /*
+                       Bundle / Bag Weight
+
+                       Example:
+                       1 Bundle = 30 Kg
+                       1 Bag = 50 Kg
+                    */
+
+                    const bundleWeight =
+                        Number(
+                            product.bundleWeight ||
+                            product.packageWeight ||
+                            product.weightPerBundle ||
+                            product.qtyPerBundle ||
+                            1
+                        );
+
+
+                    row.dataset.bundleWeight =
+                        bundleWeight;
+
+
+                    const perKg =
+                        bundleWeight > 0
+                            ? Number(
+                                purchaseRate
+                            ) / bundleWeight
+                            : 0;
+
+
+                    row
+                        .querySelector(
+                            ".item-per-kg"
+                        )
+                        .value =
+                        perKg.toFixed(3);
+
+
                     const taxRate =
                         product.taxRate ??
                         product.tax ??
                         product.gst ??
                         0;
+
 
                     row
                         .querySelector(
@@ -2149,8 +2239,11 @@ function addItem(){
                             taxRate || 0
                         );
 
+
                     calculate();
+
                 }
+
             }
         );
 
@@ -2231,6 +2324,11 @@ function calculate(){
     rows.forEach(
         row => {
 
+
+            /*
+               FULL BUNDLE / BAG QTY
+            */
+
             const qty =
                 Number(
                     row.querySelector(
@@ -2239,12 +2337,74 @@ function calculate(){
                 );
 
 
+            /*
+               LOOSE KG
+            */
+
+            const looseQty =
+                Number(
+                    row.querySelector(
+                        ".item-loose-qty"
+                    ).value || 0
+                );
+
+
+            /*
+               RATE PER BUNDLE / BAG
+            */
+
             const rate =
                 Number(
                     row.querySelector(
                         ".item-rate"
                     ).value || 0
                 );
+
+
+            /*
+               AUTO PER KG RATE
+            */
+
+            const perKg =
+                Number(
+                    row.querySelector(
+                        ".item-per-kg"
+                    ).value || 0
+                );
+
+
+            /*
+               FULL BUNDLE AMOUNT
+
+               Example:
+               2 Bundle × ₹400
+               = ₹800
+            */
+
+            const bundleAmount =
+                qty * rate;
+
+
+            /*
+               LOOSE KG AMOUNT
+
+               Example:
+               5 Kg × ₹13.33
+               = ₹66.65
+            */
+
+            const looseAmount =
+                looseQty * perKg;
+
+
+            /*
+               TOTAL BEFORE DISCOUNT
+               AND TAX
+            */
+
+            const gross =
+                bundleAmount +
+                looseAmount;
 
 
             const discountPercent =
@@ -2261,10 +2421,6 @@ function calculate(){
                         ".item-tax"
                     ).value || 0
                 );
-
-
-            const gross =
-                qty * rate;
 
 
             const discountAmount =
@@ -2308,7 +2464,9 @@ function calculate(){
             row.querySelector(
                 ".amount-cell"
             ).textContent =
-                money(amount);
+                money(
+                    amount
+                );
 
         }
     );
@@ -2333,7 +2491,9 @@ function calculate(){
             "summarySubtotal"
         )
         .textContent =
-        money(subtotal);
+        money(
+            subtotal
+        );
 
 
     document
@@ -2341,7 +2501,9 @@ function calculate(){
             "summaryDiscount"
         )
         .textContent =
-        money(discount);
+        money(
+            discount
+        );
 
 
     document
@@ -2349,7 +2511,9 @@ function calculate(){
             "summaryTax"
         )
         .textContent =
-        money(tax);
+        money(
+            tax
+        );
 
 
     document
@@ -2357,14 +2521,14 @@ function calculate(){
             "summaryTotal"
         )
         .textContent =
-        money(total);
+        money(
+            total
+        );
 
 
     updateItemCount();
 
 }
-
-
 /* =====================================================
    ITEM COUNT
 ===================================================== */
@@ -2502,48 +2666,229 @@ function savePurchase(){
     }
 
 
-    const purchase = {
+    const purchaseItems = [];
 
-        number:
-            document
-                .getElementById(
-                    "purchaseNumber"
-                )
-                .textContent,
 
-        date:
-            document
-                .getElementById(
-                    "purchaseDate"
-                )
-                .value,
+rows.forEach(
+    row => {
 
-        supplier,
+        const productSelect =
+            row.querySelector(
+                ".item-product"
+            );
 
-        invoice:
-            document
-                .getElementById(
-                    "supplierInvoice"
-                )
-                .value
-                .trim(),
 
-        reference:
-            document
-                .getElementById(
-                    "referenceNo"
-                )
-                .value
-                .trim(),
+        const productCode =
+            productSelect
+                ? productSelect.value
+                : "";
 
-        payment:
-            selectedPayment,
 
-        amount:
-            total
+        const product =
+            products.find(
+                item =>
+                    String(
+                        item.id ||
+                        item.productId ||
+                        item.code ||
+                        ""
+                    ) ===
+                    String(
+                        productCode
+                    )
+            );
 
-    };
 
+        const qty =
+            Number(
+                row.querySelector(
+                    ".item-qty"
+                ).value || 0
+            );
+
+
+        const looseQty =
+            Number(
+                row.querySelector(
+                    ".item-loose-qty"
+                ).value || 0
+            );
+
+
+        const rate =
+            Number(
+                row.querySelector(
+                    ".item-rate"
+                ).value || 0
+            );
+
+
+        const perKg =
+            Number(
+                row.querySelector(
+                    ".item-per-kg"
+                ).value || 0
+            );
+
+
+        const discountPercent =
+            Number(
+                row.querySelector(
+                    ".item-discount"
+                ).value || 0
+            );
+
+
+        const taxPercent =
+            Number(
+                row.querySelector(
+                    ".item-tax"
+                ).value || 0
+            );
+
+
+        const bundleWeight =
+            Number(
+                product?.bundleWeight ||
+                product?.packageWeight ||
+                product?.weightPerBundle ||
+                product?.qtyPerBundle ||
+                row.dataset.bundleWeight ||
+                0
+            );
+
+
+        const bundleAmount =
+            qty * rate;
+
+
+        const looseAmount =
+            looseQty * perKg;
+
+
+        const gross =
+            bundleAmount +
+            looseAmount;
+
+
+        const discountAmount =
+            gross *
+            (
+                discountPercent /
+                100
+            );
+
+
+        const taxable =
+            gross -
+            discountAmount;
+
+
+        const taxAmount =
+            taxable *
+            (
+                taxPercent /
+                100
+            );
+
+
+        const amount =
+            taxable +
+            taxAmount;
+
+
+        purchaseItems.push({
+
+            product:
+                productCode,
+
+            productName:
+                product?.name ||
+                productSelect
+                    ?.options[
+                        productSelect.selectedIndex
+                    ]
+                    ?.text ||
+                "",
+
+            qty,
+
+            looseQty,
+
+            bundleWeight,
+
+            rate,
+
+            perKg,
+
+            discountPercent,
+
+            discountAmount,
+
+            taxPercent,
+
+            taxAmount,
+
+            gross,
+
+            amount
+
+        });
+
+    }
+);
+
+
+const purchase = {
+
+    number:
+        document
+            .getElementById(
+                "purchaseNumber"
+            )
+            .textContent,
+
+    date:
+        document
+            .getElementById(
+                "purchaseDate"
+            )
+            .value,
+
+    supplier,
+
+    invoice:
+        document
+            .getElementById(
+                "supplierInvoice"
+            )
+            .value
+            .trim(),
+
+    reference:
+        document
+            .getElementById(
+                "referenceNo"
+            )
+            .value
+            .trim(),
+
+    payment:
+        selectedPayment,
+
+    items:
+        purchaseItems,
+
+    itemCount:
+        purchaseItems.length,
+
+    amount:
+        total,
+
+    total:
+        total
+
+};
 
     purchases.unshift(
         purchase
