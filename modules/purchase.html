@@ -2147,303 +2147,122 @@ function addItem(){
 
 
     row
-        .querySelector(
-            ".item-product"
-        )
-        .addEventListener(
-            "change",
-            () => {
+    .querySelector(
+        ".item-product"
+    )
+    .addEventListener(
+        "change",
+        () => {
 
-                const productId =
-                    row
-                    .querySelector(
-                        ".item-product"
-                    )
-                    .value || "";
+            const productId =
+                row
+                .querySelector(
+                    ".item-product"
+                )
+                .value || "";
 
 
-                const product =
-                    products.find(
-                        item =>
-                            String(
-                                item.id ||
-                                item.productId ||
-                                ""
-                            ) ===
-                            String(productId)
+            const product =
+                products.find(
+                    item =>
+                        String(
+                            item.id ||
+                            item.productId ||
+                            ""
+                        ) ===
+                        String(productId)
+                );
+
+
+            if(product){
+
+                const purchaseRate =
+                    Number(
+                        product.purchaseRate ||
+                        product.buyingRate ||
+                        product.costPrice ||
+                        product.purchasePrice ||
+                        product.rate ||
+                        0
                     );
-                
 
 
-                if (product) {
-
-    /*
-    =========================================
-    GET BUNDLE / PACK WEIGHT FROM INVENTORY
-    =========================================
-    */
-
-    const packWeight =
-        Number(
-            product.bundleWeight ||
-            product.quantityPerPack ||
-            product.packWeight ||
-            0
-        );
-
-
-    /*
-    Product oda bundle weight-a row la save pannrom.
-    Example:
-    Ellu = 35 KG per bundle
-    Kadalai = 50 KG per bag
-    */
-
-    row.dataset.packWeight =
-        packWeight;
-
-
-    /*
-    =========================================
-    GET PURCHASE RATE
-    =========================================
-    */
-
-    const purchaseRate =
-        Number(
-            product.purchaseRate ||
-            product.buyingRate ||
-            product.costPrice ||
-            product.rate ||
-            0
-        );
-
-
-    /*
-    Bundle Rate automatic fill
-    */
-
-    row
-        .querySelector(
-            ".item-rate"
-        )
-        .value =
-        purchaseRate;
-
-
-    /*
-    =========================================
-    PER KG CALCULATION
-    =========================================
-
-    Example:
-
-    Bundle Weight = 35 KG
-    Bundle Rate   = ₹4000
-
-    Per KG = 4000 / 35
-           = ₹114.29
-    */
-
-    const perKg =
-        packWeight > 0
-            ? purchaseRate / packWeight
-            : 0;
-
-
-    row
-        .querySelector(
-            ".item-per-kg"
-        )
-        .value =
-        perKg.toFixed(2);
-
-
-    /*
-    =========================================
-    TOTAL KG FOR BUNDLE QTY
-    =========================================
-
-    Example:
-
-    Qty = 2 Bundle
-    One Bundle = 35 KG
-
-    Total KG = 70 KG
-    */
-
-    const qty =
-        Number(
-            row
-            .querySelector(
-                ".item-qty"
-            )
-            .value || 0
-        );
-
-
-    const totalKg =
-        qty * packWeight;
-
-
-    const totalKgInput =
-        row.querySelector(
-            ".item-total-kg"
-        );
-
-
-    if (totalKgInput) {
-
-        totalKgInput.value =
-            totalKg;
-
-    }
-
-
-    /*
-    TAX
-    */
-
-    const taxRate =
-        Number(
-            product.taxRate ||
-            product.tax ||
-            product.gst ||
-            0
-        );
-
-
-    row
-        .querySelector(
-            ".item-tax"
-        )
-        .value =
-        taxRate;
-
-
-    /*
-    FINAL CALCULATION
-    */
-
-    calculate();
-
-}
-
-                    const purchaseRate =
-                        Number(
-                            product.purchaseRate ??
-                            product.buyingRate ??
-                            product.costPrice ??
-                            product.purchasePrice ??
-                            product.rate ??
-                            0
-                        );
-
-
-                    /*
-                    =========================================
-                    PACK / BUNDLE WEIGHT
-                    =========================================
-
-                    Inventory product la save pannirukkura
-                    Pack Weight value automatically edukkum.
-                    */
-
-                   const packWeight =
-    Number(
-        product.bundleWeight ||
-        product.quantityPerPack ||
-        0
-    );
-
-
-                    row
-                        .dataset
-                        .packWeight =
-                        packWeight;
-                    const currentQty =
-    Number(
-        row
-        .querySelector(
-            ".item-qty"
-        )
-        .value || 0
-    );
-
-
-const totalKgInput =
-    row.querySelector(
-        ".item-total-kg"
-    );
-
-
-if (
-    totalKgInput &&
-    packWeight > 0
-) {
-
-    totalKgInput.value =
-        (
-            currentQty *
-            packWeight
-        ).toFixed(3);
-
-}
-
-
-                    row
-                        .querySelector(
-                            ".item-rate"
-                        )
-                        .value =
-                        purchaseRate;
-
-
-                    /*
-                    Per KG = Bundle Rate / Bundle Weight
-
-                    Example:
-                    ₹4000 / 35 KG = ₹114.29
-                    */
-
-                    const perKg =
-                        packWeight > 0
-                            ? purchaseRate / packWeight
-                            : 0;
-
-
-                    row
-                        .querySelector(
-                            ".item-per-kg"
-                        )
-                        .value =
-                        perKg.toFixed(2);
-
-
-                    const taxRate =
-                        product.taxRate ??
-                        product.tax ??
-                        product.gst ??
-                        0;
-
-
-                    row
-                        .querySelector(
-                            ".item-tax"
-                        )
-                        .value =
-                        Number(
-                            taxRate || 0
-                        );
-
-
-                    calculate();
-
-                }
+                const bundleWeight =
+                    Number(
+                        product.bundleWeight ||
+                        product.quantityPerPack ||
+                        0
+                    );
+
+
+                /*
+                Save bundle weight for this row
+                */
+                row.dataset.bundleWeight =
+                    bundleWeight;
+
+
+                /*
+                Bundle Rate
+                */
+                row
+                    .querySelector(
+                        ".item-rate"
+                    )
+                    .value =
+                    purchaseRate;
+
+
+                /*
+                Per KG calculation
+
+                Example:
+                Bundle Weight = 35 KG
+                Bundle Rate = 4000
+
+                4000 / 35 = 114.29
+                */
+                const perKg =
+                    bundleWeight > 0
+                        ? purchaseRate / bundleWeight
+                        : 0;
+
+
+                row
+                    .querySelector(
+                        ".item-per-kg"
+                    )
+                    .value =
+                    perKg.toFixed(2);
+
+
+                /*
+                Tax
+                */
+                const taxRate =
+                    product.taxRate ??
+                    product.tax ??
+                    product.gst ??
+                    0;
+
+
+                row
+                    .querySelector(
+                        ".item-tax"
+                    )
+                    .value =
+                    Number(taxRate);
+
+
+                /*
+                Recalculate purchase
+                */
+                calculate();
 
             }
-        );
-/*
+
+        }
+    );/*
 /*
 =====================================================
 QTY CHANGE
