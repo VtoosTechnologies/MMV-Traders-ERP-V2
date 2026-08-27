@@ -1982,13 +1982,16 @@ function addItem(){
             "itemBody"
         );
 
+
     const row =
         document.createElement(
             "tr"
         );
 
+
     row.className =
         "purchase-item";
+
 
     row.innerHTML = `
 
@@ -2009,8 +2012,6 @@ function addItem(){
         </td>
 
 
-        <!-- FULL BUNDLE / BAG QTY -->
-
         <td>
 
             <input
@@ -2018,30 +2019,26 @@ function addItem(){
                 type="number"
                 min="0"
                 step="0.001"
-                value="0"
+                value="1"
                 placeholder="Bundle Qty"
             >
 
         </td>
 
 
-        <!-- LOOSE KG QTY -->
-
         <td>
 
             <input
-                class="item-loose-qty"
+                class="item-qty-kg"
                 type="number"
                 min="0"
                 step="0.001"
                 value="0"
-                placeholder="Loose Kg"
+                placeholder="Loose KG"
             >
 
         </td>
 
-
-        <!-- RATE PER BUNDLE / BAG -->
 
         <td>
 
@@ -2057,18 +2054,16 @@ function addItem(){
         </td>
 
 
-        <!-- AUTO CALCULATED PER KG -->
-
         <td>
 
             <input
                 class="item-per-kg"
                 type="number"
                 min="0"
-                step="0.001"
+                step="0.01"
                 value="0"
+                placeholder="Per KG"
                 readonly
-                placeholder="Per Kg"
             >
 
         </td>
@@ -2158,21 +2153,47 @@ function addItem(){
                                 item.productId ||
                                 ""
                             ) ===
-                            String(
-                                productId
-                            )
+                            String(productId)
                     );
 
 
                 if(product){
 
                     const purchaseRate =
-                        product.purchaseRate ??
-                        product.buyingRate ??
-                        product.costPrice ??
-                        product.purchasePrice ??
-                        product.rate ??
-                        0;
+                        Number(
+                            product.purchaseRate ??
+                            product.buyingRate ??
+                            product.costPrice ??
+                            product.purchasePrice ??
+                            product.rate ??
+                            0
+                        );
+
+
+                    /*
+                    =========================================
+                    PACK / BUNDLE WEIGHT
+                    =========================================
+
+                    Inventory product la save pannirukkura
+                    Pack Weight value automatically edukkum.
+                    */
+
+                    const packWeight =
+                        Number(
+                            product.packWeight ??
+                            product.bundleWeight ??
+                            product.weightPerPack ??
+                            product.qtyKg ??
+                            product.kgPerPack ??
+                            0
+                        );
+
+
+                    row
+                        .dataset
+                        .packWeight =
+                        packWeight;
 
 
                     row
@@ -2180,38 +2201,19 @@ function addItem(){
                             ".item-rate"
                         )
                         .value =
-                        Number(
-                            purchaseRate || 0
-                        );
+                        purchaseRate;
 
 
                     /*
-                       Bundle / Bag Weight
+                    Per KG = Bundle Rate / Bundle Weight
 
-                       Example:
-                       1 Bundle = 30 Kg
-                       1 Bag = 50 Kg
+                    Example:
+                    ₹4000 / 35 KG = ₹114.29
                     */
 
-                    const bundleWeight =
-                        Number(
-                            product.bundleWeight ||
-                            product.packageWeight ||
-                            product.weightPerBundle ||
-                            product.qtyPerBundle ||
-                            1
-                        );
-
-
-                    row.dataset.bundleWeight =
-                        bundleWeight;
-
-
                     const perKg =
-                        bundleWeight > 0
-                            ? Number(
-                                purchaseRate
-                            ) / bundleWeight
+                        packWeight > 0
+                            ? purchaseRate / packWeight
                             : 0;
 
 
@@ -2220,7 +2222,7 @@ function addItem(){
                             ".item-per-kg"
                         )
                         .value =
-                        perKg.toFixed(3);
+                        perKg.toFixed(2);
 
 
                     const taxRate =
@@ -2248,6 +2250,58 @@ function addItem(){
         );
 
 
+    /*
+    =====================================================
+    RATE CHANGE
+    If owner changes bundle rate manually,
+    Per KG also recalculates automatically.
+    =====================================================
+    */
+
+    row
+        .querySelector(
+            ".item-rate"
+        )
+        .addEventListener(
+            "input",
+            () => {
+
+                const rate =
+                    Number(
+                        row
+                        .querySelector(
+                            ".item-rate"
+                        )
+                        .value || 0
+                    );
+
+
+                const packWeight =
+                    Number(
+                        row.dataset.packWeight || 0
+                    );
+
+
+                const perKg =
+                    packWeight > 0
+                        ? rate / packWeight
+                        : 0;
+
+
+                row
+                    .querySelector(
+                        ".item-per-kg"
+                    )
+                    .value =
+                    perKg.toFixed(2);
+
+
+                calculate();
+
+            }
+        );
+
+
     row
         .querySelectorAll(
             "input, select"
@@ -2259,6 +2313,7 @@ function addItem(){
                     "input",
                     calculate
                 );
+
 
                 element.addEventListener(
                     "change",
@@ -2290,18 +2345,6 @@ function addItem(){
     calculate();
 
 }
-
-
-document
-    .getElementById(
-        "addItemBtn"
-    )
-    .addEventListener(
-        "click",
-        addItem
-    );
-
-
 /* =====================================================
    CALCULATE
 ===================================================== */
@@ -2326,92 +2369,66 @@ function calculate(){
 
 
             /*
-               FULL BUNDLE / BAG QTY
+            =============================================
+            FULL BUNDLE / PACK QTY
+            =============================================
             */
 
             const qty =
                 Number(
                     row.querySelector(
                         ".item-qty"
-                    ).value || 0
+                    )?.value || 0
                 );
 
 
             /*
-               LOOSE KG
+            =============================================
+            LOOSE KG QTY
+            =============================================
             */
 
-            const looseQty =
+            const qtyKg =
                 Number(
                     row.querySelector(
-                        ".item-loose-qty"
-                    ).value || 0
+                        ".item-qty-kg"
+                    )?.value || 0
                 );
 
 
             /*
-               RATE PER BUNDLE / BAG
+            =============================================
+            FULL BUNDLE RATE
+            =============================================
             */
 
             const rate =
                 Number(
                     row.querySelector(
                         ".item-rate"
-                    ).value || 0
+                    )?.value || 0
                 );
 
 
             /*
-               AUTO PER KG RATE
+            =============================================
+            PER KG RATE
+            =============================================
             */
 
             const perKg =
                 Number(
                     row.querySelector(
                         ".item-per-kg"
-                    ).value || 0
+                    )?.value || 0
                 );
-
-
-            /*
-               FULL BUNDLE AMOUNT
-
-               Example:
-               2 Bundle × ₹400
-               = ₹800
-            */
-
-            const bundleAmount =
-                qty * rate;
-
-
-            /*
-               LOOSE KG AMOUNT
-
-               Example:
-               5 Kg × ₹13.33
-               = ₹66.65
-            */
-
-            const looseAmount =
-                looseQty * perKg;
-
-
-            /*
-               TOTAL BEFORE DISCOUNT
-               AND TAX
-            */
-
-            const gross =
-                bundleAmount +
-                looseAmount;
 
 
             const discountPercent =
                 Number(
                     row.querySelector(
                         ".item-discount"
-                    ).value || 0
+                    )?.value || 0
                 );
 
 
@@ -2419,15 +2436,51 @@ function calculate(){
                 Number(
                     row.querySelector(
                         ".item-tax"
-                    ).value || 0
+                    )?.value || 0
                 );
+
+
+            /*
+            =============================================
+            BUNDLE AMOUNT
+
+            Example:
+            2 Bundle × ₹4000 = ₹8000
+            =============================================
+            */
+
+            const bundleAmount =
+                qty * rate;
+
+
+            /*
+            =============================================
+            LOOSE KG AMOUNT
+
+            Example:
+            5 KG × ₹114.29 = ₹571.45
+            =============================================
+            */
+
+            const looseKgAmount =
+                qtyKg * perKg;
+
+
+            /*
+            =============================================
+            TOTAL GROSS
+            =============================================
+            */
+
+            const gross =
+                bundleAmount +
+                looseKgAmount;
 
 
             const discountAmount =
                 gross *
                 (
-                    discountPercent /
-                    100
+                    discountPercent / 100
                 );
 
 
@@ -2439,8 +2492,7 @@ function calculate(){
             const taxAmount =
                 taxable *
                 (
-                    taxPercent /
-                    100
+                    taxPercent / 100
                 );
 
 
@@ -3379,53 +3431,145 @@ function mmvPurchaseText(id) {
 function mmvPurchaseItemRows() {
 
     return Array.from(
-        document.querySelectorAll(".purchase-item")
-    ).map(row => {
+        document.querySelectorAll(
+            ".purchase-item"
+        )
+    ).map(
+        row => {
 
-        const product =
-            row.querySelector(".item-product")?.value || "";
 
-        const qty =
-            Number(
-                row.querySelector(".item-qty")?.value || 0
-            );
+            const product =
+                row.querySelector(
+                    ".item-product"
+                )?.value || "";
 
-        const rate =
-            Number(
-                row.querySelector(".item-rate")?.value || 0
-            );
 
-        const discount =
-            Number(
-                row.querySelector(".item-discount")?.value || 0
-            );
+            const qty =
+                Number(
+                    row.querySelector(
+                        ".item-qty"
+                    )?.value || 0
+                );
 
-        const tax =
-            Number(
-                row.querySelector(".item-tax")?.value || 0
-            );
 
-        const gross = qty * rate;
-        const discountAmount =
-            gross * discount / 100;
-        const taxable =
-            gross - discountAmount;
-        const taxAmount =
-            taxable * tax / 100;
+            const qtyKg =
+                Number(
+                    row.querySelector(
+                        ".item-qty-kg"
+                    )?.value || 0
+                );
 
-        return {
-            product,
-            qty,
-            rate,
-            discountPercent: discount,
-            discountAmount,
-            taxPercent: tax,
-            taxAmount,
-            amount: taxable + taxAmount
-        };
-    });
+
+            const rate =
+                Number(
+                    row.querySelector(
+                        ".item-rate"
+                    )?.value || 0
+                );
+
+
+            const perKg =
+                Number(
+                    row.querySelector(
+                        ".item-per-kg"
+                    )?.value || 0
+                );
+
+
+            const discount =
+                Number(
+                    row.querySelector(
+                        ".item-discount"
+                    )?.value || 0
+                );
+
+
+            const tax =
+                Number(
+                    row.querySelector(
+                        ".item-tax"
+                    )?.value || 0
+                );
+
+
+            const bundleAmount =
+                qty * rate;
+
+
+            const looseKgAmount =
+                qtyKg * perKg;
+
+
+            const gross =
+                bundleAmount +
+                looseKgAmount;
+
+
+            const discountAmount =
+                gross *
+                discount /
+                100;
+
+
+            const taxable =
+                gross -
+                discountAmount;
+
+
+            const taxAmount =
+                taxable *
+                tax /
+                100;
+
+
+            return {
+
+                product,
+
+                /*
+                Full bundle quantity
+                */
+                qty,
+
+                /*
+                Loose KG quantity
+                */
+                qtyKg,
+
+                /*
+                Full bundle rate
+                */
+                rate,
+
+                /*
+                Automatically calculated KG rate
+                */
+                perKg,
+
+                bundleAmount,
+
+                looseKgAmount,
+
+                discountPercent:
+                    discount,
+
+                discountAmount,
+
+                taxPercent:
+                    tax,
+
+                taxAmount,
+
+                amount:
+                    taxable +
+                    taxAmount
+
+            };
+
+        }
+    );
+
 }
-
 function mmvPurchaseSummary() {
 
     const rows =
