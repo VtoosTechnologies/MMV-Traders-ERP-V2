@@ -3171,64 +3171,59 @@ document
 /* =====================================================
    PRODUCT OPTIONS
 ===================================================== */
+function getProductKey(product){
 
+    return String(
+        product.code ||
+        product.productCode ||
+        product.itemCode ||
+        product.id ||
+        ""
+    );
+
+}
 function productOptions(){
 
     let html = `
-
         <option value="">
             Select Product
         </option>
-
     `;
-
 
     products.forEach(
         product => {
 
-            const productCode =
-                product.code ||
-                product.productCode ||
-                product.itemCode ||
-                product.id ||
-                "";
+            const productKey =
+                getProductKey(product);
 
             const productName =
                 product.name ||
                 product.productName ||
                 product.itemName ||
                 product.description ||
-                productCode ||
+                productKey ||
                 "Product";
 
-
             html += `
-
                 <option
-                    value="${escapeHtml(productCode)}"
+                    value="${escapeHtml(productKey)}"
                 >
                     ${escapeHtml(productName)}
                 </option>
-
             `;
 
         }
     );
 
-
     html += `
-
         <option value="manual">
             Manual Product
         </option>
-
     `;
-
 
     return html;
 
 }
-
 
 /* =====================================================
    CUSTOMER CHANGE
@@ -3323,16 +3318,13 @@ function addItem(){
             "itemBody"
         );
 
-
     const row =
         document.createElement(
             "tr"
         );
 
-
     row.className =
         "sales-item";
-
 
     row.innerHTML = `
 
@@ -3437,19 +3429,25 @@ function addItem(){
     );
 
 
+    /*
+    =====================================================
+    CALCULATE WHEN QTY / RATE / DISCOUNT / TAX CHANGES
+    =====================================================
+    */
+
     row
         .querySelectorAll(
-            "input, select"
+            "input"
         )
         .forEach(
-            element => {
+            input => {
 
-                element.addEventListener(
+                input.addEventListener(
                     "input",
                     calculate
                 );
 
-                element.addEventListener(
+                input.addEventListener(
                     "change",
                     calculate
                 );
@@ -3457,77 +3455,189 @@ function addItem(){
             }
         );
 
-const productSelect =
-    row.querySelector(
-        ".item-product"
-    );
 
-productSelect.addEventListener(
-    "change",
-    function(){
+    /*
+    =====================================================
+    PRODUCT CHANGE
+    AUTO LOAD SELLING PRICE + TAX
+    =====================================================
+    */
 
-        const selectedProductCode =
-            productSelect.value;
-
-        if(
-            !selectedProductCode ||
-            selectedProductCode === "manual"
-        ){
-            row.querySelector(
-                ".item-rate"
-            ).value = 0;
-
-            calculate();
-            return;
-        }
-
-        const selectedProduct =
-            products.find(
-                item =>
-                    String(
-                        item.code ||
-                        item.productCode ||
-                        item.itemCode ||
-                        item.id ||
-                        ""
-                    ) ===
-                    String(selectedProductCode)
-            );
-
-        console.log(
-            "Selected product:",
-            selectedProduct
+    const productSelect =
+        row.querySelector(
+            ".item-product"
         );
 
-        if(selectedProduct){
 
-            const sellingRate =
+    productSelect.addEventListener(
+        "change",
+        function(){
+
+            const selectedProductKey =
+                productSelect.value ||
+                "";
+
+
+            /*
+            EMPTY / MANUAL PRODUCT
+            */
+
+            if(
+                !selectedProductKey ||
+                selectedProductKey === "manual"
+            ){
+
+                row.querySelector(
+                    ".item-rate"
+                ).value = 0;
+
+
+                row.querySelector(
+                    ".item-tax"
+                ).value = 0;
+
+
+                calculate();
+
+                return;
+
+            }
+
+
+            /*
+            FIND SELECTED PRODUCT
+            */
+
+            const product =
+                products.find(
+                    item =>
+                        getProductKey(item) ===
+                        String(selectedProductKey)
+                );
+
+
+            console.log(
+                "Selected Sales Product:",
+                product
+            );
+
+
+            /*
+            PRODUCT NOT FOUND
+            */
+
+            if(!product){
+
+                console.warn(
+                    "Selected product not found:",
+                    selectedProductKey
+                );
+
+                row.querySelector(
+                    ".item-rate"
+                ).value = 0;
+
+
+                row.querySelector(
+                    ".item-tax"
+                ).value = 0;
+
+
+                calculate();
+
+                return;
+
+            }
+
+
+            /*
+            =====================================================
+            AUTO LOAD SELLING RATE
+            =====================================================
+            */
+
+            const saleRate =
                 Number(
-                    selectedProduct.sellingRate ||
-                    selectedProduct.saleRate ||
-                    selectedProduct.salePrice ||
-                    selectedProduct.price ||
+                    product.sellingRate ??
+                    product.salesRate ??
+                    product.saleRate ??
+                    product.salePrice ??
+                    product.sellingPrice ??
+                    product.retailPrice ??
+                    product.price ??
+                    product.rate ??
                     0
                 );
+
 
             row.querySelector(
                 ".item-rate"
             ).value =
-                sellingRate;
+                saleRate;
 
-        }else{
+
+            /*
+            =====================================================
+            AUTO LOAD TAX / GST
+            =====================================================
+            */
+
+            const taxRate =
+                Number(
+                    product.taxRate ??
+                    product.tax ??
+                    product.gst ??
+                    product.gstRate ??
+                    0
+                );
+
 
             row.querySelector(
-                ".item-rate"
-            ).value = 0;
+                ".item-tax"
+            ).value =
+                taxRate;
+
+
+            /*
+            RECALCULATE AMOUNT
+            */
+
+            calculate();
 
         }
+    );
 
-        calculate();
 
-    }
-);
-if(product){
+    /*
+    =====================================================
+    DELETE ITEM
+    =====================================================
+    */
+
+    row
+        .querySelector(
+            ".delete-item"
+        )
+        .addEventListener(
+            "click",
+            () => {
+
+                row.remove();
+
+                updateItemCount();
+
+                calculate();
+
+            }
+        );
+
+
+    updateItemCount();
+
+    calculate();
+
+}
+    if(product){
 
     /*
     =========================================
