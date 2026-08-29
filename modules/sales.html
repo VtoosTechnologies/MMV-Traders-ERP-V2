@@ -3709,18 +3709,206 @@ if(product){
     calculate();
 
 }
+function addItem(){
+
+    const body =
+        document.getElementById("itemBody");
+
+    const row =
+        document.createElement("tr");
+
+    row.className = "sales-item";
+
+    row.innerHTML = `
+        <td>
+            <select class="item-product">
+                ${productOptions()}
+            </select>
+        </td>
+
+        <td>
+            <input
+                class="item-qty"
+                type="number"
+                min="0"
+                step="0.001"
+                value="1"
+            >
+        </td>
+
+        <td>
+            <input
+                class="item-rate"
+                type="number"
+                min="0"
+                step="0.01"
+                value="0"
+            >
+        </td>
+
+        <td>
+            <input
+                class="item-discount"
+                type="number"
+                min="0"
+                max="100"
+                step="0.01"
+                value="0"
+            >
+        </td>
+
+        <td>
+            <input
+                class="item-tax"
+                type="number"
+                min="0"
+                max="100"
+                step="0.01"
+                value="0"
+            >
+        </td>
+
+        <td>
+            <div class="amount-cell">
+                ₹0.00
+            </div>
+        </td>
+
+        <td>
+            <button
+                class="delete-item"
+                type="button"
+            >
+                ×
+            </button>
+        </td>
+    `;
+
+    body.appendChild(row);
 
 
-document
-    .getElementById(
-        "addItemBtn"
-    )
-    .addEventListener(
-        "click",
-        addItem
+    const productSelect =
+        row.querySelector(".item-product");
+
+
+    /*
+    Product select pannumbodhu
+    automatic ah rate and tax load aagum
+    */
+
+    productSelect.addEventListener(
+        "change",
+        function(){
+
+            const selectedId =
+                productSelect.value;
+
+            const product =
+                products.find(
+                    item =>
+                        String(
+                            item.id ||
+                            item.productId ||
+                            item.code ||
+                            item.productCode ||
+                            ""
+                        ) ===
+                        String(selectedId)
+                );
+
+
+            console.log(
+                "Selected Product:",
+                product
+            );
+
+
+            if(product){
+
+                const rate =
+                    Number(
+                        product.sellingRate ||
+                        product.salesRate ||
+                        product.saleRate ||
+                        product.sellingPrice ||
+                        product.salePrice ||
+                        product.price ||
+                        product.rate ||
+                        0
+                    );
+
+
+                const tax =
+                    Number(
+                        product.taxRate ||
+                        product.tax ||
+                        product.gstRate ||
+                        product.gst ||
+                        0
+                    );
+
+
+                row
+                    .querySelector(".item-rate")
+                    .value = rate;
+
+
+                row
+                    .querySelector(".item-tax")
+                    .value = tax;
+
+            }
+
+            calculate();
+
+        }
     );
 
 
+    row
+        .querySelectorAll(
+            "input"
+        )
+        .forEach(
+            input => {
+
+                input.addEventListener(
+                    "input",
+                    calculate
+                );
+
+                input.addEventListener(
+                    "change",
+                    calculate
+                );
+
+            }
+        );
+
+
+    row
+        .querySelector(
+            ".delete-item"
+        )
+        .addEventListener(
+            "click",
+            function(){
+
+                row.remove();
+
+                updateItemCount();
+
+                calculate();
+
+            }
+        );
+
+
+    updateItemCount();
+
+    calculate();
+
+}
 /* =====================================================
    CALCULATE
 ===================================================== */
