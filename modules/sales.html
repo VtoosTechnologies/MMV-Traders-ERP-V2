@@ -3471,23 +3471,22 @@ function addItem(){
                         ".item-product"
                     ).value;
 
-const productId =
-    row
-    .querySelector(
+const code =
+    row.querySelector(
         ".item-product"
-    )
-    .value || "";
+    ).value;
 
 
 const product =
     products.find(
         item =>
             String(
+                item.code ||
+                item.productCode ||
+                item.itemCode ||
                 item.id ||
-                item.productId ||
                 ""
-            ) ===
-            String(productId)
+            ) === String(code)
     );
 console.log(
     "SALES SELECTED PRODUCT:",
@@ -3501,29 +3500,27 @@ if(product){
     =========================================
     */
 
+if(product){
+
     const saleRate =
         Number(
-            product.salesRate ??
             product.sellingRate ??
+            product.salesRate ??
+            product.saleRate ??
             product.salePrice ??
+            product.sellingPrice ??
+            product.retailPrice ??
             product.price ??
+            product.rate ??
             0
         );
 
 
-    row
-        .querySelector(
-            ".item-rate"
-        )
-        .value =
-        saleRate;
+    row.querySelector(
+        ".item-rate"
+    ).value =
+    saleRate;
 
-
-    /*
-    =========================================
-    AUTO LOAD TAX
-    =========================================
-    */
 
     const taxRate =
         Number(
@@ -3534,18 +3531,15 @@ if(product){
         );
 
 
-    row
-        .querySelector(
-            ".item-tax"
-        )
-        .value =
-        taxRate;
+    row.querySelector(
+        ".item-tax"
+    ).value =
+    taxRate;
 
 
     calculate();
 
-}
-            }
+}            
         );
 
 
