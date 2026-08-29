@@ -3483,19 +3483,58 @@ function addItem(){
                             ) === code
                     );
 
+if(product){
 
-                if(product){
+    /*
+    =========================================
+    AUTO LOAD SALES RATE
+    =========================================
+    */
 
-                    row.querySelector(
-                        ".item-rate"
-                    ).value =
-                        product.sellingRate ||
-                        0;
+    const saleRate =
+        Number(
+            product.salesRate ??
+            product.sellingRate ??
+            product.salePrice ??
+            product.price ??
+            0
+        );
 
-                    calculate();
 
-                }
+    row
+        .querySelector(
+            ".item-rate"
+        )
+        .value =
+        saleRate;
 
+
+    /*
+    =========================================
+    AUTO LOAD TAX
+    =========================================
+    */
+
+    const taxRate =
+        Number(
+            product.taxRate ??
+            product.tax ??
+            product.gst ??
+            0
+        );
+
+
+    row
+        .querySelector(
+            ".item-tax"
+        )
+        .value =
+        taxRate;
+
+
+    calculate();
+
+}
             }
         );
 
