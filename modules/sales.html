@@ -3471,17 +3471,24 @@ function addItem(){
                         ".item-product"
                     ).value;
 
+const productId =
+    row
+    .querySelector(
+        ".item-product"
+    )
+    .value || "";
 
-                const product =
-                    products.find(
-                        item =>
-                            (
-                                item.code ||
-                                item.productCode ||
-                                item.itemCode ||
-                                item.id
-                            ) === code
-                    );
+
+const product =
+    products.find(
+        item =>
+            String(
+                item.id ||
+                item.productId ||
+                ""
+            ) ===
+            String(productId)
+    );
 
 if(product){
 
