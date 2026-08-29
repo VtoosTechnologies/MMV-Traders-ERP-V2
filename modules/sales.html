@@ -3457,37 +3457,76 @@ function addItem(){
             }
         );
 
-
-    row
-        .querySelector(
-            ".item-product"
-        )
-        .addEventListener(
-            "change",
-            () => {
-
-                const code =
-                    row.querySelector(
-                        ".item-product"
-                    ).value;
-
-const code =
+const productSelect =
     row.querySelector(
         ".item-product"
-    ).value;
-
-
-const product =
-    products.find(
-        item =>
-            String(
-                item.code ||
-                item.productCode ||
-                item.itemCode ||
-                item.id ||
-                ""
-            ) === String(code)
     );
+
+productSelect.addEventListener(
+    "change",
+    function(){
+
+        const selectedProductCode =
+            productSelect.value;
+
+        if(
+            !selectedProductCode ||
+            selectedProductCode === "manual"
+        ){
+            row.querySelector(
+                ".item-rate"
+            ).value = 0;
+
+            calculate();
+            return;
+        }
+
+        const selectedProduct =
+            products.find(
+                item =>
+                    String(
+                        item.code ||
+                        item.productCode ||
+                        item.itemCode ||
+                        item.id ||
+                        ""
+                    ) ===
+                    String(selectedProductCode)
+            );
+
+        console.log(
+            "Selected product:",
+            selectedProduct
+        );
+
+        if(selectedProduct){
+
+            const sellingRate =
+                Number(
+                    selectedProduct.sellingRate ||
+                    selectedProduct.saleRate ||
+                    selectedProduct.salePrice ||
+                    selectedProduct.price ||
+                    0
+                );
+
+            row.querySelector(
+                ".item-rate"
+            ).value =
+                sellingRate;
+
+        }else{
+
+            row.querySelector(
+                ".item-rate"
+            ).value = 0;
+
+        }
+
+        calculate();
+
+    }
+);
 console.log(
     "SALES SELECTED PRODUCT:",
     product
