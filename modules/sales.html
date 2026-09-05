@@ -1738,12 +1738,13 @@ select:focus{
 
     <div class="item-actions">
 
-        <button
-            class="btn btn-primary"
-            id="addItemBtn"
-        >
-            ＋ Add Item
-        </button>
+       <button
+    class="btn btn-primary"
+    id="addItemBtn"
+    type="button"
+>
+    ＋ Add Item
+</button>
 
     </div>
 
@@ -3637,283 +3638,22 @@ function addItem(){
     calculate();
 
 }
-    if(product){
-
-    /*
-    =========================================
-    AUTO LOAD SALES RATE
-    =========================================
-    */
-
-if(product){
-
-    const saleRate =
-        Number(
-            product.sellingRate ??
-            product.salesRate ??
-            product.saleRate ??
-            product.salePrice ??
-            product.sellingPrice ??
-            product.retailPrice ??
-            product.price ??
-            product.rate ??
-            0
-        );
-
-
-    row.querySelector(
-        ".item-rate"
-    ).value =
-    saleRate;
-
-
-    const taxRate =
-        Number(
-            product.taxRate ??
-            product.tax ??
-            product.gst ??
-            0
-        );
-
-
-    row.querySelector(
-        ".item-tax"
-    ).value =
-    taxRate;
-
-
-    calculate();
-
-}  
-});
-
-
-    row
-        .querySelector(
-            ".delete-item"
-        )
-        .addEventListener(
-            "click",
-            () => {
-
-                row.remove();
-
-                calculate();
-
-            }
-        );
-
-
-    updateItemCount();
-
-    calculate();
-
-}
-function addItem(){
-
-    const body =
-        document.getElementById("itemBody");
-
-    const row =
-        document.createElement("tr");
-
-    row.className = "sales-item";
-
-    row.innerHTML = `
-        <td>
-            <select class="item-product">
-                ${productOptions()}
-            </select>
-        </td>
-
-        <td>
-            <input
-                class="item-qty"
-                type="number"
-                min="0"
-                step="0.001"
-                value="1"
-            >
-        </td>
-
-        <td>
-            <input
-                class="item-rate"
-                type="number"
-                min="0"
-                step="0.01"
-                value="0"
-            >
-        </td>
-
-        <td>
-            <input
-                class="item-discount"
-                type="number"
-                min="0"
-                max="100"
-                step="0.01"
-                value="0"
-            >
-        </td>
-
-        <td>
-            <input
-                class="item-tax"
-                type="number"
-                min="0"
-                max="100"
-                step="0.01"
-                value="0"
-            >
-        </td>
-
-        <td>
-            <div class="amount-cell">
-                ₹0.00
-            </div>
-        </td>
-
-        <td>
-            <button
-                class="delete-item"
-                type="button"
-            >
-                ×
-            </button>
-        </td>
-    `;
-
-    body.appendChild(row);
-
-
-    const productSelect =
-        row.querySelector(".item-product");
-
-
-    /*
-    Product select pannumbodhu
-    automatic ah rate and tax load aagum
-    */
-
-    productSelect.addEventListener(
-        "change",
-        function(){
-
-            const selectedId =
-                productSelect.value;
-
-            const product =
-                products.find(
-                    item =>
-                        String(
-                            item.id ||
-                            item.productId ||
-                            item.code ||
-                            item.productCode ||
-                            ""
-                        ) ===
-                        String(selectedId)
-                );
-
-
-            console.log(
-                "Selected Product:",
-                product
-            );
-
-
-            if(product){
-
-                const rate =
-                    Number(
-                        product.sellingRate ||
-                        product.salesRate ||
-                        product.saleRate ||
-                        product.sellingPrice ||
-                        product.salePrice ||
-                        product.price ||
-                        product.rate ||
-                        0
-                    );
-
-
-                const tax =
-                    Number(
-                        product.taxRate ||
-                        product.tax ||
-                        product.gstRate ||
-                        product.gst ||
-                        0
-                    );
-
-
-                row
-                    .querySelector(".item-rate")
-                    .value = rate;
-
-
-                row
-                    .querySelector(".item-tax")
-                    .value = tax;
-
-            }
-
-            calculate();
-
-        }
-    );
-
-
-    row
-        .querySelectorAll(
-            "input"
-        )
-        .forEach(
-            input => {
-
-                input.addEventListener(
-                    "input",
-                    calculate
-                );
-
-                input.addEventListener(
-                    "change",
-                    calculate
-                );
-
-            }
-        );
-
-
-    row
-        .querySelector(
-            ".delete-item"
-        )
-        .addEventListener(
-            "click",
-            function(){
-
-                row.remove();
-
-                updateItemCount();
-
-                calculate();
-
-            }
-        );
-
-
-    updateItemCount();
-
-    calculate();
-
-}
-/* =====================================================
-   CALCULATE
+    /* =====================================================
+   ADD ITEM BUTTON
 ===================================================== */
 
-function calculate(){
+document
+    .getElementById(
+        "addItemBtn"
+    )
+    ?.addEventListener(
+        "click",
+        addItem
+    );
+    /* =====================================================
+   CALCULATE
+===================================================== */
+  function calculate(){
 
     const rows =
         document.querySelectorAll(
@@ -4249,7 +3989,12 @@ function getCurrentSalesItemDetails(){
     return Array.from(document.querySelectorAll(".sales-item")).map(row=>{
         const select=row.querySelector(".item-product");
         const code=select?.value||"manual";
-        const product=products.find(p=>(p.code||p.productCode||p.itemCode||p.id)===code);
+        const product =
+    products.find(
+        p =>
+            getProductKey(p) ===
+            String(code)
+    );
         const qty=Number(row.querySelector(".item-qty")?.value||0),rate=Number(row.querySelector(".item-rate")?.value||0),discountPercent=Number(row.querySelector(".item-discount")?.value||0),taxPercent=Number(row.querySelector(".item-tax")?.value||0);
         const gross=qty*rate,discountAmount=gross*discountPercent/100,taxable=gross-discountAmount,taxAmount=taxable*taxPercent/100;
         return {product:code,productName:product?.name||product?.productName||select?.options[select.selectedIndex]?.text||code,qty,rate,discountPercent,discountAmount,taxPercent,taxAmount,amount:taxable+taxAmount};
