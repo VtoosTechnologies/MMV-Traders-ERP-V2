@@ -3557,24 +3557,20 @@ function addItem(){
             =====================================================
             */
 
-            const saleRate =
-                Number(
-                    product.sellingRate ??
-                    product.salesRate ??
-                    product.saleRate ??
-                    product.salePrice ??
-                    product.sellingPrice ??
-                    product.retailPrice ??
-                    product.price ??
-                    product.rate ??
-                    0
-                );
+          const purchaseRate =
+    Number(
+        product.purchaseRate ??
+        product.buyingRate ??
+        product.costPrice ??
+        product.purchasePrice ??
+        product.rate ??
+        0
+    );
 
-
-            row.querySelector(
-                ".item-rate"
-            ).value =
-                saleRate;
+row.querySelector(
+    ".item-rate"
+).value =
+    purchaseRate;
 
 
             /*
