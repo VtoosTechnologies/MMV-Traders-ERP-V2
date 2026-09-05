@@ -3237,81 +3237,147 @@ function productOptions(){
    AUTO LOAD CUSTOMER DETAILS
 ===================================================== */
 
-document
-    .getElementById("customerSelect")
-    .addEventListener("change", function () {
+const customerSelect =
+    document.getElementById("customerSelect");
 
-        const badge =
-            document.getElementById("customerBadge");
+if (customerSelect) {
 
-        const name =
-            document.getElementById("customerBadgeName");
+    customerSelect.addEventListener(
+        "change",
+        function () {
 
-        const info =
-            document.getElementById("customerBadgeInfo");
+            const selectedValue =
+                String(this.value || "").trim();
 
-        if (!this.value || this.value === "walkin") {
-            badge.classList.remove("show");
-            return;
-        }
+            const badge =
+                document.getElementById("customerBadge");
 
-        const selectedValue = String(this.value);
+            const badgeName =
+                document.getElementById("customerBadgeName");
 
-        const customer = customers.find(item =>
-            String(
-                item.code ||
-                item.customerCode ||
-                item.id ||
-                ""
-            ) === selectedValue
-        );
+            const badgeInfo =
+                document.getElementById("customerBadgeInfo");
 
-        if (!customer) {
-            console.warn(
-                "Selected customer not found:",
-                selectedValue
+            /* Clear when no customer / walk-in */
+            if (
+                !selectedValue ||
+                selectedValue === "walkin"
+            ) {
+                if (badge) {
+                    badge.classList.remove("show");
+                }
+
+                if (badgeName) {
+                    badgeName.textContent =
+                        "Customer";
+                }
+
+                if (badgeInfo) {
+                    badgeInfo.textContent =
+                        "Customer information";
+                }
+
+                return;
+            }
+
+            /* Find selected customer */
+            const customer =
+                customers.find(item => {
+
+                    const keys = [
+                        item.id,
+                        item.code,
+                        item.customerCode,
+                        item.customerId
+                    ];
+
+                    return keys.some(
+                        key =>
+                            String(key || "").trim() ===
+                            selectedValue
+                    );
+                });
+
+            console.log(
+                "Selected Customer:",
+                selectedValue,
+                customer
             );
 
-            badge.classList.remove("show");
-            return;
+            if (!customer) {
+
+                console.warn(
+                    "Customer not found:",
+                    selectedValue,
+                    customers
+                );
+
+                if (badge) {
+                    badge.classList.remove("show");
+                }
+
+                return;
+            }
+
+            /* Customer Name */
+            const customerName =
+                customer.name ||
+                customer.customerName ||
+                customer.customer_name ||
+                customer.displayName ||
+                "Customer";
+
+            /* Mobile */
+            const mobile =
+                customer.mobile ||
+                customer.phone ||
+                customer.mobileNo ||
+                customer.mobileNumber ||
+                "-";
+
+            /* Type */
+            const type =
+                customer.type ||
+                customer.customerType ||
+                "Customer";
+
+            /* City */
+            const city =
+                customer.city ||
+                customer.location ||
+                "-";
+
+            /* Address */
+            const address =
+                customer.address ||
+                customer.fullAddress ||
+                customer.customerAddress ||
+                "-";
+
+            /* Display */
+            if (badgeName) {
+                badgeName.textContent =
+                    customerName;
+            }
+
+            if (badgeInfo) {
+                badgeInfo.textContent =
+                    "Mobile: " +
+                    mobile +
+                    " · Type: " +
+                    type +
+                    " · City: " +
+                    city +
+                    " · Address: " +
+                    address;
+            }
+
+            if (badge) {
+                badge.classList.add("show");
+            }
         }
-
-        const customerName =
-            customer.name ||
-            customer.customerName ||
-            "Customer";
-
-        const mobile =
-            customer.mobile ||
-            customer.phone ||
-            customer.mobileNo ||
-            "-";
-
-        const type =
-            customer.type ||
-            customer.customerType ||
-            "-";
-
-        const city =
-            customer.city ||
-            "-";
-
-        const address =
-            customer.address ||
-            customer.fullAddress ||
-            "-";
-
-        name.textContent = customerName;
-
-        info.textContent =
-            "Mobile: " + mobile +
-            " · Type: " + type +
-            " · City: " + city +
-            " · Address: " + address;
-
-        badge.classList.add("show");
-    });
-
+    );
+}
 /* =====================================================
    ADD ITEM
 ===================================================== */
