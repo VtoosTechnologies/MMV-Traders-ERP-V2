@@ -446,30 +446,32 @@ select:focus{
    CUSTOMER
 ===================================================== */
 
-.customer-badge{
-    display:none;
-    margin-top:10px;
-    padding:10px;
-    border:1px solid #dbeafe;
-    border-radius:9px;
-    background:#eff6ff;
+.customer-badge {
+    display: none;
+    margin-top: 10px;
+    padding: 12px;
+    border: 1px solid #dbeafe;
+    border-radius: 10px;
+    background: #eff6ff;
 }
 
-.customer-badge.show{
-    display:block;
+.customer-badge.show {
+    display: block;
 }
 
-.customer-badge strong{
-    display:block;
-    color:var(--primary);
-    font-size:10px;
+.customer-badge strong {
+    display: block;
+    color: var(--primary);
+    font-size: 12px;
+    font-weight: 800;
 }
 
-.customer-badge span{
-    display:block;
-    margin-top:3px;
-    color:var(--muted);
-    font-size:9px;
+.customer-badge span {
+    display: block;
+    margin-top: 6px;
+    color: var(--muted);
+    font-size: 10px;
+    line-height: 1.6;
 }
 
 /* =====================================================
@@ -3230,83 +3232,85 @@ function productOptions(){
    CUSTOMER CHANGE
 ===================================================== */
 
+/* =====================================================
+   CUSTOMER CHANGE
+   AUTO LOAD CUSTOMER DETAILS
+===================================================== */
+
 document
-    .getElementById(
-        "customerSelect"
-    )
-    .addEventListener(
-        "change",
-        function(){
+    .getElementById("customerSelect")
+    .addEventListener("change", function () {
 
-            const badge =
-                document.getElementById(
-                    "customerBadge"
-                );
+        const badge =
+            document.getElementById("customerBadge");
 
+        const name =
+            document.getElementById("customerBadgeName");
 
-            if(
-                !this.value ||
-                this.value === "walkin"
-            ){
+        const info =
+            document.getElementById("customerBadgeInfo");
 
-                badge.classList.remove(
-                    "show"
-                );
+        if (!this.value || this.value === "walkin") {
+            badge.classList.remove("show");
+            return;
+        }
 
-                return;
+        const selectedValue = String(this.value);
 
-            }
+        const customer = customers.find(item =>
+            String(
+                item.code ||
+                item.customerCode ||
+                item.id ||
+                ""
+            ) === selectedValue
+        );
 
-
-            const customer =
-                customers.find(
-                    item =>
-                        item.code ===
-                        this.value
-                );
-
-
-            if(!customer){
-
-                badge.classList.remove(
-                    "show"
-                );
-
-                return;
-
-            }
-
-
-            document
-                .getElementById(
-                    "customerBadgeName"
-                )
-                .textContent =
-                customer.name;
-
-
-            document
-                .getElementById(
-                    "customerBadgeInfo"
-                )
-                .textContent =
-                [
-                    customer.mobile,
-                    customer.city
-                ]
-                .filter(Boolean)
-                .join(
-                    " · "
-                );
-
-
-            badge.classList.add(
-                "show"
+        if (!customer) {
+            console.warn(
+                "Selected customer not found:",
+                selectedValue
             );
 
+            badge.classList.remove("show");
+            return;
         }
-    );
 
+        const customerName =
+            customer.name ||
+            customer.customerName ||
+            "Customer";
+
+        const mobile =
+            customer.mobile ||
+            customer.phone ||
+            customer.mobileNo ||
+            "-";
+
+        const type =
+            customer.type ||
+            customer.customerType ||
+            "-";
+
+        const city =
+            customer.city ||
+            "-";
+
+        const address =
+            customer.address ||
+            customer.fullAddress ||
+            "-";
+
+        name.textContent = customerName;
+
+        info.textContent =
+            "Mobile: " + mobile +
+            " · Type: " + type +
+            " · City: " + city +
+            " · Address: " + address;
+
+        badge.classList.add("show");
+    });
 
 /* =====================================================
    ADD ITEM
