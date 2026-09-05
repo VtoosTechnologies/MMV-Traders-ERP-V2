@@ -848,21 +848,75 @@ function escapeHtml(value){
    GET DATE
 ===================================================== */
 
+function normalizeReportDate(value){
+
+    if(!value){
+        return "";
+    }
+
+    // Firestore Timestamp
+    if(
+        typeof value === "object" &&
+        typeof value.toDate === "function"
+    ){
+        value = value.toDate();
+    }
+
+    // JavaScript Date
+    if(value instanceof Date){
+        if(isNaN(value.getTime())){
+            return "";
+        }
+
+        return value
+            .toISOString()
+            .slice(0,10);
+    }
+
+    const str = String(value).trim();
+
+    // Already YYYY-MM-DD
+    if(
+        /^\d{4}-\d{2}-\d{2}$/.test(str)
+    ){
+        return str;
+    }
+
+    // DD-MM-YYYY
+    let match =
+        str.match(
+            /^(\d{2})-(\d{2})-(\d{4})$/
+        );
+
+    if(match){
+        return `${match[3]}-${match[2]}-${match[1]}`;
+    }
+
+    // DD/MM/YYYY
+    match =
+        str.match(
+            /^(\d{2})\/(\d{2})\/(\d{4})$/
+        );
+
+    if(match){
+        return `${match[3]}-${match[2]}-${match[1]}`;
+    }
+
+    return "";
+}
+
+
 function getRecordDate(record){
 
-    return String(
+    return normalizeReportDate(
         record.date ||
         record.invoiceDate ||
         record.purchaseDate ||
         record.createdDate ||
-        record.createdAt?.toDate?.()
-            ?.toISOString?.()
-            ?.slice(0,10) ||
-        ""
+        record.createdAt
     );
 
 }
-
 
 /* =====================================================
    NORMALIZE CUSTOMER
@@ -1188,38 +1242,30 @@ function filterByDate(records){
             "toDate"
         ).value;
 
+    return records.filter(record => {
 
-    return records.filter(
-        record => {
+        const date =
+            getRecordDate(record);
 
-            const date =
-                getRecordDate(record);
-
-            if(!date){
-                return false;
-            }
-
-            if(
-                from &&
-                date < from
-            ){
-                return false;
-            }
-
-            if(
-                to &&
-                date > to
-            ){
-                return false;
-            }
-
-            return true;
-
+        // Date illa na date filter
+        // use pannumbodhu exclude pannuvom
+        if(!date){
+            return false;
         }
-    );
+
+        if(from && date < from){
+            return false;
+        }
+
+        if(to && date > to){
+            return false;
+        }
+
+        return true;
+
+    });
 
 }
-
 
 /* =====================================================
    FIND NAME
