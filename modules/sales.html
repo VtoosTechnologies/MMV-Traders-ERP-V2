@@ -2824,7 +2824,7 @@ async function loadSalesMasterData(){
                     ...item.data()
                 })
             );
-
+window.customers = customers;
         const customerSelect =
             document.getElementById(
                 "customerSelect"
@@ -8372,11 +8372,11 @@ function preparePrintInvoice(){
     ){
 
         const customer =
-            customers.find(
-                item =>
-                    item.code ===
-                    customerValue
-            );
+    customers.find(
+        item =>
+            item.code === this.value ||
+            item.id === this.value
+    );
 
 
         if(customer){
